@@ -157,6 +157,7 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 
 .notes { white-space: pre-wrap; }
 .pied { text-align: center; color: var(--doux); font-size: .85rem; padding: 0 1rem 2rem; }
+.pied span { display: block; }
 
 @media (max-width: 720px) {
   .barre { position: static; }

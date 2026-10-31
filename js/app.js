@@ -278,13 +278,25 @@ function majFiltres() {
   try { localStorage.setItem("bll-filtres", JSON.stringify({ saison: etat.saison, equipe: etat.equipe })); } catch (e) { /* stockage indisponible */ }
 }
 
+async function versionCode() {
+  // Date de publication du code : en-tête Last-Modified de app.js (date de déploiement sur GitHub Pages)
+  try {
+    const r = await fetch("js/app.js", { method: "HEAD", cache: "no-cache" });
+    const d = new Date(r.headers.get("Last-Modified"));
+    if (!isNaN(d)) $("#version").textContent = `Site mis à jour le ${d.toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}.`;
+  } catch (e) { /* date indisponible : on n'affiche rien */ }
+}
+
 async function demarrer() {
   try {
     const r = await fetch("data/matchs.json", { cache: "no-cache" });
     if (!r.ok) throw new Error(r.status);
     const data = await r.json();
     etat.matchs = data.matchs || [];
-    $("#maj").textContent = `Données mises à jour le ${dateFr(data.genere_le)}.`;
+    const dernier = etat.matchs.map(m => m.date).sort().pop();
+    $("#maj").textContent = (dernier ? `Statistiques à jour au ${dateFr(dernier)} (dernier match saisi)` : "Aucun match saisi")
+      + `, compilées le ${dateFr(data.genere_le)}.`;
+    versionCode();
   } catch (e) {
     el.innerHTML = `<p class="vide">Impossible de lire data/matchs.json. Lance tools/extract.py, puis ouvre le site par un serveur (Live Server ou python -m http.server), pas en double-cliquant sur le fichier.</p>`;
     return;
