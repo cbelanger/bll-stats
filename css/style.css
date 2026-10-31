@@ -99,6 +99,7 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 th, td { padding: .55rem .6rem; text-align: left; border-bottom: 1px solid var(--trait); white-space: nowrap; }
 th { font: 600 .95rem/1.2 var(--titre); color: var(--doux); }
 td.n, th.n { text-align: right; }
+tfoot td { font-weight: 700; border-top: 2px solid var(--trait); border-bottom: 0; }
 tbody tr.lien { cursor: pointer; }
 tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transparent); }
 .res { font: 700 1rem/1 var(--titre); padding: .2rem .45rem; border-radius: 3px; color: #fff; }

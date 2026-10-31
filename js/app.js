@@ -178,6 +178,16 @@ function vueGardiennes() {
     const ag = agregerButs(ms);
     const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length, n = ms.length - v - d;
     const pts = [...avecTirs].sort((a, b) => a.date.localeCompare(b.date)).map(m => ({ date: m.date, v: svArret(m) }));
+    // Tableau match par match, du plus vieux au plus récent, avec moyenne cumulative de buts accordés
+    let cumul = 0;
+    const lignes = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || ""))).map((m, i) => {
+      cumul += m.buts.adv;
+      return `<tr class="lien" tabindex="0" data-id="${esc(m.id)}">
+        <td>${dateCourte(m.date)}</td><td>${esc(m.adversaire)}</td>
+        <td class="n">${m.tirs.adv ?? "–"}</td><td class="n">${m.buts.adv}</td>
+        <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
+        <td class="n">${moy(cumul, i + 1)}</td></tr>`;
+    }).join("");
     return `<section class="panneau gardienne">
       <h3>${esc(g.nom || "Gardienne")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}</h3>
       <div class="chiffres">
@@ -187,6 +197,13 @@ function vueGardiennes() {
         <div class="chiffre"><b>${tirs}</b><span>tirs reçus</span></div>
         <div class="chiffre"><b>${ba}</b><span>buts accordés</span></div>
       </div>
+      <h3 style="margin-top:1.25rem">Buts accordés match par match</h3>
+      <div class="defile"><table>
+        <thead><tr><th>Date</th><th>Adversaire</th><th class="n">Tirs reçus</th><th class="n">Buts accordés</th><th class="n">% arrêts</th><th class="n">Moy. cumulative</th></tr></thead>
+        <tbody>${lignes}</tbody>
+        <tfoot><tr><td>Total</td><td>${ms.length} match${ms.length > 1 ? "s" : ""}</td>
+          <td class="n">${tirs}</td><td class="n">${ba}</td><td class="n">${pct(tirs - baTirs, tirs)}</td><td class="n">${moy(ba, ms.length)}</td></tr></tfoot>
+      </table></div>
       ${pts.length > 1 ? `<h3 style="margin-top:1.25rem">% d’arrêts match après match</h3>${tendance(pts)}` : ""}
       <div class="grille g2" style="margin-top:1.25rem">
         <div><h3>Où entrent les buts</h3>${filet(ag.zones, "chaleur")}</div>
