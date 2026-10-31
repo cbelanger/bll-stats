@@ -16,7 +16,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const pct = (n, d) => (d ? (100 * n / d).toFixed(1).replace(".", ",") + " %" : "–");
 const moy = (n, d, dec = 2) => (d ? (n / d).toFixed(dec).replace(".", ",") : "–");
 const dateFr = iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
-const dateCourte = iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" });
+const dateHeure = d => d.toLocaleString("fr-CA", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const dateCourte =iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" });
 const resultat = m => (m.buts.nous > m.buts.adv ? "V" : m.buts.nous < m.buts.adv ? "D" : "N");
 const cleGardienne = g => (g.numero != null ? "#" + g.numero : g.nom || "?");
 const nomGardienne = g => [g.nom, g.numero != null ? "#" + g.numero : ""].filter(Boolean).join(" ") || "Non indiquée";
@@ -283,7 +284,7 @@ async function versionCode() {
   try {
     const r = await fetch("js/app.js", { method: "HEAD", cache: "no-cache" });
     const d = new Date(r.headers.get("Last-Modified"));
-    if (!isNaN(d)) $("#version").textContent = `Site mis à jour le ${d.toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}.`;
+    if (!isNaN(d)) $("#version").textContent = `Code mis à jour : ${dateHeure(d)}`;
   } catch (e) { /* date indisponible : on n'affiche rien */ }
 }
 
@@ -293,9 +294,8 @@ async function demarrer() {
     if (!r.ok) throw new Error(r.status);
     const data = await r.json();
     etat.matchs = data.matchs || [];
-    const dernier = etat.matchs.map(m => m.date).sort().pop();
-    $("#maj").textContent = (dernier ? `Statistiques à jour au ${dateFr(dernier)} (dernier match saisi)` : "Aucun match saisi")
-      + `, compilées le ${dateFr(data.genere_le)}.`;
+    // genere_le : « AAAA-MM-JJTHH:MM » (ancien format sans heure : date seulement)
+    $("#maj").textContent = `Dernière mise à jour des stats : ${data.genere_le.includes("T") ? dateHeure(new Date(data.genere_le)) : dateFr(data.genere_le)}`;
     versionCode();
   } catch (e) {
     el.innerHTML = `<p class="vide">Impossible de lire data/matchs.json. Lance tools/extract.py, puis ouvre le site par un serveur (Live Server ou python -m http.server), pas en double-cliquant sur le fichier.</p>`;

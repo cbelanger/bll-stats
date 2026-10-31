@@ -8,7 +8,7 @@ Utilisation (depuis la racine du dépôt) :
 Prérequis : pip install pypdf
 """
 import json, re, sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from pypdf import PdfReader
 
@@ -193,7 +193,7 @@ def main():
             print(f"    attention : {a}")
     matchs.sort(key=lambda m: (m["date"], m["heure_debut"] or ""), reverse=True)
     SORTIE.parent.mkdir(exist_ok=True)
-    SORTIE.write_text(json.dumps({"genere_le": date.today().isoformat(), "matchs": matchs},
+    SORTIE.write_text(json.dumps({"genere_le": datetime.now().isoformat(timespec="minutes"),"matchs": matchs},
                                  ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n{len(matchs)} match(s) écrit(s) dans {SORTIE.relative_to(RACINE)}"
           + (f" — {echecs} PDF ignoré(s), à corriger" if echecs else ""))
