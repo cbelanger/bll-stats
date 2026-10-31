@@ -91,6 +91,74 @@
       "notes": null
     },
     {
+      "id": "2026-10-25_U19AA_laurentides",
+      "fichier_pdf": "BLL - Statistiques - Sommaire - Match U19 #2015 - 2026-10-25.pdf",
+      "saison": "2026-2027",
+      "equipe": "U19AA",
+      "no_match": "2015",
+      "date": "2026-10-25",
+      "heure_debut": "12:00",
+      "heure_fin": null,
+      "adversaire": "Laurentides",
+      "responsable": "Christian Bélanger",
+      "gardienne": {
+        "nom": "Stella Ouellet",
+        "numero": 28
+      },
+      "buts": {
+        "nous": 2,
+        "adv": 9
+      },
+      "tirs": {
+        "nous": null,
+        "adv": null
+      },
+      "tirs_par_periode": {
+        "nous": null,
+        "adv": null
+      },
+      "sorties_zone": {
+        "tentatives": null,
+        "reussies": null
+      },
+      "buts_accordes": [],
+      "notes": null
+    },
+    {
+      "id": "2026-10-24_U19AA_rive-sud",
+      "fichier_pdf": "BLL - Statistiques - Sommaire - Match U19 #2014 - 2026-10-24.pdf",
+      "saison": "2026-2027",
+      "equipe": "U19AA",
+      "no_match": "2014",
+      "date": "2026-10-24",
+      "heure_debut": "18:30",
+      "heure_fin": null,
+      "adversaire": "Rive-Sud",
+      "responsable": "Christian Belanger",
+      "gardienne": {
+        "nom": "Frédérique Bélanger",
+        "numero": 30
+      },
+      "buts": {
+        "nous": 0,
+        "adv": 9
+      },
+      "tirs": {
+        "nous": null,
+        "adv": null
+      },
+      "tirs_par_periode": {
+        "nous": null,
+        "adv": null
+      },
+      "sorties_zone": {
+        "tentatives": null,
+        "reussies": null
+      },
+      "buts_accordes": [],
+      "notes": null
+    },
+    {
       "id": "2026-10-10_U19AA_rive-sud",
       "fichier_pdf": "BLL - Statistiques - Sommaire - Match U19 #2010 - 2026-10-10.pdf",
       "saison": "2026-2027",
