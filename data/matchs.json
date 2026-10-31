@@ -3,6 +3,95 @@
   "matchs": [
     {
       "id": "2026-10-31_U19AA_ontario-rush",
+      "fichier_pdf": "BLL - Statistiques - Sommaire - Match U19 #2016 - 2026-10-31 - Copie.pdf",
+      "saison": "2026-2027",
+      "equipe": "U19AA",
+      "no_match": "2017",
+      "date": "2026-10-31",
+      "heure_debut": "11:42",
+      "heure_fin": "12:45",
+      "adversaire": "Ontario Rush",
+      "responsable": "Christian Bélanger",
+      "gardienne": {
+        "nom": "Frédérique Bélanger",
+        "numero": 30
+      },
+      "buts": {
+        "nous": 0,
+        "adv": 6
+      },
+      "tirs": {
+        "nous": 13,
+        "adv": 51
+      },
+      "tirs_par_periode": {
+        "nous": {
+          "p1": 3,
+          "p2": 5,
+          "p3": 1,
+          "p4": 4,
+          "prol": 0
+        },
+        "adv": {
+          "p1": 7,
+          "p2": 10,
+          "p3": 10,
+          "p4": 24,
+          "prol": 0
+        }
+      },
+      "sorties_zone": {
+        "tentatives": 33,
+        "reussies": 15
+      },
+      "buts_accordes": [
+        {
+          "no": 1,
+          "periode": "1",
+          "temps": "6:28",
+          "type": "T",
+          "zone": "CD"
+        },
+        {
+          "no": 2,
+          "periode": "2",
+          "temps": "7:55",
+          "type": "T",
+          "zone": "CD"
+        },
+        {
+          "no": 3,
+          "periode": "2",
+          "temps": "6:29",
+          "type": "FC",
+          "zone": "CD"
+        },
+        {
+          "no": 4,
+          "periode": "3",
+          "temps": "5:49",
+          "type": "T",
+          "zone": "HG"
+        },
+        {
+          "no": 5,
+          "periode": "3",
+          "temps": "4:43",
+          "type": "A",
+          "zone": "BC"
+        },
+        {
+          "no": 6,
+          "periode": "4",
+          "temps": "8:24",
+          "type": "L",
+          "zone": "BD"
+        }
+      ],
+      "notes": null
+    },
+    {
+      "id": "2026-10-31_U19AA_ontario-rush_2016",
       "fichier_pdf": "BLL - Statistiques - Sommaire - Match U19 #2016 - 2026-10-31.pdf",
       "saison": "2026-2027",
       "equipe": "U19AA",
