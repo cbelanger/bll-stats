@@ -100,14 +100,14 @@ function vueMatchs() {
   if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}. Dépose un sommaire dans pdf/ et lance tools/extract.py.</p>`;
   return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}</p>
   <div class="panneau defile" style="margin-top:1rem"><table>
-    <thead><tr><th>No</th><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n">Tirs</th><th>Gardienne</th><th class="n">% arrêts</th></tr></thead>
+    <thead><tr><th class="opt">No</th><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n opt">Tirs</th><th class="opt">Gardienne</th><th class="n">% arrêts</th></tr></thead>
     <tbody>${ms.map(m => `
       <tr class="lien" tabindex="0" data-id="${esc(m.id)}">
-        <td>${esc(m.no_match || "–")}</td><td>${dateCourte(m.date)}</td><td>${esc(m.adversaire)}</td>
+        <td class="opt">${esc(m.no_match || "–")}</td><td>${dateCourte(m.date)}</td><td class="txt">${esc(m.adversaire)}</td>
         <td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
         <td class="n">${m.buts.nous}–${m.buts.adv}</td>
-        <td class="n">${m.tirs.nous ?? "–"}–${m.tirs.adv ?? "–"}</td>
-        <td>${esc(nomGardienne(m.gardienne))}</td>
+        <td class="n opt">${m.tirs.nous ?? "–"}–${m.tirs.adv ?? "–"}</td>
+        <td class="opt">${esc(nomGardienne(m.gardienne))}</td>
         <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
       </tr>`).join("")}</tbody></table></div>`;
 }
@@ -140,7 +140,7 @@ function vueMatch(id) {
       ${m.buts_accordes.length ? `<div class="defile"><table>
         <thead><tr><th>But</th><th>Pér.</th><th>Temps</th><th>Type de jeu</th><th>Zone</th></tr></thead>
         <tbody>${m.buts_accordes.map(b => `<tr><td>${b.no}</td><td>${esc(b.periode || "–")}</td><td>${esc(b.temps || "–")}</td>
-          <td>${b.type ? `<span class="code-t">${b.type}</span>${TYPES[b.type] || ""}` : "–"}</td><td>${esc(b.zone || "–")}</td></tr>`).join("")}</tbody>
+          <td class="txt">${b.type ? `<span class="code-t">${b.type}</span>${TYPES[b.type] || ""}` : "–"}</td><td>${esc(b.zone || "–")}</td></tr>`).join("")}</tbody>
       </table></div>` : `<p class="vide">Aucun but accordé détaillé.</p>`}
     </section>
   </div>
@@ -181,10 +181,10 @@ function vueGardiennes() {
     // Tableau match par match, du plus vieux au plus récent ; la moyenne de la saison n'apparaît qu'au total
     const lignes = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || ""))).map(m => `
       <tr class="lien" tabindex="0" data-id="${esc(m.id)}">
-        <td>${dateCourte(m.date)}</td><td>${esc(m.adversaire)}</td>
+        <td>${dateCourte(m.date)}</td><td class="txt">${esc(m.adversaire)}</td>
         <td class="n">${m.tirs.adv ?? "–"}</td><td class="n">${m.buts.adv}</td>
         <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
-        <td class="n">${moy(m.buts.adv, 1)}</td></tr>`).join("");
+        <td class="n opt">${moy(m.buts.adv, 1)}</td></tr>`).join("");
     return `<section class="panneau gardienne">
       <h3>${esc(g.nom || "Gardienne")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}</h3>
       <div class="chiffres">
@@ -196,10 +196,10 @@ function vueGardiennes() {
       </div>
       <h3 style="margin-top:1.25rem">Buts accordés match par match</h3>
       <div class="defile"><table>
-        <thead><tr><th>Date</th><th>Adversaire</th><th class="n">Tirs reçus</th><th class="n">Buts accordés</th><th class="n">% arrêts</th><th class="n">Moy. buts / match</th></tr></thead>
+        <thead><tr><th>Date</th><th>Adversaire</th><th class="n">Tirs reçus</th><th class="n">Buts accordés</th><th class="n">% arrêts</th><th class="n opt">Moy. buts / match</th></tr></thead>
         <tbody>${lignes}</tbody>
         <tfoot><tr><td>Total</td><td>${ms.length} match${ms.length > 1 ? "s" : ""}</td>
-          <td class="n">${tirs}</td><td class="n">${ba}</td><td class="n">${pct(tirs - baTirs, tirs)}</td><td class="n">${moy(ba, ms.length)}</td></tr></tfoot>
+          <td class="n">${tirs}</td><td class="n">${ba}</td><td class="n">${pct(tirs - baTirs, tirs)}</td><td class="n opt">${moy(ba, ms.length)}</td></tr></tfoot>
       </table></div>
       ${pts.length > 1 ? `<h3 style="margin-top:1.25rem">% d’arrêts match après match</h3>${tendance(pts)}` : ""}
       <div class="grille g2" style="margin-top:1.25rem">

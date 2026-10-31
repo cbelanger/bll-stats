@@ -51,7 +51,7 @@ main:focus, main:focus-visible { outline: none; }
 .marque { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
 .marque img { height: 42px; background: #fff; border-radius: 6px; padding: 3px 6px; }
 .marque span { font: 700 1.5rem/1 var(--titre); letter-spacing: .01em; }
-.onglets { display: flex; gap: .25rem; }
+.onglets { display: flex; flex-wrap: wrap; gap: .25rem; }
 .onglets a {
   font: 600 1.15rem/1 var(--titre); text-decoration: none;
   padding: .5rem .8rem; border-radius: 4px; color: #C9D6EE;
@@ -84,8 +84,10 @@ h3 { font-size: 1.2rem; margin-bottom: .5rem; }
   padding: 1.1rem 1.25rem;
 }
 .grille { display: grid; gap: 1rem; }
-.g2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-.g3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+/* min-width: 0 : sinon un tableau large élargit la colonne au lieu de défiler dans .defile */
+.grille > * { min-width: 0; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
 
 /* Chiffres clés */
 .chiffres { display: flex; flex-wrap: wrap; gap: 1.5rem 2.25rem; margin-top: 1rem; }
@@ -161,5 +163,20 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
   .filtres { margin-left: 0; width: 100%; justify-content: space-between; }
   .score .pts { font-size: 2.6rem; }
   .barre-l { grid-template-columns: 7.5rem 1fr 2rem; }
+}
+@media (max-width: 600px) {
+  .panneau { padding: .9rem .8rem; }
+  .onglets a { padding: .5rem .55rem; }
+  /* Tableaux : plus serrés, colonnes secondaires (.opt) masquées, texte long (.txt) sur plusieurs lignes */
+  table { font-size: .92rem; }
+  th, td { padding: .45rem .35rem; }
+  th { white-space: normal; }
+  td.txt { white-space: normal; }
+  .opt { display: none; }
+  .score { gap: .5rem; padding: 1rem; }
+  .score .eq { font-size: 1.15rem; }
+  .score .pts { font-size: 2.2rem; }
+  .periodes { grid-template-columns: 3rem repeat(5, 1fr) 3rem; }
+  .periodes div { padding: .4rem .1rem; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
