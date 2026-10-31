@@ -95,7 +95,8 @@ function agregerButs(matchs) {
 
 /* ---------- Vues */
 function vueMatchs() {
-  const ms = filtres();
+  // Du plus vieux au plus récent
+  const ms = filtres().sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
   if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}. Dépose un sommaire dans pdf/ et lance tools/extract.py.</p>`;
   return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}</p>
   <div class="panneau defile" style="margin-top:1rem"><table>
