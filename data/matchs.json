@@ -2,548 +2,93 @@
   "genere_le": "2026-10-31",
   "matchs": [
     {
-      "id": "2026-10-31_U19AA_repentigny",
-      "fichier_pdf": "2026-10-31_U19AA_Repentigny.pdf",
+      "id": "2026-10-31_U19AA_ontario-rush",
+      "fichier_pdf": "BLL - Statistiques - Sommaire - Match U19 #2016 - 2026-10-31.pdf",
       "saison": "2026-2027",
       "equipe": "U19AA",
-      "no_match": "129",
+      "no_match": "2016",
       "date": "2026-10-31",
-      "heure_debut": "15:30",
-      "heure_fin": "16:05",
-      "adversaire": "Repentigny",
-      "responsable": "Démo",
+      "heure_debut": "11:42",
+      "heure_fin": "12:45",
+      "adversaire": "Ontario Rush",
+      "responsable": "Christian Bélanger",
       "gardienne": {
-        "nom": "Gardienne démo C",
+        "nom": "Frédérique Bélanger",
         "numero": 30
       },
       "buts": {
-        "nous": 3,
-        "adv": 2
+        "nous": 0,
+        "adv": 6
       },
       "tirs": {
-        "nous": 31,
+        "nous": 13,
         "adv": 37
       },
       "tirs_par_periode": {
         "nous": {
-          "p1": 12,
-          "p2": 8,
-          "p3": 5,
-          "p4": 6,
-          "prol": 0
-        },
-        "adv": {
-          "p1": 8,
-          "p2": 11,
-          "p3": 7,
-          "p4": 11,
-          "prol": 0
-        }
-      },
-      "sorties_zone": {
-        "tentatives": 32,
-        "reussies": 18
-      },
-      "buts_accordes": [
-        {
-          "no": 1,
-          "periode": "2",
-          "temps": "11:34",
-          "type": "R",
-          "zone": "HD"
-        },
-        {
-          "no": 2,
-          "periode": "1",
-          "temps": "06:10",
-          "type": "FC",
-          "zone": "C"
-        }
-      ],
-      "notes": "Match de démonstration — données fictives."
-    },
-    {
-      "id": "2026-10-26_U16AA_rive-sud",
-      "fichier_pdf": "2026-10-26_U16AA_Rive-Sud.pdf",
-      "saison": "2026-2027",
-      "equipe": "U16AA",
-      "no_match": "218",
-      "date": "2026-10-26",
-      "heure_debut": "19:30",
-      "heure_fin": "20:05",
-      "adversaire": "Rive-Sud",
-      "responsable": "Démo",
-      "gardienne": {
-        "nom": "Gardienne démo A",
-        "numero": 31
-      },
-      "buts": {
-        "nous": 1,
-        "adv": 3
-      },
-      "tirs": {
-        "nous": 34,
-        "adv": 31
-      },
-      "tirs_par_periode": {
-        "nous": {
-          "p1": 6,
-          "p2": 11,
-          "p3": 8,
-          "p4": 9,
-          "prol": 0
-        },
-        "adv": {
-          "p1": 6,
-          "p2": 9,
-          "p3": 5,
-          "p4": 11,
-          "prol": 0
-        }
-      },
-      "sorties_zone": {
-        "tentatives": 48,
-        "reussies": 35
-      },
-      "buts_accordes": [
-        {
-          "no": 1,
-          "periode": "1",
-          "temps": "13:02",
-          "type": "T",
-          "zone": "BD"
-        },
-        {
-          "no": 2,
-          "periode": "2",
-          "temps": "12:36",
-          "type": "R",
-          "zone": "HG"
-        },
-        {
-          "no": 3,
-          "periode": "1",
-          "temps": "04:12",
-          "type": "L",
-          "zone": "HC"
-        }
-      ],
-      "notes": "Match de démonstration — données fictives."
-    },
-    {
-      "id": "2026-10-25_U19AA_quebec",
-      "fichier_pdf": "2026-10-25_U19AA_Qu├®bec.pdf",
-      "saison": "2026-2027",
-      "equipe": "U19AA",
-      "no_match": "122",
-      "date": "2026-10-25",
-      "heure_debut": "13:00",
-      "heure_fin": "14:35",
-      "adversaire": "Québec",
-      "responsable": "Démo",
-      "gardienne": {
-        "nom": "Gardienne démo D",
-        "numero": 28
-      },
-      "buts": {
-        "nous": 6,
-        "adv": 1
-      },
-      "tirs": {
-        "nous": 33,
-        "adv": 27
-      },
-      "tirs_par_periode": {
-        "nous": {
-          "p1": 12,
+          "p1": 3,
           "p2": 5,
-          "p3": 5,
-          "p4": 11,
+          "p3": 1,
+          "p4": 4,
           "prol": 0
         },
         "adv": {
-          "p1": 10,
-          "p2": 4,
-          "p3": 6,
-          "p4": 7,
-          "prol": 0
-        }
-      },
-      "sorties_zone": {
-        "tentatives": 37,
-        "reussies": 27
-      },
-      "buts_accordes": [
-        {
-          "no": 1,
-          "periode": "1",
-          "temps": "08:28",
-          "type": "E",
-          "zone": "CG"
-        }
-      ],
-      "notes": "Match de démonstration — données fictives."
-    },
-    {
-      "id": "2026-10-19_U16AA_sherbrooke",
-      "fichier_pdf": "2026-10-19_U16AA_Sherbrooke.pdf",
-      "saison": "2026-2027",
-      "equipe": "U16AA",
-      "no_match": "211",
-      "date": "2026-10-19",
-      "heure_debut": "13:00",
-      "heure_fin": "14:35",
-      "adversaire": "Sherbrooke",
-      "responsable": "Démo",
-      "gardienne": {
-        "nom": "Gardienne démo B",
-        "numero": 35
-      },
-      "buts": {
-        "nous": 5,
-        "adv": 5
-      },
-      "tirs": {
-        "nous": 36,
-        "adv": 35
-      },
-      "tirs_par_periode": {
-        "nous": {
           "p1": 7,
-          "p2": 12,
-          "p3": 11,
-          "p4": 6,
-          "prol": 0
-        },
-        "adv": {
-          "p1": 10,
-          "p2": 8,
-          "p3": 11,
-          "p4": 6,
-          "prol": 0
-        }
-      },
-      "sorties_zone": {
-        "tentatives": 39,
-        "reussies": 24
-      },
-      "buts_accordes": [
-        {
-          "no": 1,
-          "periode": "1",
-          "temps": "03:56",
-          "type": "P",
-          "zone": "BD"
-        },
-        {
-          "no": 2,
-          "periode": "4",
-          "temps": "12:01",
-          "type": "R",
-          "zone": "BG"
-        },
-        {
-          "no": 3,
-          "periode": "3",
-          "temps": "10:20",
-          "type": "L",
-          "zone": "BC"
-        },
-        {
-          "no": 4,
-          "periode": "3",
-          "temps": "14:21",
-          "type": "T",
-          "zone": "HG"
-        },
-        {
-          "no": 5,
-          "periode": "4",
-          "temps": "12:35",
-          "type": "FC",
-          "zone": "CD"
-        }
-      ],
-      "notes": "Match de démonstration — données fictives."
-    },
-    {
-      "id": "2026-10-18_U19AA_rive-sud",
-      "fichier_pdf": "2026-10-18_U19AA_Rive-Sud.pdf",
-      "saison": "2026-2027",
-      "equipe": "U19AA",
-      "no_match": "115",
-      "date": "2026-10-18",
-      "heure_debut": "19:30",
-      "heure_fin": "20:05",
-      "adversaire": "Rive-Sud",
-      "responsable": "Démo",
-      "gardienne": {
-        "nom": "Gardienne démo C",
-        "numero": 30
-      },
-      "buts": {
-        "nous": 3,
-        "adv": 2
-      },
-      "tirs": {
-        "nous": 35,
-        "adv": 34
-      },
-      "tirs_par_periode": {
-        "nous": {
-          "p1": 9,
           "p2": 10,
-          "p3": 6,
+          "p3": 10,
           "p4": 10,
-          "prol": 0
-        },
-        "adv": {
-          "p1": 8,
-          "p2": 8,
-          "p3": 11,
-          "p4": 7,
           "prol": 0
         }
       },
       "sorties_zone": {
         "tentatives": 33,
-        "reussies": 23
+        "reussies": 15
       },
       "buts_accordes": [
         {
           "no": 1,
           "periode": "1",
-          "temps": "11:50",
-          "type": "D",
-          "zone": "HD"
+          "temps": "6:28",
+          "type": "T",
+          "zone": "CD"
         },
         {
           "no": 2,
           "periode": "2",
-          "temps": "14:47",
-          "type": "R",
-          "zone": "BD"
-        }
-      ],
-      "notes": "Match de démonstration — données fictives."
-    },
-    {
-      "id": "2026-10-11_U19AA_gatineau",
-      "fichier_pdf": "2026-10-11_U19AA_Gatineau.pdf",
-      "saison": "2026-2027",
-      "equipe": "U19AA",
-      "no_match": "108",
-      "date": "2026-10-11",
-      "heure_debut": "15:30",
-      "heure_fin": "16:05",
-      "adversaire": "Gatineau",
-      "responsable": "Démo",
-      "gardienne": {
-        "nom": "Gardienne démo D",
-        "numero": 28
-      },
-      "buts": {
-        "nous": 6,
-        "adv": 2
-      },
-      "tirs": {
-        "nous": 35,
-        "adv": 39
-      },
-      "tirs_par_periode": {
-        "nous": {
-          "p1": 10,
-          "p2": 9,
-          "p3": 10,
-          "p4": 6,
-          "prol": 0
-        },
-        "adv": {
-          "p1": 11,
-          "p2": 6,
-          "p3": 11,
-          "p4": 11,
-          "prol": 0
-        }
-      },
-      "sorties_zone": {
-        "tentatives": 35,
-        "reussies": 26
-      },
-      "buts_accordes": [
-        {
-          "no": 1,
-          "periode": "3",
-          "temps": "10:52",
-          "type": "R",
-          "zone": "BG"
-        },
-        {
-          "no": 2,
-          "periode": "1",
-          "temps": "01:27",
-          "type": "P",
-          "zone": "HD"
-        }
-      ],
-      "notes": "Match de démonstration — données fictives."
-    },
-    {
-      "id": "2026-10-05_U16AA_laval",
-      "fichier_pdf": "2026-10-05_U16AA_Laval.pdf",
-      "saison": "2026-2027",
-      "equipe": "U16AA",
-      "no_match": "204",
-      "date": "2026-10-05",
-      "heure_debut": "15:30",
-      "heure_fin": "16:05",
-      "adversaire": "Laval",
-      "responsable": "Démo",
-      "gardienne": {
-        "nom": "Gardienne démo A",
-        "numero": 31
-      },
-      "buts": {
-        "nous": 3,
-        "adv": 5
-      },
-      "tirs": {
-        "nous": 35,
-        "adv": 35
-      },
-      "tirs_par_periode": {
-        "nous": {
-          "p1": 11,
-          "p2": 7,
-          "p3": 11,
-          "p4": 6,
-          "prol": 0
-        },
-        "adv": {
-          "p1": 7,
-          "p2": 8,
-          "p3": 10,
-          "p4": 10,
-          "prol": 0
-        }
-      },
-      "sorties_zone": {
-        "tentatives": 49,
-        "reussies": 33
-      },
-      "buts_accordes": [
-        {
-          "no": 1,
-          "periode": "3",
-          "temps": "01:01",
-          "type": "R",
-          "zone": "HD"
-        },
-        {
-          "no": 2,
-          "periode": "4",
-          "temps": "03:10",
-          "type": "FC",
-          "zone": "HG"
+          "temps": "7:55",
+          "type": "T",
+          "zone": "CD"
         },
         {
           "no": 3,
-          "periode": "1",
-          "temps": "03:56",
-          "type": "R",
+          "periode": "2",
+          "temps": "6:29",
+          "type": "FC",
           "zone": "CD"
         },
         {
           "no": 4,
-          "periode": "4",
-          "temps": "11:17",
-          "type": "P",
-          "zone": "CG"
-        },
-        {
-          "no": 5,
-          "periode": "2",
-          "temps": "11:55",
-          "type": "L",
-          "zone": "BC"
-        }
-      ],
-      "notes": "Match de démonstration — données fictives."
-    },
-    {
-      "id": "2026-10-03_U19AA_laval",
-      "fichier_pdf": "2026-10-03_U19AA_Laval.pdf",
-      "saison": "2026-2027",
-      "equipe": "U19AA",
-      "no_match": "101",
-      "date": "2026-10-03",
-      "heure_debut": "15:30",
-      "heure_fin": "16:05",
-      "adversaire": "Laval",
-      "responsable": "Démo",
-      "gardienne": {
-        "nom": "Gardienne démo C",
-        "numero": 30
-      },
-      "buts": {
-        "nous": 3,
-        "adv": 4
-      },
-      "tirs": {
-        "nous": 31,
-        "adv": 32
-      },
-      "tirs_par_periode": {
-        "nous": {
-          "p1": 6,
-          "p2": 5,
-          "p3": 9,
-          "p4": 11,
-          "prol": 0
-        },
-        "adv": {
-          "p1": 10,
-          "p2": 9,
-          "p3": 6,
-          "p4": 7,
-          "prol": 0
-        }
-      },
-      "sorties_zone": {
-        "tentatives": 30,
-        "reussies": 18
-      },
-      "buts_accordes": [
-        {
-          "no": 1,
-          "periode": "4",
-          "temps": "14:01",
-          "type": "P",
-          "zone": "BD"
-        },
-        {
-          "no": 2,
-          "periode": "4",
-          "temps": "06:01",
-          "type": "R",
-          "zone": "BG"
-        },
-        {
-          "no": 3,
           "periode": "3",
-          "temps": "12:03",
+          "temps": "5:49",
           "type": "T",
           "zone": "HG"
         },
         {
-          "no": 4,
+          "no": 5,
           "periode": "3",
-          "temps": "10:11",
-          "type": "R",
+          "temps": "4:43",
+          "type": "A",
+          "zone": "BC"
+        },
+        {
+          "no": 6,
+          "periode": "4",
+          "temps": "8:24",
+          "type": "L",
           "zone": "BD"
         }
       ],
-      "notes": "Match de démonstration — données fictives."
+      "notes": null
     }
   ]
 }
