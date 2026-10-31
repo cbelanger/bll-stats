@@ -71,3 +71,9 @@ Le dépôt est public : tout ce qui est dans `pdf/` (y compris les notes) est pu
 - Tirs par période : une période P1 à P4 laissée vide compte pour 0 ; une prolongation vide
   signifie « pas de prolongation » et n'entre pas dans la moyenne de la prolongation.
 - Saison : d'août à juillet (un match du 2026-11-01 compte pour 2026-2027).
+
+## Licence
+
+Le code (`index.html`, `css/`, `js/`, `tools/`) est sous [licence MIT](LICENSE), © 2026 Christian Bélanger.
+Le logo du BLL Élite (`assets/`) appartient au club ; les données de match (`pdf/`, `data/`) ne sont pas
+sous licence libre (tous droits réservés).
