@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BLL Élite – Statistiques</title>
+  <link rel="icon" href="assets/logo-bll.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="barre">
+    <a class="marque" href="#/matchs">
+      <img src="assets/logo-bll.png" alt="BLL Élite">
+      <span>Statistiques</span>
+    </a>
+    <nav class="onglets" aria-label="Sections">
+      <a href="#/matchs" data-vue="matchs">Matchs</a>
+      <a href="#/gardiennes" data-vue="gardiennes">Gardiennes</a>
+      <a href="#/equipe" data-vue="equipe">Équipe</a>
+    </nav>
+    <div class="filtres">
+      <label>Saison <select id="f-saison"></select></label>
+      <div class="bascule" role="group" aria-label="Équipe">
+        <button type="button" data-equipe="U19AA">U19AA</button>
+        <button type="button" data-equipe="U16AA">U16AA</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="contenu" tabindex="-1">
+    <p class="vide">Chargement des matchs…</p>
+  </main>
+
+  <footer class="pied">
+    <span id="maj"></span>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
