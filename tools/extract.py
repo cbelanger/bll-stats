@@ -92,19 +92,26 @@ def lire(pdf):
     if not no_match:
         avertissements.append("numéro de match manquant")
 
-    # Tirs cadrés : somme des périodes si elles sont remplies, sinon le total
+    def nombre(nom):
+        v = entier(champs, nom)
+        if v is None and texte(champs, nom):
+            avertissements.append(f"{nom} : « {texte(champs, nom)} » n'est pas un nombre, valeur ignorée")
+        return v
+
+    # Tirs cadrés : somme des périodes si elles sont remplies, sinon le total.
+    # P1-P4 vides = 0 ; prolongation vide = None (pas de prolongation).
     def tirs(cote):
-        per = {p: entier(champs, f"tirs_{cote}_{p}") for p in PERIODES}
+        per = {p: nombre(f"tirs_{cote}_{p}") for p in PERIODES}
         if any(v is not None for v in per.values()):
-            per = {p: (v or 0) for p, v in per.items()}
-            return sum(per.values()), per
-        return entier(champs, f"tirs_{cote}"), None
+            per = {p: (v if p == "prol" else v or 0) for p, v in per.items()}
+            return sum(v or 0 for v in per.values()), per
+        return nombre(f"tirs_{cote}"), None
 
     tirs_nous, per_nous = tirs("nous")
     tirs_adv, per_adv = tirs("adv")
 
-    buts_nous = entier(champs, "buts_nous")
-    buts_adv = entier(champs, "buts_adv")
+    buts_nous = nombre("buts_nous")
+    buts_adv = nombre("buts_adv")
     if buts_nous is None or buts_adv is None:
         erreurs.append("buts marqués / accordés manquants (section 1)")
 
@@ -131,7 +138,7 @@ def lire(pdf):
     if tirs_adv is not None and buts_adv is not None and buts_adv > tirs_adv:
         erreurs.append("plus de buts accordés que de tirs cadrés adverses (un but compte aussi comme tir cadré)")
 
-    sz_t, sz_r = entier(champs, "sz_tentatives"), entier(champs, "sz_reussies")
+    sz_t, sz_r = nombre("sz_tentatives"), nombre("sz_reussies")
     if sz_t is not None and sz_r is not None and sz_r > sz_t:
         erreurs.append("plus de sorties de zone réussies que de tentatives")
 

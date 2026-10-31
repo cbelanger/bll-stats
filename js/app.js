@@ -117,7 +117,7 @@ function vueMatch(id) {
   const nums = {};
   m.buts_accordes.forEach(b => { if (b.zone) (nums[b.zone] = nums[b.zone] || []).push(b.no); });
   const tp = m.tirs_par_periode;
-  const ligneP = (lab, o, tot) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${o ? o[k] : "–"}</div>`).join("")}<div class="tot">${tot ?? "–"}</div>`;
+  const ligneP = (lab, o, tot) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${o ? o[k] ?? "–" : "–"}</div>`).join("")}<div class="tot">${tot ?? "–"}</div>`;
   const sz = m.sorties_zone;
   return `<a class="retour" href="#/matchs">← Matchs</a>
   <h1>${esc(m.equipe)} contre ${esc(m.adversaire)}</h1>
@@ -203,10 +203,15 @@ function vueEquipe() {
   const somme = f => ms.reduce((s, m) => s + (f(m) ?? 0), 0);
   const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length, n = ms.length - v - d;
   const bp = somme(m => m.buts.nous), bc = somme(m => m.buts.adv);
+  const avecTn = ms.filter(m => m.tirs.nous != null), avecTa = ms.filter(m => m.tirs.adv != null);
   const tp = somme(m => m.tirs.nous), tc = somme(m => m.tirs.adv);
   const szT = somme(m => m.sorties_zone.tentatives), szR = somme(m => m.sorties_zone.reussies);
   const avecP = ms.filter(m => m.tirs_par_periode.nous && m.tirs_par_periode.adv);
-  const moyP = (cote, k) => avecP.length ? (avecP.reduce((s, m) => s + m.tirs_par_periode[cote][k], 0) / avecP.length).toFixed(1).replace(".", ",") : "–";
+  const moyP = (cote, k) => {
+    // La prolongation est null quand il n'y en a pas eu : on ne compte que les matchs où la période existe
+    const vals = avecP.map(m => m.tirs_par_periode[cote][k]).filter(v => v != null);
+    return vals.length ? (vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1).replace(".", ",") : "–";
+  };
   const ag = agregerButs(ms);
   return `<h1>Équipe ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}</p>
   <section class="panneau" style="margin-top:1rem">
@@ -215,8 +220,8 @@ function vueEquipe() {
       <div class="chiffre"><b>${bp}–${bc}</b><span>buts pour et contre</span></div>
       <div class="chiffre"><b>${moy(bp, ms.length)}</b><span>buts pour / match</span></div>
       <div class="chiffre"><b>${moy(bc, ms.length)}</b><span>buts contre / match</span></div>
-      <div class="chiffre"><b>${moy(tp, ms.length, 1)}</b><span>tirs pour / match</span></div>
-      <div class="chiffre"><b>${moy(tc, ms.length, 1)}</b><span>tirs contre / match</span></div>
+      <div class="chiffre"><b>${moy(tp, avecTn.length, 1)}</b><span>tirs pour / match</span></div>
+      <div class="chiffre"><b>${moy(tc, avecTa.length, 1)}</b><span>tirs contre / match</span></div>
       <div class="chiffre accent"><b>${pct(szR, szT)}</b><span>sorties de zone réussies</span></div>
     </div>
   </section>
