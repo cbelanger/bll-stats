@@ -100,6 +100,12 @@ main {
 .moins { min-height: 54px; border: 1px solid var(--trait); border-radius: 8px; background: transparent; color: var(--doux); font: 700 1.5rem/1 var(--titre); }
 .note { margin: .45rem 0 0; font-size: .78rem; color: var(--doux); }
 
+.bandeau {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+  background: var(--surface); border: 2px solid var(--vert); border-radius: 10px; padding: .6rem .7rem;
+  font-weight: 600;
+}
+
 /* Buts accordés */
 .liste { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; }
 .but {

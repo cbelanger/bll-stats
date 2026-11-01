@@ -107,6 +107,8 @@ function afficher() {
   $("#note-liste").textContent = incomplets ? `${incomplets} but${incomplets > 1 ? "s" : ""} à compléter (?) : touche la ligne quand le jeu est arrêté.` : "";
   $("#note-liste").hidden = !incomplets;
 
+  $("#bandeau").hidden = !S.exporte;
+
   const h = hist[hist.length - 1];
   $("#annuler").disabled = !h;
   $("#annuler-l").textContent = h ? "Annuler : " + h.libelle : "Rien à annuler";
@@ -154,7 +156,7 @@ function ouvrirInfos() {
     + `<button type="button" class="puce" data-gd="autre">Autre</button>`;
   majGardienne();
   confirmerNouveau = 0; $("#b-nouveau").textContent = "Nouveau match";
-  $("#f-infos").showModal();
+  if (!$("#f-infos").open) $("#f-infos").showModal();
 }
 
 function majGardienne() {
@@ -235,6 +237,7 @@ function telecharger() {
   S.exporte = true; sauver();
   $("#nom-fichier").textContent = nomFichier() + " (déjà téléchargé)";
   toast("Fichier enregistré dans Téléchargements");
+  afficher();   // bandeau « Nouveau match »
 }
 function copier() {
   const txt = contenuExport();
@@ -370,10 +373,10 @@ document.addEventListener("click", e => {
       break;
     }
     case "nouveau":
-      // Deux touches pour effacer ; avertir si le match n'a pas été exporté
-      if (Date.now() - confirmerNouveau > 4000) {
+      // Match exporté ou vide : tout de suite. Sinon deux touches, avec avertissement si pas exporté.
+      if (aDesDonnees() && !S.exporte && Date.now() - confirmerNouveau > 4000) {
         confirmerNouveau = Date.now();
-        b.textContent = aDesDonnees() && !S.exporte ? "Pas exporté ! Toucher encore pour effacer" : "Toucher encore pour confirmer";
+        b.textContent = "Pas exporté ! Toucher encore pour effacer";
         break;
       }
       action("Nouveau match", () => { S = nouveau(); });
@@ -406,4 +409,3 @@ afficher();
 // Liste des gardiennes d'abord, pour que les infos du match s'ouvrent avec les bons boutons
 if (!S.adversaire && !aDesDonnees()) chargerGardiennes().then(ouvrirInfos);
 else chargerGardiennes();
-if (S.adversaire && S.exporte && S.date !== aujourdhui()) toast("Match déjà exporté. Pour le suivant : touche le nom du match, puis « Nouveau match ».");
