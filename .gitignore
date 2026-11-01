@@ -3,3 +3,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Générés : localement par tools/extract.py, et par GitHub Actions au moment de publier
+data/matchs.json
+data/version.json

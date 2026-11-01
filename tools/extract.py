@@ -7,7 +7,7 @@ Utilisation (depuis la racine du dépôt) :
 
 Prérequis : pip install pypdf
 """
-import json, re, sys
+import json, os, re, sys
 from datetime import date, datetime
 from pathlib import Path
 from pypdf import PdfReader
@@ -15,6 +15,8 @@ from pypdf import PdfReader
 RACINE = Path(__file__).resolve().parent.parent
 DOSSIER_PDF = RACINE / "pdf"
 SORTIE = RACINE / "data" / "matchs.json"
+
+SUR_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
 
 PERIODES = ["p1", "p2", "p3", "p4", "prol"]
 CODES_TYPE = {"P", "T", "L", "R", "E", "D", "FC", "A"}
@@ -183,6 +185,8 @@ def main():
             print(f"✗ {pdf.name} — ignoré")
             for e in err:
                 print(f"    erreur : {e}")
+                if SUR_GITHUB:  # annotation rouge en haut de la page de l'exécution
+                    print(f"::error title={pdf.name}::{e}")
         else:
             if m["id"] in ids:
                 m["id"] += f"_{m['no_match'] or len(ids)}"
@@ -191,6 +195,8 @@ def main():
             print(f"✓ {pdf.name} → {m['id']}")
         for a in avert:
             print(f"    attention : {a}")
+            if SUR_GITHUB:  # annotation jaune en haut de la page de l'exécution
+                print(f"::warning title={pdf.name}::{a}")
     matchs.sort(key=lambda m: (m["date"], m["heure_debut"] or ""), reverse=True)
     SORTIE.parent.mkdir(exist_ok=True)
     SORTIE.write_text(json.dumps({"genere_le": datetime.now().isoformat(timespec="minutes"),"matchs": matchs},

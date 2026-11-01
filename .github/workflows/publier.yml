@@ -1,0 +1,88 @@
+# Lance tools/extract.py sur GitHub et publie le site sur GitHub Pages.
+# - Toute branche : extraction et vérification seulement (rien n'est publié).
+# - Branche main : extraction, puis publication. Un PDF en erreur est laissé de côté,
+#   les autres matchs sont publiés, et l'exécution finit en échec pour que tu reçoives un courriel.
+# Prérequis (une seule fois) : Settings → Pages → Source : « GitHub Actions ».
+name: Extraire et publier
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TZ: America/Toronto   # heure locale pour « genere_le » (bas de page du site)
+
+jobs:
+  extraire:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      code: ${{ steps.extract.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # historique complet : date du dernier changement de code
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Extraire les PDF
+        id: extract
+        run: |
+          set +e
+          python tools/extract.py 2>&1 | tee "$RUNNER_TEMP/extract.log"
+          code=${PIPESTATUS[0]}
+          set -e
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Extraction des PDF"
+            echo '```'
+            cat "$RUNNER_TEMP/extract.log"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f data/matchs.json ]; then
+            echo "::error::data/matchs.json n'a pas été produit : rien n'est publié."
+            exit 1
+          fi
+
+      - name: Date du dernier changement de code
+        run: |
+          d=$(git log -1 --format=%cI -- index.html css js assets)
+          echo "{\"code\": \"$d\"}" > data/version.json
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: .
+
+  deployer:
+    needs: extraire
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v4
+
+  verdict:
+    # Après la publication : échec si au moins un PDF a été ignoré (déclenche le courriel de GitHub)
+    needs: [extraire, deployer]
+    if: always() && needs.extraire.result == 'success' && needs.extraire.outputs.code != '0'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "::error::Au moins un PDF a été ignoré. Voir le résumé de l'extraction ; les autres matchs sont publiés."
+          exit 1

@@ -11,9 +11,13 @@ Répondre en français, tutoiement, ton direct.
 1. Pendant le match : feuille papier « Saisie » (grilles à barrer).
 2. Après le match : « Sommaire » rempli dans Acrobat Reader → enregistré dans `pdf/`
    (nom sans accents : `AAAA-MM-JJ_U19AA_Adversaire.pdf`).
-3. `python tools/extract.py` lit tous les PDF de `pdf/` → écrit `data/matchs.json`.
+3. Commit + push → GitHub Actions (`.github/workflows/publier.yml`) lance `python tools/extract.py`,
+   qui lit tous les PDF de `pdf/` → écrit `data/matchs.json`, puis publie le site sur GitHub Pages (branche `main` seulement).
+   Sur une autre branche, l'Action fait l'extraction et la vérification sans publier.
 4. Le site (`index.html`, `js/app.js`, `css/style.css`) lit `data/matchs.json` et calcule tout côté navigateur.
-5. Commit + push → GitHub Pages republie.
+
+`data/matchs.json` et `data/version.json` ne sont pas versionnés (`.gitignore`) : lancer `extract.py` localement
+sert seulement à vérifier avec Live Server. Tag `avant-github-actions` = état du site avant ce fonctionnement.
 
 ## Structure
 
@@ -27,7 +31,8 @@ Répondre en français, tutoiement, ton direct.
 | `tools/fiches/generer_saisie.py` | Génère la feuille papier « Saisie » (paysage) |
 | `fiches/` | PDF vierges générés (à distribuer à l'équipe) |
 | `pdf/` | Sommaires remplis = source des données |
-| `data/matchs.json` | Généré, ne jamais éditer à la main |
+| `data/matchs.json` | Généré (localement ou par l'Action), non versionné, ne jamais éditer à la main |
+| `.github/workflows/publier.yml` | Extraction + publication sur GitHub Pages ; erreurs en annotations et courriel |
 | `assets/logo-bll.png` | Logo du club |
 
 ## Champs du PDF Sommaire (noms internes stables — ne pas renommer sans adapter extract.py)
@@ -55,7 +60,8 @@ Périodes : P1 à P4 + Prolongation.
 
 ## Contraintes
 
-- Le site doit rester 100 % statique : pas de serveur, pas de base de données, pas d'étape de build.
+- Le site doit rester 100 % statique : pas de serveur, pas de base de données, pas d'étape de build
+  locale. La seule étape automatisée est `extract.py`, lancé par GitHub Actions.
 - Le dépôt est public : ne rien y mettre qu'on ne veut pas voir publié.
 - Les calculs JavaScript du PDF (totaux, filet, validation de l'heure) ne marchent que dans Acrobat Reader.
   Éviter `AFTime_FormatEx` : la valeur devenait invisible hors focus ; on utilise une validation maison.

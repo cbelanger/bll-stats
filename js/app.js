@@ -280,10 +280,16 @@ function majFiltres() {
 }
 
 async function versionCode() {
-  // Date de publication du code : en-tête Last-Modified de app.js (date de déploiement sur GitHub Pages)
+  // Date du dernier commit qui touche le code : data/version.json, écrit par GitHub Actions.
+  // En local (pas de version.json) : en-tête Last-Modified de app.js.
   try {
-    const r = await fetch("js/app.js", { method: "HEAD", cache: "no-cache" });
-    const d = new Date(r.headers.get("Last-Modified"));
+    let d = null;
+    const v = await fetch("data/version.json", { cache: "no-cache" });
+    if (v.ok) d = new Date((await v.json()).code);
+    if (!d || isNaN(d)) {
+      const r = await fetch("js/app.js", { method: "HEAD", cache: "no-cache" });
+      d = new Date(r.headers.get("Last-Modified"));
+    }
     if (!isNaN(d)) $("#version").textContent = `Code mis à jour : ${dateHeure(d)}`;
   } catch (e) { /* date indisponible : on n'affiche rien */ }
 }

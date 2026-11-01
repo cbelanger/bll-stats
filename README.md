@@ -10,13 +10,19 @@ Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et 
    (les totaux, le filet et la validation de l'heure ne fonctionnent que dans Acrobat)
    et l'enregistrer dans `pdf/`. Le nom du fichier est libre, par exemple
    `BLL - Statistiques - Sommaire - Match U19 #2016 - 2026-10-31.pdf`.
-3. Extraire les données :
-   ```
-   python tools/extract.py
-   ```
-4. Vérifier localement (voir ci-dessous).
-5. Commit + push. Le site se met à jour en environ une minute
+3. (Facultatif) Vérifier localement : `python tools/extract.py`, puis Live Server.
+4. Commit + push. GitHub Actions lance `extract.py` et publie le site en 1 à 2 minutes
    (Ctrl+F5 dans le navigateur si l'ancienne version reste affichée).
+
+### Si quelque chose ne va pas
+
+- **Erreur** dans un PDF : le match est laissé de côté, les autres sont publiés, et l'exécution finit en ✗ rouge.
+  GitHub envoie un courriel ; le détail est dans l'onglet **Actions** du dépôt (résumé de l'extraction
+  et annotations en rouge).
+- **Attention** : l'exécution reste verte ; les avertissements s'affichent en jaune en haut de l'exécution.
+- Sur une autre branche que `main`, l'Action vérifie les PDF sans rien publier.
+- Revenir à l'état d'avant GitHub Actions : tag `avant-github-actions`, et remettre
+  Settings → Pages → Source sur « Deploy from a branch ».
 
 ## Commandes
 
@@ -25,7 +31,7 @@ Toutes les commandes se lancent depuis la racine du dépôt.
 | Commande | Rôle |
 |---|---|
 | `pip install -r requirements.txt` | Installe les dépendances Python (pypdf, reportlab, pillow) |
-| `python tools/extract.py` | Lit tous les PDF de `pdf/` et réécrit `data/matchs.json` |
+| `python tools/extract.py` | Lit tous les PDF de `pdf/` et réécrit `data/matchs.json` (vérification locale ; GitHub Actions le lance aussi à chaque push) |
 | `python tools/fiches/generer_sommaire.py` | Régénère le PDF remplissable vierge `fiches/BLL - Statistiques - Sommaire - Match.pdf` |
 | `python tools/fiches/generer_saisie.py` | Régénère la feuille papier vierge `fiches/BLL - Statistiques - Saisie - Match.pdf` (paysage) |
 | `python -m http.server 8000` | Sert le site localement sur <http://localhost:8000> (ou Live Server dans VS Code) |
@@ -47,7 +53,8 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 |---|---|
 | `index.html`, `css/`, `js/` | Le site (JavaScript sans dépendance, aucune étape de build) |
 | `pdf/` | Sommaires remplis (source des données) |
-| `data/matchs.json` | Généré par `tools/extract.py` — ne pas éditer à la main |
+| `data/matchs.json` | Généré par `tools/extract.py` — non versionné, ne pas éditer à la main |
+| `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |
 | `tools/extract.py` | Extraction PDF → JSON, avec validation |
 | `tools/fiches/` | Scripts qui génèrent les fiches vierges |
 | `fiches/` | Fiches vierges à distribuer (Sommaire remplissable, Saisie papier) |
