@@ -22,6 +22,7 @@
           <span class="crayon" aria-hidden="true">✎</span>
         </button>
         <span class="score" id="score" aria-label="Score">0–0</span>
+        <button type="button" class="menu-b" data-act="menu" aria-label="Menu du match">☰</button>
       </div>
       <div class="periodes" id="periodes" role="group" aria-label="Période en cours">
         <button type="button" data-p="p1">P1</button>
@@ -204,12 +205,26 @@
         <input type="text" id="fi-resp" autocomplete="name" autocapitalize="words">
       </div>
       <div class="pied-f">
-        <button type="button" class="btn danger" data-act="nouveau" id="b-nouveau">Nouveau match</button>
         <button type="button" class="btn" data-act="fermer">Fermer</button>
         <button type="button" class="btn principal" data-act="infos-ok">Enregistrer</button>
       </div>
-      <div class="pied-f">
+    </div>
+  </dialog>
+
+  <!-- Menu du match -->
+  <dialog class="feuille" id="f-menu" aria-labelledby="fm-titre">
+    <div class="corps">
+      <h3 id="fm-titre">Match</h3>
+      <div class="menu-l">
+        <button type="button" class="btn principal" data-act="nouveau">Nouveau match</button>
         <button type="button" class="btn" data-act="ouvrir">Ouvrir un match du site…</button>
+        <button type="button" class="btn" data-act="infos">Infos du match</button>
+        <button type="button" class="btn" data-act="recuperer" id="b-recuperer" hidden>Récupérer le match précédent</button>
+      </div>
+      <p class="aide">« Nouveau match » et « Ouvrir » mettent de côté le match en cours s’il n’est pas exporté ;
+        « Récupérer le match précédent » le remet en place.</p>
+      <div class="pied-f">
+        <button type="button" class="btn" data-act="fermer">Fermer</button>
       </div>
     </div>
   </dialog>
@@ -219,7 +234,7 @@
     <div class="corps">
       <h3 id="fo-titre">Ouvrir un match du site</h3>
       <p class="aide">Le match s’ouvre ici pour être corrigé. « Terminer » le réexporte sous le même nom de fichier ; déposé dans data/matchs, il remplace l’ancien.</p>
-      <p class="err" id="fo-avert" hidden>Le match en cours n’est pas exporté : il sera remplacé (« Annuler » le récupère).</p>
+      <p class="aide" id="fo-avert" hidden>Le match en cours n’est pas exporté : il sera mis de côté (Menu ☰ → « Récupérer le match précédent »).</p>
       <ul class="liste" id="fo-liste"></ul>
       <div class="pied-f">
         <button type="button" class="btn" data-act="fermer">Fermer</button>

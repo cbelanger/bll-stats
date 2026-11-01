@@ -10,7 +10,7 @@ const TYPES = [["P", "Pick / écran"], ["T", "Triangle"], ["L", "Tir de loin"], 
                ["E", "Échappée"], ["D", "Déviation"], ["FC", "Fille de coin"], ["A", "Autre"]];
 const ZONES = ["HG", "HC", "HD", "CG", "C", "CD", "BG", "BC", "BD"];
 const FORMAT = "bll-match-1";
-const CLE = "bll-saisie-match", CLE_PREFS = "bll-saisie-prefs";
+const CLE = "bll-saisie-match", CLE_PREFS = "bll-saisie-prefs", CLE_PRECEDENT = "bll-saisie-precedent";
 
 const $ = s => document.querySelector(s);
 const nomP = k => (PER.find(p => p[0] === k) || [null, "?"])[1];   // « ? » : période inconnue
@@ -161,7 +161,6 @@ function ouvrirInfos() {
   $("#fi-gards").innerHTML = GARDIENNES.map((g, k) => `<button type="button" class="puce" data-gd="${k}">${esc(texteGardienne(g))}</button>`).join("")
     + `<button type="button" class="puce" data-gd="autre">Autre</button>`;
   majGardienne();
-  confirmerNouveau = 0; $("#b-nouveau").textContent = "Nouveau match";
   if (!$("#f-infos").open) $("#f-infos").showModal();
 }
 
@@ -261,11 +260,26 @@ async function listerMatchs() {
     $("#fo-liste").innerHTML = `<li class="vide">Liste indisponible : il faut du réseau pour ouvrir un match du site.</li>`;
   }
 }
+/* ---------- Match mis de côté (un seul, gardé même si l'application est fermée) */
+const nonExporte = s => !s.exporte && somme(s.tirs.nous) + somme(s.tirs.adv) + s.butsNous.length + s.butsAdv.length + s.sz.r + s.sz.x > 0;
+const resume = s => `${s.equipe} contre ${s.adversaire || "adversaire ?"}, ${s.butsNous.length}–${s.butsAdv.length}`;
+function mettreDeCote() {
+  if (nonExporte(S)) { ecrireStockage(CLE_PRECEDENT, S); return true; }
+  return false;
+}
+function ouvrirMenu() {
+  const p = lireStockage(CLE_PRECEDENT);
+  $("#b-recuperer").hidden = !p;
+  if (p) $("#b-recuperer").textContent = `Récupérer : ${resume(p)}`;
+  if (!$("#f-menu").open) $("#f-menu").showModal();
+}
+
 async function ouvrirMatch(fichier) {
   try {
     const r = await fetch("data/matchs/" + encodeURIComponent(fichier), { cache: "no-cache" });
     if (!r.ok) throw new Error(r.status);
     const data = await r.json();
+    mettreDeCote();
     action("Ouvrir " + fichier, () => { S = depuisChamps(data.champs || {}, fichier, data.source); });
     S.exporte = true; S.ouvert = true; sauver(); afficher();   // action() les remet à false
     $("#f-ouvrir").close();
@@ -338,7 +352,6 @@ document.addEventListener("pointerdown", garderEveille, { once: true });
 document.addEventListener("visibilitychange", garderEveille);
 
 /* ---------- Événements */
-let confirmerNouveau = 0;
 document.addEventListener("click", e => {
   // Clic sur le voile d'une feuille : fermer
   if (e.target.matches("dialog.feuille")) { e.target.close(); return; }
@@ -432,7 +445,7 @@ document.addEventListener("click", e => {
       break;
     }
     case "annuler": annuler(); break;
-    case "infos": ouvrirInfos(); break;
+    case "infos": if ($("#f-menu").open) $("#f-menu").close(); ouvrirInfos(); break;
     case "infos-ok": {
       const gardienne = gardienneChoisie();
       if (gardienne === null) { $("#err-gard").hidden = false; break; }
@@ -448,20 +461,30 @@ document.addEventListener("click", e => {
       $("#f-infos").close();
       break;
     }
-    case "nouveau":
-      // Match exporté ou vide : tout de suite. Sinon deux touches, avec avertissement si pas exporté.
-      if (aDesDonnees() && !S.exporte && Date.now() - confirmerNouveau > 4000) {
-        confirmerNouveau = Date.now();
-        b.textContent = "Pas exporté ! Toucher encore pour effacer";
-        break;
-      }
+    case "nouveau": {
+      // Une touche : le match en cours, s'il n'est pas exporté, est mis de côté (récupérable par le menu)
+      const garde = mettreDeCote();
       action("Nouveau match", () => { S = nouveau(); });
-      toast("Nouveau match. « Annuler » récupère l’ancien.");
+      if ($("#f-menu").open) $("#f-menu").close();
+      toast(garde ? "Match précédent mis de côté : Menu ☰ → Récupérer." : "Nouveau match.");
       ouvrirInfos();
       break;
+    }
+    case "recuperer": {
+      // Échange : le match mis de côté revient, le match en cours (s'il n'est pas exporté) prend sa place
+      const p = lireStockage(CLE_PRECEDENT); if (!p) break;
+      if (nonExporte(S)) ecrireStockage(CLE_PRECEDENT, S);
+      else try { localStorage.removeItem(CLE_PRECEDENT); } catch (e) { /* rien */ }
+      action("Récupérer le match précédent", () => { S = p; });
+      S.exporte = p.exporte; sauver(); afficher();   // action() remet exporte à false
+      $("#f-menu").close();
+      toast("Match récupéré : " + resume(S));
+      break;
+    }
+    case "menu": ouvrirMenu(); break;
     case "notes": $("#notes").value = S.notes; $("#f-notes").showModal(); break;
     case "notes-ok": S.notes = $("#notes").value; S.exporte = false; sauver(); $("#f-notes").close(); toast("Notes enregistrées"); break;
-    case "ouvrir": $("#f-infos").close(); listerMatchs(); break;
+    case "ouvrir": if ($("#f-menu").open) $("#f-menu").close(); listerMatchs(); break;
     case "terminer": ouvrirTerminer(); break;
     case "telecharger": telecharger(); break;
     case "copier": copier(); break;

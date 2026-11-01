@@ -60,6 +60,11 @@ button:disabled { opacity: .45; cursor: default; transform: none; }
 .match .noms { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .match .eq, .match .crayon { color: var(--sur-doux); }
 .score { font: 700 2rem/1 var(--titre); font-variant-numeric: tabular-nums; letter-spacing: .03em; }
+.menu-b {
+  flex: none; min-width: 44px; min-height: 44px; border: 1px solid var(--tete-trait); border-radius: 8px;
+  background: transparent; color: var(--sur); font: 700 1.4rem/1 var(--texte);
+}
+.menu-l { display: grid; gap: .5rem; margin-bottom: .8rem; }
 .periodes { display: grid; grid-template-columns: repeat(5, 1fr); gap: .35rem; margin-top: .45rem; }
 .periodes button {
   min-height: 40px; border-radius: 6px; border: 1px solid var(--tete-trait);
