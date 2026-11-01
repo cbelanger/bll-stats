@@ -38,7 +38,8 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
    « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
 3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
-4. Pour le match suivant : bandeau vert « Nouveau match ».
+4. Pour le match suivant : bandeau vert « Nouveau match », ou menu ☰ → « Nouveau match » à tout moment.
+   Un match pas encore exporté est mis de côté sur le téléphone : menu ☰ → « Récupérer » le remet en place.
 
 Les fichiers vont dans `data/matchs/` et ont les mêmes champs que le PDF Sommaire.
 Si le téléphone renomme le fichier « (1) », les deux fichiers du même match coexistent : le plus récent est
