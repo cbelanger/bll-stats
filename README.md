@@ -21,7 +21,7 @@ Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et 
   et annotations en rouge).
 - **Attention** : l'exécution reste verte ; les avertissements s'affichent en jaune en haut de l'exécution.
 - Sur une autre branche que `main`, l'Action vérifie les PDF sans rien publier.
-- Revenir à l'état d'avant GitHub Actions : tag `avant-github-actions`, et remettre
+- Revenir à l'état d'avant GitHub Actions : tag `avant-github-action`, et remettre
   Settings → Pages → Source sur « Deploy from a branch ».
 
 ## Commandes

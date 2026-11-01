@@ -17,7 +17,7 @@ Répondre en français, tutoiement, ton direct.
 4. Le site (`index.html`, `js/app.js`, `css/style.css`) lit `data/matchs.json` et calcule tout côté navigateur.
 
 `data/matchs.json` et `data/version.json` ne sont pas versionnés (`.gitignore`) : lancer `extract.py` localement
-sert seulement à vérifier avec Live Server. Tag `avant-github-actions` = état du site avant ce fonctionnement.
+sert seulement à vérifier avec Live Server. Tag `avant-github-action` = état du site avant ce fonctionnement.
 
 ## Structure
 
