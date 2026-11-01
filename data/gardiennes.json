@@ -1,0 +1,7 @@
+{
+  "_note": "Liste officielle des gardiennes. Utilisée par saisie.html, tools/extract.py et tools/fiches/generer_sommaire.py.",
+  "gardiennes": [
+    { "nom": "Frédérique Bélanger", "numero": 30 },
+    { "nom": "Stella Ouellet", "numero": 28 }
+  ]
+}

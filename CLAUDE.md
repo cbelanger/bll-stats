@@ -22,6 +22,10 @@ La saisie reste dans le navigateur (localStorage, `sw-saisie.js` pour le hors-li
 déposé dans `data/saisies/` et validé par la même fonction `valider()` d'extract.py.
 Doublons : PDF + saisie du même match → le PDF est gardé ; deux saisies → la plus récemment exportée.
 
+Gardiennes : liste officielle dans `data/gardiennes.json` (versionné, édité à la main), lue par saisie.html (boutons),
+generer_sommaire.py (liste du PDF) et extract.py (`normaliser_gardienne` : numéro connu → nom officiel ;
+nom connu sans numéro → numéro ajouté ; inconnue → avertissement). Le site regroupe les gardiennes par numéro.
+
 `data/matchs.json` et `data/version.json` ne sont pas versionnés (`.gitignore`) : lancer `extract.py` localement
 sert seulement à vérifier avec Live Server. Tag `avant-github-action` = état du site avant ce fonctionnement.
 

@@ -125,8 +125,10 @@ tf("notes",tx,M+8,colw-16,h6-36,multi=True)
 # ---------- 2. Buts accordés (une ligne par but)
 rx=RX+8; iw=colw-16; h2=top-M
 section(2,"BUTS ACCORDÉS – DÉTAIL PAR BUT",RX,top,colw,h2)
-txt("Gardienne :",rx,top-35,9.5,True); f.choice(name="gardienne",tooltip="Gardienne – choisir dans la liste ou taper un autre nom",value=" ",
-         x=rx+62,y=top-40,width=iw-62,height=17,options=[" ","Frédérique Bélanger #30","Stella Ouellet #28"],
+import json
+GARDIENNES=[f"{g['nom']} #{g['numero']}" for g in json.loads((RACINE/"data"/"gardiennes.json").read_text(encoding="utf-8"))["gardiennes"]]
+txt("Gardienne :",rx,top-35,9.5,True); f.choice(name="gardienne",tooltip="Gardienne – choisir dans la liste ou taper un autre nom (Nom #numéro)",value=" ",
+         x=rx+62,y=top-40,width=iw-62,height=17,options=[" "]+GARDIENNES,
          fieldFlags="combo edit",borderColor=LINE,fillColor=white,textColor=black,borderWidth=0.8,fontName="Helvetica",fontSize=10)
 # Schéma du but (référence pour les zones)
 txt("Vue de face du but – les numéros s’affichent seuls",rx,top-48,7.6,True,col=NAVY)

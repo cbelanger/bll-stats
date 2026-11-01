@@ -69,6 +69,7 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `index.html`, `css/`, `js/` | Le site (JavaScript sans dépendance, aucune étape de build) |
 | `pdf/` | Sommaires remplis (source des données) |
 | `data/saisies/` | Matchs saisis sur téléphone avec `saisie.html` (source des données) |
+| `data/gardiennes.json` | Liste officielle des gardiennes (nom, numéro) — édité à la main |
 | `saisie.html`, `css/saisie.css`, `js/saisie.js`, `sw-saisie.js` | Page de saisie sur téléphone (hors ligne grâce à `sw-saisie.js`) |
 | `data/matchs.json` | Généré par `tools/extract.py` — non versionné, ne pas éditer à la main |
 | `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |
@@ -85,6 +86,14 @@ Le dépôt est public : tout ce qui est dans `pdf/` (y compris les notes) est pu
 - **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, zones et types de jeu.
 - **Équipe** : fiche V-D-N, moyennes par match, tirs cadrés moyens par période, buts accordés par zone et par type.
 - Bas de page : date de publication du code et date de la dernière exécution de `extract.py`.
+
+## Ajouter une gardienne
+
+1. Ajouter une ligne dans `data/gardiennes.json` : `{ "nom": "Prénom Nom", "numero": 31 }`.
+2. Régénérer la fiche : `python tools/fiches/generer_sommaire.py` (pour la liste du PDF), puis commit + push.
+
+La page de saisie affiche la liste à la prochaine ouverture avec réseau. `extract.py` s'en sert pour corriger
+les coquilles (numéro connu → nom officiel), compléter un numéro oublié et avertir pour une gardienne inconnue.
 
 ## Calculs
 

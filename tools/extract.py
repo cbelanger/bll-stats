@@ -17,6 +17,7 @@ from pypdf import PdfReader
 RACINE = Path(__file__).resolve().parent.parent
 DOSSIER_PDF = RACINE / "pdf"
 DOSSIER_SAISIES = RACINE / "data" / "saisies"
+LISTE_GARDIENNES = RACINE / "data" / "gardiennes.json"
 FORMAT_SAISIE = "bll-saisie-1"
 SORTIE = RACINE / "data" / "matchs.json"
 
@@ -62,6 +63,33 @@ def gardienne_de(v):
     if m:
         return m.group(1).strip(), int(m.group(2))
     return v.strip(), None
+
+
+def gardiennes_officielles():
+    try:
+        return json.loads(LISTE_GARDIENNES.read_text(encoding="utf-8-sig"))["gardiennes"]
+    except (OSError, ValueError, KeyError):
+        return []
+
+
+def normaliser_gardienne(nom, no, avertissements):
+    # Rapproche de data/gardiennes.json pour éviter les doublons (coquille, numéro oublié)
+    if not nom and no is None:
+        return nom, no
+    liste = gardiennes_officielles()
+    par_no = next((g for g in liste if g["numero"] == no), None)
+    if par_no:
+        if slug(nom) != slug(par_no["nom"]):
+            avertissements.append(f"gardienne #{no} : « {nom} » remplacé par « {par_no['nom']} » (data/gardiennes.json)")
+        return par_no["nom"], no
+    par_nom = next((g for g in liste if slug(g["nom"]) == slug(nom)), None)
+    if par_nom and no is None:
+        return par_nom["nom"], par_nom["numero"]
+    if no is None:
+        avertissements.append(f"gardienne « {nom} » sans numéro et absente de data/gardiennes.json")
+    else:
+        avertissements.append(f"gardienne « {nom} #{no} » absente de data/gardiennes.json : l'y ajouter")
+    return nom, no
 
 
 def slug(s):
@@ -168,7 +196,7 @@ def valider(champs, fichier, source):
     if sz_t is not None and sz_r is not None and sz_r > sz_t:
         erreurs.append("plus de sorties de zone réussies que de tentatives")
 
-    g_nom, g_no = gardienne_de(texte(champs, "gardienne"))
+    g_nom, g_no = normaliser_gardienne(*gardienne_de(texte(champs, "gardienne")), avertissements)
     if not g_nom:
         avertissements.append("gardienne non indiquée")
 

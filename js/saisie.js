@@ -19,7 +19,9 @@ const compteP = arr => { const o = vide(); arr.forEach(b => o[b.periode]++); ret
 const d2 = n => String(n).padStart(2, "0");
 const aujourdhui = () => { const d = new Date(); return `${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}`; };
 const maintenant = () => { const d = new Date(); return `${d2(d.getHours())}:${d2(d.getMinutes())}`; };
-const slug = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const texteGardienne = g => `${g.nom} #${g.numero}`;
+const slug = s =>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 /* ---------- État */
 function lireStockage(cle) { try { return JSON.parse(localStorage.getItem(cle) || "null"); } catch (e) { return null; } }
@@ -38,6 +40,17 @@ const aDesDonnees = () => somme(S.tirs.nous) + somme(S.tirs.adv) + S.butsNous.le
 
 let S = lireStockage(CLE) || nouveau();
 let hist = [], courant = null, brouillon = null;
+
+// Liste officielle (data/gardiennes.json) ; dernière copie gardée pour le hors-ligne
+const CLE_GARDIENNES = "bll-saisie-gardiennes";
+let GARDIENNES = lireStockage(CLE_GARDIENNES) || [];
+let choixGardienne = null;   // index dans GARDIENNES, "autre" ou null
+async function chargerGardiennes() {
+  try {
+    const r = await fetch("data/gardiennes.json", { cache: "no-cache" });
+    if (r.ok) { GARDIENNES = (await r.json()).gardiennes || []; ecrireStockage(CLE_GARDIENNES, GARDIENNES); }
+  } catch (e) { /* hors ligne : on garde la dernière copie */ }
+}
 
 function sauver() { ecrireStockage(CLE, S); }
 function vibrer() { try { navigator.vibrate && navigator.vibrate(12); } catch (e) { /* rien */ } }
@@ -130,9 +143,31 @@ function ouvrirInfos() {
   document.querySelectorAll("[data-eq]").forEach(x => x.setAttribute("aria-pressed", x.dataset.eq === S.equipe));
   $("#fi-adv").value = S.adversaire; $("#fi-date").value = S.date; $("#fi-no").value = S.no_match;
   $("#fi-debut").value = S.heure_debut; $("#fi-fin").value = S.heure_fin;
-  $("#fi-gard").value = S.gardienne; $("#fi-resp").value = S.responsable;
+  $("#fi-resp").value = S.responsable;
+  // Gardienne : boutons de la liste officielle, sinon « Autre » (nom + numéro)
+  const i = GARDIENNES.findIndex(g => texteGardienne(g) === S.gardienne);
+  const m = S.gardienne.match(/^(.*?)\s*#\s*(\d+)\s*$/);
+  choixGardienne = i >= 0 ? i : S.gardienne ? "autre" : null;
+  $("#fi-gnom").value = i < 0 && S.gardienne ? (m ? m[1] : S.gardienne) : "";
+  $("#fi-gno").value = i < 0 && m ? m[2] : "";
+  $("#fi-gards").innerHTML = GARDIENNES.map((g, k) => `<button type="button" class="puce" data-gd="${k}">${esc(texteGardienne(g))}</button>`).join("")
+    + `<button type="button" class="puce" data-gd="autre">Autre</button>`;
+  majGardienne();
   confirmerNouveau = 0; $("#b-nouveau").textContent = "Nouveau match";
   $("#f-infos").showModal();
+}
+
+function majGardienne() {
+  document.querySelectorAll("[data-gd]").forEach(b => b.setAttribute("aria-pressed", b.dataset.gd === String(choixGardienne)));
+  $("#fi-autre").hidden = choixGardienne !== "autre";
+  $("#err-gard").hidden = true;
+}
+// Texte « Nom #numéro » (format du PDF), ou null si « Autre » est incomplet
+function gardienneChoisie() {
+  if (choixGardienne === null) return "";
+  if (choixGardienne !== "autre") return texteGardienne(GARDIENNES[choixGardienne]);
+  const nom = $("#fi-gnom").value.trim(), no = $("#fi-gno").value.replace(/\D/g, "");
+  return nom && no ? `${nom} #${Number(no)}` : null;
 }
 
 /* ---------- Export (mêmes champs que le PDF Sommaire) */
@@ -240,6 +275,14 @@ document.addEventListener("click", e => {
   if (bt) { brouillon.type = brouillon.type === bt.dataset.bt ? "" : bt.dataset.bt; majFeuilleBut(); return; }
   if (bz) { brouillon.zone = brouillon.zone === bz.dataset.bz ? "" : bz.dataset.bz; majFeuilleBut(); return; }
 
+  const gd = e.target.closest("[data-gd]");
+  if (gd) {
+    const v = gd.dataset.gd === "autre" ? "autre" : Number(gd.dataset.gd);
+    choixGardienne = choixGardienne === v ? null : v;   // toucher à nouveau désélectionne
+    majGardienne();
+    return;
+  }
+
   const eq = e.target.closest("[data-eq]");
   if (eq) { document.querySelectorAll("[data-eq]").forEach(b => b.setAttribute("aria-pressed", b === eq)); return; }
 
@@ -312,12 +355,14 @@ document.addEventListener("click", e => {
     case "annuler": annuler(); break;
     case "infos": ouvrirInfos(); break;
     case "infos-ok": {
+      const gardienne = gardienneChoisie();
+      if (gardienne === null) { $("#err-gard").hidden = false; break; }
       const eqSel = document.querySelector('[data-eq][aria-pressed="true"]');
       const v = {
         equipe: eqSel ? eqSel.dataset.eq : S.equipe, adversaire: $("#fi-adv").value.trim(),
         date: $("#fi-date").value, no_match: $("#fi-no").value.trim(),
         heure_debut: $("#fi-debut").value, heure_fin: $("#fi-fin").value,
-        gardienne: $("#fi-gard").value.trim(), responsable: $("#fi-resp").value.trim()
+        gardienne, responsable: $("#fi-resp").value.trim()
       };
       action("Infos du match", () => Object.assign(S, v));
       ecrireStockage(CLE_PREFS, { equipe: v.equipe, gardienne: v.gardienne, responsable: v.responsable });
@@ -358,5 +403,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw-saisie.js
 
 construireFeuilleBut();
 afficher();
-if (!S.adversaire && !aDesDonnees()) ouvrirInfos();
-else if (S.exporte && S.date !== aujourdhui()) toast("Match déjà exporté. Pour le suivant : touche le nom du match, puis « Nouveau match ».");
+// Liste des gardiennes d'abord, pour que les infos du match s'ouvrent avec les bons boutons
+if (!S.adversaire && !aDesDonnees()) chargerGardiennes().then(ouvrirInfos);
+else chargerGardiennes();
+if (S.adversaire && S.exporte && S.date !== aujourdhui()) toast("Match déjà exporté. Pour le suivant : touche le nom du match, puis « Nouveau match ».");

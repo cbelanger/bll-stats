@@ -179,12 +179,19 @@
         </div>
       </div>
       <div class="champ">
-        <label class="lab" for="fi-gard">Gardienne</label>
-        <input type="text" id="fi-gard" list="gardiennes" autocomplete="off" placeholder="Nom #numéro">
-        <datalist id="gardiennes">
-          <option value="Frédérique Bélanger #30"></option>
-          <option value="Stella Ouellet #28"></option>
-        </datalist>
+        <span class="lab">Gardienne</span>
+        <div class="puces" id="fi-gards"></div>
+        <div class="rang" id="fi-autre" hidden>
+          <div class="champ">
+            <label class="lab" for="fi-gnom">Nom</label>
+            <input type="text" id="fi-gnom" autocomplete="off" autocapitalize="words">
+          </div>
+          <div class="champ">
+            <label class="lab" for="fi-gno">Numéro</label>
+            <input type="text" id="fi-gno" inputmode="numeric" autocomplete="off">
+          </div>
+        </div>
+        <span class="err" id="err-gard" hidden>Indique le nom et le numéro de la gardienne.</span>
       </div>
       <div class="champ">
         <label class="lab" for="fi-resp">Responsable des stats</label>
