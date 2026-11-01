@@ -117,6 +117,13 @@ main {
 .but .fl { text-align: right; }
 .but .ty { color: var(--rouge); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .but .ty span { color: var(--encre); font-weight: 500; }
+.match-l {
+  width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .6rem;
+  min-height: 48px; padding: 0 .7rem; border: 1px solid var(--trait); border-radius: 8px;
+  background: var(--glace); text-align: left; font: 600 1rem/1.2 var(--titre); font-variant-numeric: tabular-nums;
+}
+.match-l span:first-child { color: var(--doux); }
+.match-l b { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .manque { font-style: normal; color: var(--rouge); background: color-mix(in srgb, var(--rouge) 14%, transparent); border-radius: 3px; padding: .1rem .3rem; }
 .vide { color: var(--doux); font-size: .9rem; margin: .2rem 0; }
 

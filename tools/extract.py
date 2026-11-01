@@ -1,24 +1,34 @@
 #!/usr/bin/env python3
 """
-Lit les sommaires PDF remplis (dossier pdf/) et les saisies faites sur téléphone avec saisie.html
-(dossier data/saisies/), et produit data/matchs.json pour le site.
-Un même match présent en PDF et en saisie : le PDF est gardé.
+Produit data/matchs.json pour le site à partir des matchs de data/matchs/ (un fichier JSON par match).
+
+Un match = un fichier data/matchs/AAAA-MM-JJ_EQUIPE_adversaire[_no].json, au format « bll-match-1 » :
+    {"format": "bll-match-1", "exporte_le": "…", "source": "pdf" | "saisie", "champs": {…}}
+où « champs » reprend les noms de champs du PDF Sommaire. Ces fichiers viennent :
+  - de saisie.html (téléphone), déposés directement dans data/matchs/ ;
+  - des PDF déposés dans pdf/ : avec --importer, chaque PDF valide est converti en JSON dans data/matchs/
+    (il remplace le JSON du même match s'il existe) puis déplacé dans pdf/archives/.
+    Sans --importer (vérification locale), les PDF de pdf/ sont lus sans rien déplacer.
+Un PDF en erreur reste dans pdf/.
 
 Utilisation (depuis la racine du dépôt) :
-    python tools/extract.py
+    python tools/extract.py              # vérifier localement
+    python tools/extract.py --importer   # GitHub Actions : convertir et archiver les PDF
 
 Prérequis : pip install pypdf
 """
-import json, os, re, sys
-from datetime import date, datetime
+import json, os, re, sys, unicodedata
+from datetime import date, datetime, timezone
 from pathlib import Path
 from pypdf import PdfReader
 
 RACINE = Path(__file__).resolve().parent.parent
 DOSSIER_PDF = RACINE / "pdf"
-DOSSIER_SAISIES = RACINE / "data" / "saisies"
+DOSSIER_ARCHIVES = DOSSIER_PDF / "archives"
+DOSSIER_MATCHS = RACINE / "data" / "matchs"
 LISTE_GARDIENNES = RACINE / "data" / "gardiennes.json"
-FORMAT_SAISIE = "bll-saisie-1"
+FORMAT = "bll-match-1"
+FORMATS_LUS = {FORMAT, "bll-saisie-1"}   # bll-saisie-1 : premiers exports de saisie.html
 SORTIE = RACINE / "data" / "matchs.json"
 
 SUR_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
@@ -93,33 +103,40 @@ def normaliser_gardienne(nom, no, avertissements):
 
 
 def slug(s):
-    s = s.lower()
-    for a, b in (("àâä", "a"), ("éèêë", "e"), ("îï", "i"), ("ôö", "o"), ("ùûü", "u"), ("ç", "c")):
-        for ch in a:
-            s = s.replace(ch, b)
-    return re.sub(r"[^a-z0-9]+", "-", s).strip("-") or "adversaire"
+    # Même règle que slug() dans js/saisie.js : les noms de fichiers doivent correspondre
+    s = unicodedata.normalize("NFD", s.lower())
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+
+
+def nom_fichier(m):
+    # Même règle que nomFichier() dans js/saisie.js
+    no = f"_{slug(m['no_match'])}" if m["no_match"] and slug(m["no_match"]) else ""
+    return f"{m['date']}_{m['equipe']}_{slug(m['adversaire']) or 'adversaire'}{no}.json"
 
 
 def lire_pdf(pdf):
-    champs = {k: v.get("/V") for k, v in (PdfReader(pdf).get_fields() or {}).items()}
-    return valider(champs, pdf, "pdf")
+    brut = {k: v.get("/V") for k, v in (PdfReader(pdf).get_fields() or {}).items()}
+    # Valeurs en texte, sans les champs vides ni les zones calculées du filet (zone_HG…)
+    champs = {k: texte(brut, k) for k in brut if texte(brut, k) and not k.startswith("zone_")}
+    m, erreurs, avertissements = valider(champs)
+    return m, erreurs, avertissements, champs
 
 
-def lire_saisie(fichier):
-    # Fichier exporté par saisie.html : mêmes noms de champs que le PDF Sommaire
+def lire_json(fichier):
     try:
         data = json.loads(fichier.read_text(encoding="utf-8-sig"))  # -sig : tolère un BOM
     except (ValueError, UnicodeDecodeError) as e:
         return None, [f"fichier JSON illisible : {e}"], []
-    if not isinstance(data, dict) or data.get("format") != FORMAT_SAISIE or not isinstance(data.get("champs"), dict):
-        return None, [f"format inconnu (attendu : « {FORMAT_SAISIE} »)"], []
-    m, erreurs, avertissements = valider(data["champs"], fichier, "saisie")
+    if not isinstance(data, dict) or data.get("format") not in FORMATS_LUS or not isinstance(data.get("champs"), dict):
+        return None, [f"format inconnu (attendu : « {FORMAT} »)"], []
+    m, erreurs, avertissements = valider(data["champs"])
     if m:
-        m["exporte_le"] = data.get("exporte_le")
+        m.update(fichier=fichier.name, source=data.get("source", "saisie"), exporte_le=data.get("exporte_le"))
     return m, erreurs, avertissements
 
 
-def valider(champs, fichier, source):
+def valider(champs):
     erreurs, avertissements = [], []
 
     # Équipe
@@ -204,9 +221,9 @@ def valider(champs, fichier, source):
         return None, erreurs, avertissements
 
     return {
-        "id": f"{d.isoformat()}_{equipe}_{slug(adversaire)}",
-        "fichier": fichier.name,
-        "source": source,
+        "id": f"{d.isoformat()}_{equipe}_{slug(adversaire) or 'adversaire'}",
+        "fichier": None,
+        "source": None,
         "saison": saison_de(d),
         "equipe": equipe,
         "no_match": no_match or None,
@@ -232,56 +249,92 @@ def meme_match(a, b):
     return not (a["no_match"] and b["no_match"] and a["no_match"] != b["no_match"])
 
 
-def main():
-    # PDF d'abord : en cas de doublon avec une saisie, le PDF est gardé
-    fichiers = ([(f, lire_pdf) for f in sorted(DOSSIER_PDF.glob("*.pdf"))]
-                + [(f, lire_saisie) for f in sorted(DOSSIER_SAISIES.glob("*.json"))])
-    if not fichiers:
-        print(f"Aucun PDF dans {DOSSIER_PDF} ni saisie dans {DOSSIER_SAISIES}")
-        return 1
-    matchs, ids, echecs = [], set(), 0
-    for f, lire in fichiers:
-        m, err, avert = lire(f)
-        if not err and m["source"] == "saisie":
-            autre = next((x for x in matchs if meme_match(x, m)), None)
-            if autre and autre["source"] == "pdf":
-                print(f"– {f.name} — ignoré")
-                avert = avert + [f"même match que {autre['fichier']} : le PDF est gardé, la saisie est ignorée"]
-                m = None
-            elif autre and (m["exporte_le"] or "") > (autre["exporte_le"] or ""):
-                # Deux saisies du même match (ex. exportée deux fois) : la plus récente remplace l'autre
-                avert = avert + [f"remplace {autre['fichier']} (exportée plus tôt) : supprimer ce fichier"]
-                matchs.remove(autre)
-                ids.discard(autre["id"])
-            elif autre:
-                print(f"– {f.name} — ignoré")
-                avert = avert + [f"même match que {autre['fichier']}, exportée plus tard : supprimer ce fichier"]
-                m = None
-        if err:
-            echecs += 1
-            print(f"✗ {f.name} — ignoré")
-            for e in err:
-                print(f"    erreur : {e}")
-                if SUR_GITHUB:  # annotation rouge en haut de la page de l'exécution
-                    print(f"::error title={f.name}::{e}")
-        elif m:
-            if m["id"] in ids:
-                m["id"] += f"_{m['no_match'] or len(ids)}"
-            ids.add(m["id"])
-            matchs.append(m)
-            print(f"✓ {f.name} → {m['id']}")
-        for a in avert:
+class Rapport:
+    def __init__(self):
+        self.echecs = 0
+
+    def fichier(self, nom, symbole, suite, erreurs=(), avertissements=()):
+        print(f"{symbole} {nom}{suite}")
+        if erreurs:
+            self.echecs += 1
+        for e in erreurs:
+            print(f"    erreur : {e}")
+            if SUR_GITHUB:  # annotation rouge en haut de la page de l'exécution
+                print(f"::error title={nom}::{e}")
+        for a in avertissements:
             print(f"    attention : {a}")
             if SUR_GITHUB:  # annotation jaune en haut de la page de l'exécution
-                print(f"::warning title={f.name}::{a}")
+                print(f"::warning title={nom}::{a}")
+
+
+def main(importer):
+    rapport, matchs = Rapport(), []
+
+    # 1. Matchs enregistrés (data/matchs/*.json)
+    for f in sorted(DOSSIER_MATCHS.glob("*.json")):
+        m, err, avert = lire_json(f)
+        if err:
+            rapport.fichier(f.name, "✗", " — ignoré", err, avert)
+            continue
+        autre = next((x for x in matchs if meme_match(x, m)), None)
+        if autre:
+            # Deux fichiers pour le même match (ex. renommé « (1) » au téléchargement) : le plus récent gagne
+            garde, ecarte = (m, autre) if (m["exporte_le"] or "") > (autre["exporte_le"] or "") else (autre, m)
+            avert = avert + [f"même match que {autre['fichier']} : {garde['fichier']} est gardé (le plus récent), "
+                             f"supprimer {ecarte['fichier']}"]
+            matchs[matchs.index(autre)] = garde
+        else:
+            matchs.append(m)
+        rapport.fichier(f.name, "✓", "", (), avert)
+
+    # 2. PDF déposés dans pdf/ : convertis (et archivés avec --importer), ils remplacent le même match
+    for pdf in sorted(DOSSIER_PDF.glob("*.pdf")):
+        m, err, avert, champs = lire_pdf(pdf)
+        if err:
+            rapport.fichier(pdf.name, "✗", " — ignoré, reste dans pdf/", err, avert)
+            continue
+        i = next((k for k, x in enumerate(matchs) if meme_match(x, m)), None)
+        cible = matchs[i]["fichier"] if i is not None else nom_fichier(m)
+        if i is None and (DOSSIER_MATCHS / cible).exists():
+            cible = cible[:-5] + "_2.json"   # nom pris par un autre match (fichier en erreur)
+        if i is not None:
+            avert = avert + [f"remplace {cible}"]
+        m.update(fichier=cible, source="pdf", exporte_le=datetime.now(timezone.utc).isoformat(timespec="seconds"))
+        if importer:
+            DOSSIER_MATCHS.mkdir(parents=True, exist_ok=True)
+            DOSSIER_ARCHIVES.mkdir(parents=True, exist_ok=True)
+            (DOSSIER_MATCHS / cible).write_text(json.dumps(
+                {"format": FORMAT, "exporte_le": m["exporte_le"], "source": "pdf", "pdf": pdf.name, "champs": champs},
+                ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            pdf.replace(DOSSIER_ARCHIVES / pdf.name)
+            suite = f" → data/matchs/{cible} (PDF archivé)"
+        else:
+            suite = f" → {cible} (sera importé au push)"
+        if i is not None:
+            matchs[i] = m
+        else:
+            matchs.append(m)
+        rapport.fichier(pdf.name, "✓", suite, (), avert)
+
+    if not matchs and not rapport.echecs:
+        print(f"Aucun match dans {DOSSIER_MATCHS.relative_to(RACINE)} ni PDF dans {DOSSIER_PDF.relative_to(RACINE)}")
+        return 1
+
+    # Identifiants uniques pour les liens du site (#/match/<id>)
+    ids = set()
+    for m in sorted(matchs, key=lambda m: (m["date"], m["heure_debut"] or "", m["fichier"])):
+        if m["id"] in ids:
+            m["id"] += f"_{slug(m['no_match'] or '') or len(ids)}"
+        ids.add(m["id"])
+
     matchs.sort(key=lambda m: (m["date"], m["heure_debut"] or ""), reverse=True)
     SORTIE.parent.mkdir(exist_ok=True)
-    SORTIE.write_text(json.dumps({"genere_le": datetime.now().isoformat(timespec="minutes"),"matchs": matchs},
+    SORTIE.write_text(json.dumps({"genere_le": datetime.now().isoformat(timespec="minutes"), "matchs": matchs},
                                  ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n{len(matchs)} match(s) écrit(s) dans {SORTIE.relative_to(RACINE)}"
-          + (f" — {echecs} fichier(s) ignoré(s), à corriger" if echecs else ""))
-    return 1 if echecs else 0
+          + (f" — {rapport.echecs} fichier(s) ignoré(s), à corriger" if rapport.echecs else ""))
+    return 1 if rapport.echecs else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(importer="--importer" in sys.argv[1:]))

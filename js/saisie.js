@@ -2,20 +2,22 @@
 
 /* Saisie des stats sur téléphone pendant le match.
    Tout reste dans le navigateur (localStorage) ; « Terminer » exporte un fichier JSON
-   avec les mêmes noms de champs que le PDF Sommaire, lu par tools/extract.py (data/saisies/). */
+   avec les mêmes noms de champs que le PDF Sommaire, à déposer dans data/matchs/ (lu par tools/extract.py).
+   « Ouvrir un match du site » recharge n'importe quel fichier de data/matchs/ pour le corriger. */
 
 const PER = [["p1", "P1"], ["p2", "P2"], ["p3", "P3"], ["p4", "P4"], ["prol", "Prol."]];
 const TYPES = [["P", "Pick / écran"], ["T", "Triangle"], ["L", "Tir de loin"], ["R", "Rebond"],
                ["E", "Échappée"], ["D", "Déviation"], ["FC", "Fille de coin"], ["A", "Autre"]];
 const ZONES = ["HG", "HC", "HD", "CG", "C", "CD", "BG", "BC", "BD"];
-const FORMAT = "bll-saisie-1";
+const FORMAT = "bll-match-1";
 const CLE = "bll-saisie-match", CLE_PREFS = "bll-saisie-prefs";
 
 const $ = s => document.querySelector(s);
-const nomP = k => PER.find(p => p[0] === k)[1];
+const nomP = k => (PER.find(p => p[0] === k) || [null, "?"])[1];   // « ? » : période inconnue
 const somme = o => Object.values(o).reduce((a, b) => a + b, 0);
 const vide = () => ({ p1: 0, p2: 0, p3: 0, p4: 0, prol: 0 });
-const compteP = arr => { const o = vide(); arr.forEach(b => o[b.periode]++); return o; };
+// Période inconnue (buts BLL d'un match venu d'un PDF) : comptée dans le total seulement
+const compteP = arr => { const o = vide(); arr.forEach(b => { if (b.periode in o) o[b.periode]++; }); return o; };
 const d2 = n => String(n).padStart(2, "0");
 const aujourdhui = () => { const d = new Date(); return `${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}`; };
 const maintenant = () => { const d = new Date(); return `${d2(d.getHours())}:${d2(d.getMinutes())}`; };
@@ -33,9 +35,12 @@ function nouveau() {
     equipe: p.equipe || "U19AA", adversaire: "", date: aujourdhui(), no_match: "",
     heure_debut: "", heure_fin: "", responsable: p.responsable || "", gardienne: p.gardienne || "",
     periode: "p1", tirs: { nous: vide(), adv: vide() }, butsNous: [], butsAdv: [], sz: { r: 0, x: 0 },
-    notes: "", exporte: false
+    notes: "", exporte: false,
+    fichier: null, origine: "saisie", ouvert: false,   // ouvert = rechargé depuis le site, pas encore modifié
+    tirsInconnus: { nous: false, adv: false }          // tirs jamais saisis (match rouvert venu d'un PDF incomplet)
   };
 }
+const tirsInconnus = c => !!(S.tirsInconnus && S.tirsInconnus[c]);
 const aDesDonnees = () => somme(S.tirs.nous) + somme(S.tirs.adv) + S.butsNous.length + S.butsAdv.length + S.sz.r + S.sz.x > 0;
 
 let S = lireStockage(CLE) || nouveau();
@@ -65,7 +70,7 @@ function action(libelle, fn, compte = false) {
   if (hist.length > 100) hist.shift();
   if (compte && !S.heure_debut) S.heure_debut = maintenant();
   fn();
-  S.exporte = false;
+  S.exporte = false; S.ouvert = false;
   sauver(); afficher(); vibrer();
 }
 function annuler() {
@@ -85,8 +90,8 @@ function afficher() {
   document.querySelectorAll("#periodes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === S.periode));
   $("#per-cour").textContent = nomP(S.periode);
   for (const c of ["nous", "adv"]) {
-    $("#tot-" + c).textContent = somme(S.tirs[c]);
-    $("#det-" + c).innerHTML = detail(S.tirs[c]);
+    $("#tot-" + c).textContent = tirsInconnus(c) ? "–" : somme(S.tirs[c]);
+    $("#det-" + c).innerHTML = tirsInconnus(c) ? "non saisis" : detail(S.tirs[c]);
   }
   $("#bn").textContent = S.butsNous.length; $("#det-bn").innerHTML = detail(compteP(S.butsNous));
   $("#ba").textContent = S.butsAdv.length; $("#det-ba").innerHTML = detail(compteP(S.butsAdv));
@@ -108,6 +113,7 @@ function afficher() {
   $("#note-liste").hidden = !incomplets;
 
   $("#bandeau").hidden = !S.exporte;
+  $("#bandeau-txt").textContent = S.ouvert ? `Match du site ouvert (${S.fichier}), sans modification.` : "Match exporté. Pour le suivant :";
 
   const h = hist[hist.length - 1];
   $("#annuler").disabled = !h;
@@ -189,26 +195,93 @@ function champs() {
     notes: S.notes
   };
   for (const cote of ["nous", "adv"]) {
-    // Prolongation vide = pas de prolongation (extract.py la laisse à null)
+    // Prolongation vide = pas de prolongation (extract.py la laisse à null) ; tirs jamais saisis = vides
+    if (tirsInconnus(cote)) { c[`tirs_${cote}`] = ""; for (const [k] of PER) c[`tirs_${cote}_${k}`] = ""; continue; }
     for (const [k] of PER) c[`tirs_${cote}_${k}`] = k === "prol" && !prolJouee() ? "" : S.tirs[cote][k];
   }
+  // Un but sans aucun détail (période inconnue, rien d'autre) ne donne pas de ligne : il compte dans buts_adv
   S.butsAdv.forEach((b, i) => {
+    if (!b.periode && !b.temps && !b.type && !b.zone) return;
     const n = i + 1;
-    c[`but_${n}_periode`] = b.periode === "prol" ? "Prol." : b.periode.slice(1);
+    c[`but_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
     c[`but_${n}_temps`] = b.temps; c[`but_${n}_type`] = b.type; c[`but_${n}_zone`] = b.zone;
   });
+  // Buts BLL par période : absent du PDF, gardé pour pouvoir rouvrir le match (ignoré par extract.py)
+  const bp = compteP(S.butsNous);
+  for (const [k] of PER) if (bp[k]) c[`buts_nous_${k}`] = bp[k];
   return c;
 }
-const nomFichier = () => `${S.date || "sans-date"}_${S.equipe}_${slug(S.adversaire) || "adversaire"}.json`;
-const contenuExport = () => JSON.stringify({ format: FORMAT, exporte_le: new Date().toISOString(), champs: champs() }, null, 2);
+// Même règle que nom_fichier() dans tools/extract.py ; un match rouvert garde son nom pour remplacer le fichier
+const nomFichier = () => S.fichier ||
+  `${S.date || "sans-date"}_${S.equipe}_${slug(S.adversaire) || "adversaire"}${slug(S.no_match) ? "_" + slug(S.no_match) : ""}.json`;
+const contenuExport = () => JSON.stringify(
+  { format: FORMAT, exporte_le: new Date().toISOString(), source: S.origine || "saisie", champs: champs() }, null, 2);
+
+/* ---------- Ouvrir un match du site (data/matchs/<fichier>) */
+function depuisChamps(c, fichier, origine) {
+  const t = k => { const v = c[k] == null ? "" : String(c[k]).trim(); return v === "/Off" || v === "Off" ? "" : v; };
+  const n = k => { const v = parseFloat(t(k).replace(",", ".")); return isNaN(v) ? 0 : Math.trunc(v); };
+  const s = { ...nouveau(), fichier, origine: origine || "saisie", exporte: true, ouvert: true };
+  s.equipe = t("equipe_U16AA") ? "U16AA" : "U19AA";
+  for (const k of ["adversaire", "date", "no_match", "heure_debut", "heure_fin", "responsable", "gardienne", "notes"]) s[k] = t(k);
+  for (const cote of ["nous", "adv"]) {
+    for (const [k] of PER) s.tirs[cote][k] = n(`tirs_${cote}_${k}`);
+    if (!somme(s.tirs[cote])) s.tirs[cote].p1 = n(`tirs_${cote}`);   // PDF sans détail par période
+    s.tirsInconnus[cote] = !PER.some(([k]) => t(`tirs_${cote}_${k}`)) && !t(`tirs_${cote}`);
+  }
+  // Buts BLL : par période si connue, sinon période inconnue (le total reste exact)
+  for (const [k] of PER) for (let i = 0; i < n(`buts_nous_${k}`); i++) s.butsNous.push({ periode: k });
+  while (s.butsNous.length < n("buts_nous")) s.butsNous.push({ periode: null });
+  const per = { "1": "p1", "2": "p2", "3": "p3", "4": "p4", "Prol.": "prol" };
+  const max = Math.max(15, ...Object.keys(c).map(k => (k.match(/^but_(\d+)_periode$/) || [])[1] || 0).map(Number));
+  for (let i = 1; i <= max; i++) {
+    const b = { periode: per[t(`but_${i}_periode`)] || null, temps: t(`but_${i}_temps`),
+                type: t(`but_${i}_type`).split(/\s+[–-]\s+/)[0], zone: t(`but_${i}_zone`) };
+    if (t(`but_${i}_periode`) || b.temps || b.type || b.zone) s.butsAdv.push(b);
+  }
+  // Buts accordés sans ligne de détail : lignes vides à compléter, pour garder le bon score
+  while (s.butsAdv.length < n("buts_adv")) s.butsAdv.push({ periode: null, temps: "", type: "", zone: "" });
+  const tot = n("sz_tentatives"); s.sz = { r: n("sz_reussies"), x: Math.max(0, tot - n("sz_reussies")) };
+  s.periode = [...PER].reverse().map(([k]) => k).find(k => s.tirs.nous[k] || s.tirs.adv[k]) || "p1";
+  return s;
+}
+async function listerMatchs() {
+  $("#fo-liste").innerHTML = `<li class="vide">Chargement…</li>`;
+  $("#fo-avert").hidden = !(aDesDonnees() && !S.exporte);
+  if (!$("#f-ouvrir").open) $("#f-ouvrir").showModal();
+  try {
+    const r = await fetch("data/matchs.json", { cache: "no-cache" });
+    if (!r.ok) throw new Error(r.status);
+    const ms = (await r.json()).matchs.filter(m => m.fichier && m.fichier.endsWith(".json"));
+    $("#fo-liste").innerHTML = ms.length ? ms.map(m => `
+      <li><button type="button" class="match-l" data-fichier="${esc(m.fichier)}">
+        <span>${esc(m.date)} · ${esc(m.equipe)}</span><b>${esc(m.adversaire)}</b><span class="n">${m.buts.nous}–${m.buts.adv}</span>
+      </button></li>`).join("") : `<li class="vide">Aucun match publié.</li>`;
+  } catch (e) {
+    $("#fo-liste").innerHTML = `<li class="vide">Liste indisponible : il faut du réseau pour ouvrir un match du site.</li>`;
+  }
+}
+async function ouvrirMatch(fichier) {
+  try {
+    const r = await fetch("data/matchs/" + encodeURIComponent(fichier), { cache: "no-cache" });
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    action("Ouvrir " + fichier, () => { S = depuisChamps(data.champs || {}, fichier, data.source); });
+    S.exporte = true; S.ouvert = true; sauver(); afficher();   // action() les remet à false
+    $("#f-ouvrir").close();
+    toast("Match ouvert. Corrige-le, puis « Terminer » pour le réexporter sous le même nom.");
+  } catch (e) {
+    toast("Impossible d’ouvrir ce match (réseau ?).");
+  }
+}
 
 // Mêmes règles qu'extract.py : « er » bloque l'export, « av » est un avertissement
 function verifications() {
   const v = [];
   if (!S.adversaire.trim()) v.push(["er", "Adversaire manquant (touche le nom du match en haut)."]);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(S.date)) v.push(["er", "Date manquante."]);
-  if (S.butsAdv.length > somme(S.tirs.adv)) v.push(["er", "Plus de buts accordés que de tirs adverses."]);
-  if (S.butsNous.length > somme(S.tirs.nous)) v.push(["er", "Plus de buts BLL que de tirs BLL."]);
+  if (!tirsInconnus("adv") && S.butsAdv.length > somme(S.tirs.adv)) v.push(["er", "Plus de buts accordés que de tirs adverses."]);
+  if (!tirsInconnus("nous") && S.butsNous.length > somme(S.tirs.nous)) v.push(["er", "Plus de buts BLL que de tirs BLL."]);
   if (!S.no_match.trim()) v.push(["av", "Numéro de match manquant."]);
   if (!S.gardienne.trim()) v.push(["av", "Gardienne non indiquée."]);
   const inc = S.butsAdv.filter(b => !b.type || !b.zone).length;
@@ -278,6 +351,9 @@ document.addEventListener("click", e => {
   if (bt) { brouillon.type = brouillon.type === bt.dataset.bt ? "" : bt.dataset.bt; majFeuilleBut(); return; }
   if (bz) { brouillon.zone = brouillon.zone === bz.dataset.bz ? "" : bz.dataset.bz; majFeuilleBut(); return; }
 
+  const fo = e.target.closest("[data-fichier]");
+  if (fo) { ouvrirMatch(fo.dataset.fichier); return; }
+
   const gd = e.target.closest("[data-gd]");
   if (gd) {
     const v = gd.dataset.gd === "autre" ? "autre" : Number(gd.dataset.gd);
@@ -294,7 +370,7 @@ document.addEventListener("click", e => {
   switch (b.dataset.act) {
     case "tir": {
       const c = b.dataset.c;
-      action(`Tir ${c === "nous" ? "BLL" : "adv."} ${lp}`, () => { S.tirs[c][P]++; }, true);
+      action(`Tir ${c === "nous" ? "BLL" : "adv."} ${lp}`, () => { S.tirs[c][P]++; if (S.tirsInconnus) S.tirsInconnus[c] = false; }, true);
       break;
     }
     case "tir-moins": {
@@ -325,7 +401,7 @@ document.addEventListener("click", e => {
       const i = courant, nouv = { ...brouillon, temps: t };
       action(`Détail du but ${i + 1}`, () => {
         const ancien = S.butsAdv[i];
-        if (ancien.periode !== nouv.periode) {
+        if (ancien.periode !== nouv.periode && ancien.periode && nouv.periode) {
           S.tirs.adv[ancien.periode] = Math.max(0, S.tirs.adv[ancien.periode] - 1);
           S.tirs.adv[nouv.periode]++;
         }
@@ -338,7 +414,7 @@ document.addEventListener("click", e => {
       const i = courant;
       action(`Suppression du but ${i + 1}`, () => {
         const x = S.butsAdv.splice(i, 1)[0];
-        S.tirs.adv[x.periode] = Math.max(0, S.tirs.adv[x.periode] - 1);
+        if (x.periode) S.tirs.adv[x.periode] = Math.max(0, S.tirs.adv[x.periode] - 1);
       });
       $("#f-but").close();
       toast("But supprimé (−1 tir adverse). « Annuler » le remet.");
@@ -385,6 +461,7 @@ document.addEventListener("click", e => {
       break;
     case "notes": $("#notes").value = S.notes; $("#f-notes").showModal(); break;
     case "notes-ok": S.notes = $("#notes").value; S.exporte = false; sauver(); $("#f-notes").close(); toast("Notes enregistrées"); break;
+    case "ouvrir": $("#f-infos").close(); listerMatchs(); break;
     case "terminer": ouvrirTerminer(); break;
     case "telecharger": telecharger(); break;
     case "copier": copier(); break;

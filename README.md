@@ -1,18 +1,30 @@
 # BLL Élite – Statistiques de match
 
-Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et U19AA
-à partir des sommaires PDF remplis après chaque match.
+Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et U19AA.
 
-## Ajouter un match
+**Un match = un fichier** dans `data/matchs/`, nommé `AAAA-MM-JJ_EQUIPE_adversaire_no.json`
+(ex. `2026-10-31_U19AA_ontario-rush_2016.json`). Le nom du fichier est affiché au bas de la fiche du match sur le site.
+
+| Je veux… | Comment |
+|---|---|
+| Ajouter un match saisi sur téléphone | Page de saisie → « Terminer » → déposer le fichier dans `data/matchs/` |
+| Ajouter un match en PDF | Déposer le PDF dans `pdf/` : GitHub Actions le convertit et le range dans `pdf/archives/` |
+| Corriger un match | Page de saisie → nom du match → « Ouvrir un match du site… » → corriger → « Terminer » → déposer (même nom, remplace l'ancien) |
+| Retraiter un PDF | Le recopier de `pdf/archives/` vers `pdf/` : il remplace le fichier du même match |
+| Supprimer un match | Supprimer son fichier dans `data/matchs/` (sur GitHub : ouvrir le fichier → ··· → Delete file) |
+
+Après chaque import de PDF, GitHub Actions ajoute un commit « Import automatique des PDF » :
+faire **Pull origin** avant ton prochain push.
+
+## Ajouter un match en PDF
 
 1. Pendant le match : noter les données sur la feuille papier « Saisie ».
 2. Après le match : remplir `fiches/BLL - Statistiques - Sommaire - Match.pdf` dans **Acrobat Reader**
    (les totaux, le filet et la validation de l'heure ne fonctionnent que dans Acrobat)
-   et l'enregistrer dans `pdf/`. Le nom du fichier est libre, par exemple
-   `BLL - Statistiques - Sommaire - Match U19 #2016 - 2026-10-31.pdf`.
-3. (Facultatif) Vérifier localement : `python tools/extract.py`, puis Live Server.
-4. Commit + push. GitHub Actions lance `extract.py` et publie le site en 1 à 2 minutes
-   (Ctrl+F5 dans le navigateur si l'ancienne version reste affichée).
+   et l'enregistrer dans `pdf/`. Le nom du fichier PDF est libre.
+3. (Facultatif) Vérifier localement : `python tools/extract.py` (ne déplace rien), puis Live Server.
+4. Commit + push. GitHub Actions convertit le PDF, l'archive et publie le site en 1 à 2 minutes
+   (Ctrl+F5 dans le navigateur si l'ancienne version reste affichée). Un PDF en erreur reste dans `pdf/`.
 
 ## Saisir un match sur téléphone
 
@@ -24,18 +36,19 @@ Page non liée depuis le site : <https://cbelanger.github.io/bll-stats/saisie.ht
    « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
 3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
-4. Pour le match suivant : toucher le nom du match → « Nouveau match ».
+4. Pour le match suivant : bandeau vert « Nouveau match ».
 
-Les fichiers vont dans `data/saisies/` et ont les mêmes champs que le PDF Sommaire. Les PDF restent possibles en parallèle ;
-si un même match existe en PDF et en saisie, le PDF est gardé.
+Les fichiers vont dans `data/matchs/` et ont les mêmes champs que le PDF Sommaire.
+Si le téléphone renomme le fichier « (1) », les deux fichiers du même match coexistent : le plus récent est
+gardé (avertissement) ; supprimer l'autre.
 
 ### Si quelque chose ne va pas
 
-- **Erreur** dans un PDF : le match est laissé de côté, les autres sont publiés, et l'exécution finit en ✗ rouge.
+- **Erreur** dans un fichier : le match est laissé de côté, les autres sont publiés, et l'exécution finit en ✗ rouge.
   GitHub envoie un courriel ; le détail est dans l'onglet **Actions** du dépôt (résumé de l'extraction
   et annotations en rouge).
 - **Attention** : l'exécution reste verte ; les avertissements s'affichent en jaune en haut de l'exécution.
-- Sur une autre branche que `main`, l'Action vérifie les PDF sans rien publier.
+- Sur une autre branche que `main`, l'Action vérifie sans rien importer ni publier.
 - Revenir à l'état d'avant GitHub Actions : tag `avant-github-action`, et remettre
   Settings → Pages → Source sur « Deploy from a branch ».
 
@@ -46,7 +59,8 @@ Toutes les commandes se lancent depuis la racine du dépôt.
 | Commande | Rôle |
 |---|---|
 | `pip install -r requirements.txt` | Installe les dépendances Python (pypdf, reportlab, pillow) |
-| `python tools/extract.py` | Lit tous les PDF de `pdf/` et réécrit `data/matchs.json` (vérification locale ; GitHub Actions le lance aussi à chaque push) |
+| `python tools/extract.py` | Lit `data/matchs/` et les PDF de `pdf/` (sans les déplacer), réécrit `data/matchs.json` : vérification locale |
+| `python tools/extract.py --importer` | Comme ci-dessus, mais convertit les PDF en `data/matchs/*.json` et les archive (ce que fait GitHub Actions) |
 | `python tools/fiches/generer_sommaire.py` | Régénère le PDF remplissable vierge `fiches/BLL - Statistiques - Sommaire - Match.pdf` |
 | `python tools/fiches/generer_saisie.py` | Régénère la feuille papier vierge `fiches/BLL - Statistiques - Saisie - Match.pdf` (paysage) |
 | `python -m http.server 8000` | Sert le site localement sur <http://localhost:8000> (ou Live Server dans VS Code) |
@@ -67,18 +81,18 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | Chemin | Contenu |
 |---|---|
 | `index.html`, `css/`, `js/` | Le site (JavaScript sans dépendance, aucune étape de build) |
-| `pdf/` | Sommaires remplis (source des données) |
-| `data/saisies/` | Matchs saisis sur téléphone avec `saisie.html` (source des données) |
+| `data/matchs/` | **Un fichier JSON par match (source des données)** |
+| `pdf/` | PDF déposés, en attente d'import ; `pdf/archives/` : PDF déjà importés |
 | `data/gardiennes.json` | Liste officielle des gardiennes (nom, numéro) — édité à la main |
 | `saisie.html`, `css/saisie.css`, `js/saisie.js`, `sw-saisie.js` | Page de saisie sur téléphone (hors ligne grâce à `sw-saisie.js`) |
 | `data/matchs.json` | Généré par `tools/extract.py` — non versionné, ne pas éditer à la main |
 | `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |
-| `tools/extract.py` | Extraction PDF → JSON, avec validation |
+| `tools/extract.py` | Validation, import des PDF, production de `data/matchs.json` |
 | `tools/fiches/` | Scripts qui génèrent les fiches vierges |
 | `fiches/` | Fiches vierges à distribuer (Sommaire remplissable, Saisie papier) |
 | `assets/` | Logo du club |
 
-Le dépôt est public : tout ce qui est dans `pdf/` (y compris les notes) est publié.
+Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les notes) est publié.
 
 ## Le site
 

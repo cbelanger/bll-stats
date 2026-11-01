@@ -1,7 +1,9 @@
 # Lance tools/extract.py sur GitHub et publie le site sur GitHub Pages.
-# - Toute branche : extraction et vérification seulement (rien n'est publié).
-# - Branche main : extraction, puis publication. Un PDF en erreur est laissé de côté,
-#   les autres matchs sont publiés, et l'exécution finit en échec pour que tu reçoives un courriel.
+# - Toute branche : vérification seulement (rien n'est importé ni publié).
+# - Branche main : les PDF de pdf/ sont convertis en data/matchs/*.json et déplacés dans pdf/archives/
+#   (commit « Import automatique des PDF » : faire Pull avant ton prochain push), puis le site est publié.
+#   Un fichier en erreur est laissé de côté, les autres matchs sont publiés, et l'exécution finit
+#   en échec pour que tu reçoives un courriel.
 # Prérequis (une seule fois) : Settings → Pages → Source : « GitHub Actions ».
 name: Extraire et publier
 
@@ -20,7 +22,7 @@ jobs:
   extraire:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write   # commit de l'import des PDF
     outputs:
       code: ${{ steps.extract.outputs.code }}
     steps:
@@ -34,16 +36,18 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Extraire les PDF
+      - name: Importer les PDF et extraire les matchs
         id: extract
         run: |
+          arg=""
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then arg="--importer"; fi
           set +e
-          python tools/extract.py 2>&1 | tee "$RUNNER_TEMP/extract.log"
+          python tools/extract.py $arg 2>&1 | tee "$RUNNER_TEMP/extract.log"
           code=${PIPESTATUS[0]}
           set -e
           echo "code=$code" >> "$GITHUB_OUTPUT"
           {
-            echo "## Extraction des PDF"
+            echo "## Extraction des matchs"
             echo '```'
             cat "$RUNNER_TEMP/extract.log"
             echo '```'
@@ -51,6 +55,18 @@ jobs:
           if [ ! -f data/matchs.json ]; then
             echo "::error::data/matchs.json n'a pas été produit : rien n'est publié."
             exit 1
+          fi
+
+      - name: Enregistrer l'import des PDF
+        if: github.ref == 'refs/heads/main'
+        run: |
+          if [ -n "$(git status --porcelain -- pdf data/matchs)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A -- pdf data/matchs
+            git commit -m "Import automatique des PDF"
+            git push
+            echo "::notice::PDF importés et archivés : faire Pull origin avant ton prochain push."
           fi
 
       - name: Date du dernier changement de code

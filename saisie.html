@@ -34,7 +34,7 @@
 
   <main>
     <div class="bandeau" id="bandeau" hidden>
-      <span>Match exporté. Pour le suivant :</span>
+      <span id="bandeau-txt">Match exporté. Pour le suivant :</span>
       <button type="button" class="btn principal" data-act="nouveau">Nouveau match</button>
     </div>
 
@@ -207,6 +207,22 @@
         <button type="button" class="btn" data-act="fermer">Fermer</button>
         <button type="button" class="btn principal" data-act="infos-ok">Enregistrer</button>
       </div>
+      <div class="pied-f">
+        <button type="button" class="btn" data-act="ouvrir">Ouvrir un match du site…</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Ouvrir un match publié pour le corriger -->
+  <dialog class="feuille" id="f-ouvrir" aria-labelledby="fo-titre">
+    <div class="corps">
+      <h3 id="fo-titre">Ouvrir un match du site</h3>
+      <p class="aide">Le match s’ouvre ici pour être corrigé. « Terminer » le réexporte sous le même nom de fichier ; déposé dans data/matchs, il remplace l’ancien.</p>
+      <p class="err" id="fo-avert" hidden>Le match en cours n’est pas exporté : il sera remplacé (« Annuler » le récupère).</p>
+      <ul class="liste" id="fo-liste"></ul>
+      <div class="pied-f">
+        <button type="button" class="btn" data-act="fermer">Fermer</button>
+      </div>
     </div>
   </dialog>
 
@@ -236,7 +252,7 @@
       <ol class="etapes">
         <li><button type="button" class="btn principal" data-act="telecharger" id="b-telecharger">Télécharger le fichier</button>
           <span class="fichier" id="nom-fichier"></span></li>
-        <li><a class="btn" id="lien-depot" href="https://github.com/cbelanger/bll-stats/upload/main/data/saisies" target="_blank" rel="noopener">Ouvrir la page de dépôt GitHub</a>
+        <li><a class="btn" id="lien-depot" href="https://github.com/cbelanger/bll-stats/upload/main/data/matchs" target="_blank" rel="noopener">Ouvrir la page de dépôt GitHub</a>
           <span class="aide">Touche « choose your files », prends le fichier dans Téléchargements, puis « Commit changes ». Le site se met à jour en 1 à 2 minutes.</span></li>
       </ol>
       <div class="pied-f">

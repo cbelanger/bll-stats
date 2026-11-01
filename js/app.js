@@ -163,7 +163,9 @@ function vueMatch(id) {
       </div>
     </section>
   </div>
-  ${m.notes ? `<section class="panneau" style="margin-top:1rem"><h3>Observations et notes</h3><p class="notes">${esc(m.notes)}</p></section>` : ""}`;
+  ${m.notes ? `<section class="panneau" style="margin-top:1rem"><h3>Observations et notes</h3><p class="notes">${esc(m.notes)}</p></section>` : ""}
+  ${m.fichier ? `<p class="source">Fichier : <a href="https://github.com/cbelanger/bll-stats/blob/main/data/matchs/${encodeURIComponent(m.fichier)}">${esc(m.fichier)}</a>
+    (${m.source === "pdf" ? "PDF Sommaire" : "saisie téléphone"})</p>` : ""}`;
 }
 
 function vueGardiennes() {

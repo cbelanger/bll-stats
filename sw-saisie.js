@@ -2,7 +2,7 @@
 // Garde la page de saisie disponible sans réseau (aréna).
 // Réseau d'abord (toujours la dernière version publiée), copie en cache si le réseau manque.
 // Seuls les fichiers de la saisie sont concernés ; le reste du site n'est pas touché.
-const CACHE = "bll-saisie-v3";
+const CACHE = "bll-saisie-v4";
 const FICHIERS = ["saisie.html", "css/saisie.css", "js/saisie.js", "data/gardiennes.json", "assets/logo-bll.png"];
 
 self.addEventListener("install", e => {
