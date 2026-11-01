@@ -1,0 +1,17 @@
+{
+  "format": "bll-match-1",
+  "exporte_le": "2026-11-01T17:16:38+00:00",
+  "source": "pdf",
+  "pdf": "BLL - Statistiques - Sommaire - Match U19 #2015 - 2026-10-25.pdf",
+  "champs": {
+    "equipe_U19AA": "/Yes",
+    "adversaire": "Laurentides",
+    "date": "2026-10-25",
+    "heure_debut": "12:00",
+    "no_match": "2015",
+    "responsable": "Christian Bélanger",
+    "buts_nous": "2",
+    "buts_adv": "9",
+    "gardienne": "Stella Ouellet #28"
+  }
+}

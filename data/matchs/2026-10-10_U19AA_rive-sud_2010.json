@@ -1,0 +1,22 @@
+{
+  "format": "bll-match-1",
+  "exporte_le": "2026-11-01T17:16:38+00:00",
+  "source": "pdf",
+  "pdf": "BLL - Statistiques - Sommaire - Match U19 #2010 - 2026-10-10.pdf",
+  "champs": {
+    "equipe_U19AA": "/Yes",
+    "adversaire": "Rive-Sud",
+    "date": "2026-10-10",
+    "heure_debut": "15:00",
+    "no_match": "2010",
+    "responsable": "Christian Bélanger",
+    "buts_nous": "1",
+    "buts_adv": "7",
+    "tirs_adv": "37",
+    "tirs_adv_p1": "8",
+    "tirs_adv_p2": "9",
+    "tirs_adv_p3": "11",
+    "tirs_adv_p4": "9",
+    "gardienne": "Stella Ouellet #28"
+  }
+}

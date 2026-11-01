@@ -1,0 +1,17 @@
+{
+  "format": "bll-match-1",
+  "exporte_le": "2026-11-01T17:16:38+00:00",
+  "source": "pdf",
+  "pdf": "BLL - Statistiques - Sommaire - Match U19 #2014 - 2026-10-24.pdf",
+  "champs": {
+    "equipe_U19AA": "/Yes",
+    "adversaire": "Rive-Sud",
+    "date": "2026-10-24",
+    "heure_debut": "18:30",
+    "no_match": "2014",
+    "responsable": "Christian Belanger",
+    "buts_nous": "0",
+    "buts_adv": "9",
+    "gardienne": "Frédérique Bélanger #30"
+  }
+}
