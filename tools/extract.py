@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Lit les sommaires PDF remplis (dossier pdf/) et produit data/matchs.json pour le site.
+Lit les sommaires PDF remplis (dossier pdf/) et les saisies faites sur téléphone avec saisie.html
+(dossier data/saisies/), et produit data/matchs.json pour le site.
+Un même match présent en PDF et en saisie : le PDF est gardé.
 
 Utilisation (depuis la racine du dépôt) :
     python tools/extract.py
@@ -14,6 +16,8 @@ from pypdf import PdfReader
 
 RACINE = Path(__file__).resolve().parent.parent
 DOSSIER_PDF = RACINE / "pdf"
+DOSSIER_SAISIES = RACINE / "data" / "saisies"
+FORMAT_SAISIE = "bll-saisie-1"
 SORTIE = RACINE / "data" / "matchs.json"
 
 SUR_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
@@ -68,8 +72,26 @@ def slug(s):
     return re.sub(r"[^a-z0-9]+", "-", s).strip("-") or "adversaire"
 
 
-def lire(pdf):
+def lire_pdf(pdf):
     champs = {k: v.get("/V") for k, v in (PdfReader(pdf).get_fields() or {}).items()}
+    return valider(champs, pdf, "pdf")
+
+
+def lire_saisie(fichier):
+    # Fichier exporté par saisie.html : mêmes noms de champs que le PDF Sommaire
+    try:
+        data = json.loads(fichier.read_text(encoding="utf-8-sig"))  # -sig : tolère un BOM
+    except (ValueError, UnicodeDecodeError) as e:
+        return None, [f"fichier JSON illisible : {e}"], []
+    if not isinstance(data, dict) or data.get("format") != FORMAT_SAISIE or not isinstance(data.get("champs"), dict):
+        return None, [f"format inconnu (attendu : « {FORMAT_SAISIE} »)"], []
+    m, erreurs, avertissements = valider(data["champs"], fichier, "saisie")
+    if m:
+        m["exporte_le"] = data.get("exporte_le")
+    return m, erreurs, avertissements
+
+
+def valider(champs, fichier, source):
     erreurs, avertissements = [], []
 
     # Équipe
@@ -119,7 +141,9 @@ def lire(pdf):
 
     # Buts accordés détaillés
     detail = []
-    for n in range(1, NB_LIGNES_BUTS + 1):
+    # 15 lignes dans le PDF ; une saisie téléphone peut en avoir plus
+    nums = [int(m.group(1)) for k in champs if (m := re.fullmatch(r"but_(\d+)_periode", k))]
+    for n in range(1, max([NB_LIGNES_BUTS, *nums]) + 1):
         per = texte(champs, f"but_{n}_periode")
         tps = texte(champs, f"but_{n}_temps")
         typ = re.split(r"\s+[–-]\s+", texte(champs, f"but_{n}_type"))[0].strip()
@@ -153,7 +177,8 @@ def lire(pdf):
 
     return {
         "id": f"{d.isoformat()}_{equipe}_{slug(adversaire)}",
-        "fichier_pdf": pdf.name,
+        "fichier": fichier.name,
+        "source": source,
         "saison": saison_de(d),
         "equipe": equipe,
         "no_match": no_match or None,
@@ -172,37 +197,61 @@ def lire(pdf):
     }, [], avertissements
 
 
+def meme_match(a, b):
+    # Même date, équipe et adversaire ; deux numéros de match différents = deux matchs distincts
+    if (a["date"], a["equipe"], slug(a["adversaire"])) != (b["date"], b["equipe"], slug(b["adversaire"])):
+        return False
+    return not (a["no_match"] and b["no_match"] and a["no_match"] != b["no_match"])
+
+
 def main():
-    pdfs = sorted(DOSSIER_PDF.glob("*.pdf"))
-    if not pdfs:
-        print(f"Aucun PDF dans {DOSSIER_PDF}")
+    # PDF d'abord : en cas de doublon avec une saisie, le PDF est gardé
+    fichiers = ([(f, lire_pdf) for f in sorted(DOSSIER_PDF.glob("*.pdf"))]
+                + [(f, lire_saisie) for f in sorted(DOSSIER_SAISIES.glob("*.json"))])
+    if not fichiers:
+        print(f"Aucun PDF dans {DOSSIER_PDF} ni saisie dans {DOSSIER_SAISIES}")
         return 1
     matchs, ids, echecs = [], set(), 0
-    for pdf in pdfs:
-        m, err, avert = lire(pdf)
+    for f, lire in fichiers:
+        m, err, avert = lire(f)
+        if not err and m["source"] == "saisie":
+            autre = next((x for x in matchs if meme_match(x, m)), None)
+            if autre and autre["source"] == "pdf":
+                print(f"– {f.name} — ignoré")
+                avert = avert + [f"même match que {autre['fichier']} : le PDF est gardé, la saisie est ignorée"]
+                m = None
+            elif autre and (m["exporte_le"] or "") > (autre["exporte_le"] or ""):
+                # Deux saisies du même match (ex. exportée deux fois) : la plus récente remplace l'autre
+                avert = avert + [f"remplace {autre['fichier']} (exportée plus tôt) : supprimer ce fichier"]
+                matchs.remove(autre)
+                ids.discard(autre["id"])
+            elif autre:
+                print(f"– {f.name} — ignoré")
+                avert = avert + [f"même match que {autre['fichier']}, exportée plus tard : supprimer ce fichier"]
+                m = None
         if err:
             echecs += 1
-            print(f"✗ {pdf.name} — ignoré")
+            print(f"✗ {f.name} — ignoré")
             for e in err:
                 print(f"    erreur : {e}")
                 if SUR_GITHUB:  # annotation rouge en haut de la page de l'exécution
-                    print(f"::error title={pdf.name}::{e}")
-        else:
+                    print(f"::error title={f.name}::{e}")
+        elif m:
             if m["id"] in ids:
                 m["id"] += f"_{m['no_match'] or len(ids)}"
             ids.add(m["id"])
             matchs.append(m)
-            print(f"✓ {pdf.name} → {m['id']}")
+            print(f"✓ {f.name} → {m['id']}")
         for a in avert:
             print(f"    attention : {a}")
             if SUR_GITHUB:  # annotation jaune en haut de la page de l'exécution
-                print(f"::warning title={pdf.name}::{a}")
+                print(f"::warning title={f.name}::{a}")
     matchs.sort(key=lambda m: (m["date"], m["heure_debut"] or ""), reverse=True)
     SORTIE.parent.mkdir(exist_ok=True)
     SORTIE.write_text(json.dumps({"genere_le": datetime.now().isoformat(timespec="minutes"),"matchs": matchs},
                                  ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n{len(matchs)} match(s) écrit(s) dans {SORTIE.relative_to(RACINE)}"
-          + (f" — {echecs} PDF ignoré(s), à corriger" if echecs else ""))
+          + (f" — {echecs} fichier(s) ignoré(s), à corriger" if echecs else ""))
     return 1 if echecs else 0
 
 

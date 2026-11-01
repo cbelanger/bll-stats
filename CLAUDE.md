@@ -16,6 +16,12 @@ Répondre en français, tutoiement, ton direct.
    Sur une autre branche, l'Action fait l'extraction et la vérification sans publier.
 4. Le site (`index.html`, `js/app.js`, `css/style.css`) lit `data/matchs.json` et calcule tout côté navigateur.
 
+Autre source, en parallèle des PDF : `saisie.html` (page non liée depuis le site, pour téléphone Android/Chrome).
+La saisie reste dans le navigateur (localStorage, `sw-saisie.js` pour le hors-ligne) ; « Terminer » exporte un JSON
+`{"format": "bll-saisie-1", "exporte_le": …, "champs": {…}}` dont `champs` reprend **les noms de champs du PDF Sommaire**,
+déposé dans `data/saisies/` et validé par la même fonction `valider()` d'extract.py.
+Doublons : PDF + saisie du même match → le PDF est gardé ; deux saisies → la plus récemment exportée.
+
 `data/matchs.json` et `data/version.json` ne sont pas versionnés (`.gitignore`) : lancer `extract.py` localement
 sert seulement à vérifier avec Live Server. Tag `avant-github-action` = état du site avant ce fonctionnement.
 
@@ -35,7 +41,7 @@ sert seulement à vérifier avec Live Server. Tag `avant-github-action` = état 
 | `.github/workflows/publier.yml` | Extraction + publication sur GitHub Pages ; erreurs en annotations et courriel |
 | `assets/logo-bll.png` | Logo du club |
 
-## Champs du PDF Sommaire (noms internes stables — ne pas renommer sans adapter extract.py)
+## Champs du PDF Sommaire (noms internes stables — ne pas renommer sans adapter extract.py et js/saisie.js)
 
 - En-tête : `equipe_U16AA`, `equipe_U19AA` (cases), `adversaire`, `date` (AAAA-MM-JJ), `heure_debut`, `heure_fin` (HH:MM),
   `no_match`, `responsable`

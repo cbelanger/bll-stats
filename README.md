@@ -14,6 +14,21 @@ Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et 
 4. Commit + push. GitHub Actions lance `extract.py` et publie le site en 1 à 2 minutes
    (Ctrl+F5 dans le navigateur si l'ancienne version reste affichée).
 
+## Saisir un match sur téléphone
+
+Page non liée depuis le site : <https://cbelanger.github.io/bll-stats/saisie.html> (à mettre en favori ou sur l'écran d'accueil).
+
+1. Avant le match : toucher le nom du match en haut pour remplir les infos (équipe, adversaire, no de match, gardienne).
+2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone. « + But accordé » enregistre le but
+   tout de suite ; le détail (temps, type, zone) se complète maintenant ou plus tard en touchant la ligne du but.
+   « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
+3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
+   → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
+4. Pour le match suivant : toucher le nom du match → « Nouveau match ».
+
+Les fichiers vont dans `data/saisies/` et ont les mêmes champs que le PDF Sommaire. Les PDF restent possibles en parallèle ;
+si un même match existe en PDF et en saisie, le PDF est gardé.
+
 ### Si quelque chose ne va pas
 
 - **Erreur** dans un PDF : le match est laissé de côté, les autres sont publiés, et l'exécution finit en ✗ rouge.
@@ -53,6 +68,8 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 |---|---|
 | `index.html`, `css/`, `js/` | Le site (JavaScript sans dépendance, aucune étape de build) |
 | `pdf/` | Sommaires remplis (source des données) |
+| `data/saisies/` | Matchs saisis sur téléphone avec `saisie.html` (source des données) |
+| `saisie.html`, `css/saisie.css`, `js/saisie.js`, `sw-saisie.js` | Page de saisie sur téléphone (hors ligne grâce à `sw-saisie.js`) |
 | `data/matchs.json` | Généré par `tools/extract.py` — non versionné, ne pas éditer à la main |
 | `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |
 | `tools/extract.py` | Extraction PDF → JSON, avec validation |

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#16336B">
+  <title>BLL Élite – Saisie de match</title>
+  <link rel="icon" href="assets/logo-bll.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/saisie.css">
+</head>
+<body>
+  <header class="tete">
+    <div class="tete-in">
+      <div class="ligne1">
+        <button type="button" class="match" data-act="infos" aria-label="Modifier les infos du match">
+          <span class="noms"><span class="eq" id="t-equipe">U19AA</span> contre <span id="t-adv">adversaire ?</span></span>
+          <span class="crayon" aria-hidden="true">✎</span>
+        </button>
+        <span class="score" id="score" aria-label="Score">0–0</span>
+      </div>
+      <div class="periodes" id="periodes" role="group" aria-label="Période en cours">
+        <button type="button" data-p="p1">P1</button>
+        <button type="button" data-p="p2">P2</button>
+        <button type="button" data-p="p3">P3</button>
+        <button type="button" data-p="p4">P4</button>
+        <button type="button" data-p="prol">Prol.</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="carte" aria-labelledby="h-tirs">
+      <h2 id="h-tirs">Tirs cadrés <span>période <span id="per-cour">P1</span></span></h2>
+      <div class="deux">
+        <div class="cote nous">
+          <div class="haut"><span class="etiq">Nous</span><span class="total" id="tot-nous">0</span></div>
+          <div class="detail" id="det-nous"></div>
+          <div class="actions">
+            <button type="button" class="moins" data-act="tir-moins" data-c="nous" aria-label="Retirer un tir BLL">−</button>
+            <button type="button" class="plus" data-act="tir" data-c="nous">+ Tir</button>
+          </div>
+        </div>
+        <div class="cote adv">
+          <div class="haut"><span class="etiq">Adv.</span><span class="total" id="tot-adv">0</span></div>
+          <div class="detail" id="det-adv"></div>
+          <div class="actions">
+            <button type="button" class="moins" data-act="tir-moins" data-c="adv" aria-label="Retirer un tir adverse">−</button>
+            <button type="button" class="plus" data-act="tir" data-c="adv">+ Tir</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="carte" aria-labelledby="h-buts">
+      <h2 id="h-buts">Buts <span>chaque but compte aussi 1 tir cadré</span></h2>
+      <div class="deux">
+        <div class="cote nous">
+          <div class="haut"><span class="etiq">Nous</span><span class="total" id="bn">0</span></div>
+          <div class="detail" id="det-bn"></div>
+          <div class="actions">
+            <button type="button" class="moins" data-act="but-nous-moins" aria-label="Retirer un but BLL de la période">−</button>
+            <button type="button" class="plus" data-act="but-nous">+ But</button>
+          </div>
+        </div>
+        <div class="cote adv">
+          <div class="haut"><span class="etiq">Accordés</span><span class="total" id="ba">0</span></div>
+          <div class="detail" id="det-ba"></div>
+          <div class="actions seul">
+            <button type="button" class="plus" data-act="but-adv">+ But accordé</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="carte" aria-labelledby="h-sz">
+      <h2 id="h-sz">Sorties de zone <span id="szp"></span></h2>
+      <div class="deux">
+        <div class="cote">
+          <div class="haut"><span class="etiq">Réussies</span><span class="total" id="szr">0</span></div>
+          <div class="actions">
+            <button type="button" class="moins" data-act="sz-moins" data-r="r" aria-label="Retirer une sortie réussie">−</button>
+            <button type="button" class="plus vert" data-act="sz" data-r="r">✓ Réussie</button>
+          </div>
+        </div>
+        <div class="cote">
+          <div class="haut"><span class="etiq">Ratées</span><span class="total" id="szx">0</span></div>
+          <div class="actions">
+            <button type="button" class="moins" data-act="sz-moins" data-r="x" aria-label="Retirer une sortie ratée">−</button>
+            <button type="button" class="plus neutre" data-act="sz" data-r="x">✗ Ratée</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="carte" aria-labelledby="h-ba">
+      <h2 id="h-ba">Buts accordés <span id="gard"></span></h2>
+      <ol class="liste" id="liste"></ol>
+      <p class="note" id="note-liste" hidden></p>
+    </section>
+  </main>
+
+  <nav class="bas" aria-label="Actions">
+    <div class="bas-in">
+      <button type="button" id="annuler" data-act="annuler"><span aria-hidden="true">↶</span><span id="annuler-l">Rien à annuler</span></button>
+      <button type="button" data-act="notes">Notes</button>
+      <button type="button" class="fin" data-act="terminer">Terminer</button>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- Détail d'un but accordé -->
+  <dialog class="feuille" id="f-but" aria-labelledby="fb-titre">
+    <div class="corps">
+      <h3 id="fb-titre">But accordé</h3>
+      <div class="champ">
+        <span class="lab">Période</span>
+        <div class="puces" id="fb-per"></div>
+      </div>
+      <div class="champ">
+        <label class="lab" for="temps">Temps au chrono</label>
+        <input type="text" id="temps" inputmode="numeric" autocomplete="off" placeholder="mm:ss">
+        <span class="aide">Tape seulement les chiffres : 845 donne 8:45.</span>
+        <span class="err" id="err-temps" hidden>Les secondes doivent être entre 00 et 59.</span>
+      </div>
+      <div class="champ">
+        <span class="lab">Type de jeu</span>
+        <div class="types" id="fb-types"></div>
+      </div>
+      <div class="champ">
+        <span class="lab">Zone (filet vu de face)</span>
+        <div class="filet" id="fb-zones"></div>
+      </div>
+      <div class="pied-f">
+        <button type="button" class="btn danger" data-act="but-suppr">Supprimer</button>
+        <button type="button" class="btn" data-act="fermer">Plus tard</button>
+        <button type="button" class="btn principal" data-act="but-ok">Enregistrer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Infos du match -->
+  <dialog class="feuille" id="f-infos" aria-labelledby="fi-titre">
+    <div class="corps">
+      <h3 id="fi-titre">Infos du match</h3>
+      <div class="champ">
+        <span class="lab">Équipe</span>
+        <div class="puces" id="fi-eq">
+          <button type="button" class="puce" data-eq="U16AA">U16AA</button>
+          <button type="button" class="puce" data-eq="U19AA">U19AA</button>
+        </div>
+      </div>
+      <div class="champ">
+        <label class="lab" for="fi-adv">Adversaire</label>
+        <input type="text" id="fi-adv" autocomplete="off" autocapitalize="words">
+      </div>
+      <div class="rang">
+        <div class="champ">
+          <label class="lab" for="fi-date">Date</label>
+          <input type="date" id="fi-date">
+        </div>
+        <div class="champ">
+          <label class="lab" for="fi-no">No de match</label>
+          <input type="text" id="fi-no" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+      <div class="rang">
+        <div class="champ">
+          <label class="lab" for="fi-debut">Heure début</label>
+          <input type="time" id="fi-debut">
+        </div>
+        <div class="champ">
+          <label class="lab" for="fi-fin">Heure fin</label>
+          <input type="time" id="fi-fin">
+        </div>
+      </div>
+      <div class="champ">
+        <label class="lab" for="fi-gard">Gardienne</label>
+        <input type="text" id="fi-gard" list="gardiennes" autocomplete="off" placeholder="Nom #numéro">
+        <datalist id="gardiennes">
+          <option value="Frédérique Bélanger #30"></option>
+          <option value="Stella Ouellet #28"></option>
+        </datalist>
+      </div>
+      <div class="champ">
+        <label class="lab" for="fi-resp">Responsable des stats</label>
+        <input type="text" id="fi-resp" autocomplete="name" autocapitalize="words">
+      </div>
+      <div class="pied-f">
+        <button type="button" class="btn danger" data-act="nouveau" id="b-nouveau">Nouveau match</button>
+        <button type="button" class="btn" data-act="fermer">Fermer</button>
+        <button type="button" class="btn principal" data-act="infos-ok">Enregistrer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Notes -->
+  <dialog class="feuille" id="f-notes" aria-labelledby="fn-titre">
+    <div class="corps">
+      <h3 id="fn-titre">Observations et notes</h3>
+      <div class="champ">
+        <label class="lab" for="notes">Notes</label>
+        <textarea id="notes" placeholder="Ex. : but 2, type A : passe arrière derrière le filet"></textarea>
+      </div>
+      <div class="pied-f">
+        <button type="button" class="btn principal" data-act="notes-ok">Enregistrer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Terminer : vérification et export -->
+  <dialog class="feuille" id="f-fin" aria-labelledby="ff-titre">
+    <div class="corps">
+      <h3 id="ff-titre">Terminer le match</h3>
+      <div class="champ">
+        <label class="lab" for="ff-fin">Heure de fin</label>
+        <input type="time" id="ff-fin">
+      </div>
+      <ul class="verifs" id="verifs"></ul>
+      <ol class="etapes">
+        <li><button type="button" class="btn principal" data-act="telecharger" id="b-telecharger">Télécharger le fichier</button>
+          <span class="fichier" id="nom-fichier"></span></li>
+        <li><a class="btn" id="lien-depot" href="https://github.com/cbelanger/bll-stats/upload/main/data/saisies" target="_blank" rel="noopener">Ouvrir la page de dépôt GitHub</a>
+          <span class="aide">Touche « choose your files », prends le fichier dans Téléchargements, puis « Commit changes ». Le site se met à jour en 1 à 2 minutes.</span></li>
+      </ol>
+      <div class="pied-f">
+        <button type="button" class="btn" data-act="copier">Copier le contenu</button>
+        <button type="button" class="btn" data-act="fermer">Fermer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/saisie.js"></script>
+</body>
+</html>
