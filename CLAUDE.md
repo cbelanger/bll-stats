@@ -44,7 +44,8 @@ sert seulement à vérifier avec Live Server. Tag `avant-github-action` = état 
 | `js/app.js` | Toute la logique (JS vanilla, aucune dépendance, aucun build) |
 | `css/style.css` | Styles ; jetons de couleur dans `:root` (marine #16336B, rouge #D7192D), mode sombre |
 | `tools/extract.py` | Validation (erreurs bloquantes / avertissements), import PDF → `data/matchs/`, écrit `data/matchs.json` |
-| `saisie.html`, `js/saisie.js`, `css/saisie.css`, `sw-saisie.js` | Page de saisie téléphone (incrémenter `CACHE` dans sw-saisie.js à chaque modification) |
+| `saisie.html`, `js/saisie.js`, `css/saisie.css`, `sw-saisie.js` | Page de saisie téléphone (incrémenter `CACHE` dans sw-saisie.js à chaque modification ; tout fichier de `FICHIERS` doit exister, sinon le hors-ligne ne s'installe pas) |
+| `saisie.webmanifest`, `assets/icones/` | Installation de la saisie comme application (icônes générées par `tools/generer_icones.py`) |
 | `data/matchs/` | Un JSON par match = source des données |
 | `data/gardiennes.json` | Liste officielle des gardiennes |
 | `tools/fiches/generer_sommaire.py` | Génère le PDF remplissable « Sommaire » (reportlab + post-traitement pypdf pour le JavaScript Acrobat) |

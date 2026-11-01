@@ -28,7 +28,9 @@ faire **Pull origin** avant ton prochain push.
 
 ## Saisir un match sur téléphone
 
-Page non liée depuis le site : <https://cbelanger.github.io/bll-stats/saisie.html> (à mettre en favori ou sur l'écran d'accueil).
+Page non liée depuis le site : <https://cbelanger.github.io/bll-stats/saisie.html>.
+Pour l'installer comme une application (icône BLL sur l'écran d'accueil, plein écran) : dans Edge ou Chrome,
+menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes se régénèrent avec `python tools/generer_icones.py`.
 
 1. Avant le match : toucher le nom du match en haut pour remplir les infos (équipe, adversaire, no de match, gardienne).
 2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone. « + But accordé » enregistre le but
