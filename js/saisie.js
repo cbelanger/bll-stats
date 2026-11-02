@@ -21,6 +21,9 @@ const compteP = arr => { const o = vide(); arr.forEach(b => { if (b.periode in o
 // Buts sans période (match rouvert) : « + » dans une période en place un au lieu d'en ajouter un.
 // place = but placé ainsi : score et tirs inchangés ; « − » le remet sans période.
 const sansPeriode = arr => arr.filter(b => !b.periode).length;
+// Le but a-t-il ajouté un tir dans sa période ? Oui en saisie en direct ; non pour un but placé
+// ou un match venu d'un PDF (tirs comptés à part sur papier) : changer sa période ne touche pas aux tirs.
+const tirLie = b => !b.place && S.origine !== "pdf";
 const detailButs = arr => detail(compteP(arr)) + (sansPeriode(arr) ? ` · <span class="manque-p">sans période&nbsp;${sansPeriode(arr)}</span>` : "");
 const d2 = n => String(n).padStart(2, "0");
 const aujourdhui = () => { const d = new Date(); return `${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}`; };
@@ -415,7 +418,7 @@ document.addEventListener("click", e => {
     case "but-nous-moins": {
       const i = S.butsNous.map(x => x.periode).lastIndexOf(P);
       if (i < 0) { toast(`Aucun but BLL en ${lp} à retirer.`); break; }
-      if (S.butsNous[i].place) {
+      if (!tirLie(S.butsNous[i])) {
         action(`But BLL remis sans période`, () => { S.butsNous[i] = { periode: null }; });
         toast("But remis sans période (score inchangé)");
         break;
@@ -444,8 +447,7 @@ document.addEventListener("click", e => {
       const i = courant, nouv = { ...brouillon, temps: t };
       action(`Détail du but ${i + 1}`, () => {
         const ancien = S.butsAdv[i];
-        // Un but placé (match rouvert) n'a jamais ajouté de tir : rien à déplacer
-        if (ancien.periode !== nouv.periode && ancien.periode && nouv.periode && !ancien.place) {
+        if (ancien.periode !== nouv.periode && ancien.periode && nouv.periode && tirLie(ancien)) {
           S.tirs.adv[ancien.periode] = Math.max(0, S.tirs.adv[ancien.periode] - 1);
           S.tirs.adv[nouv.periode]++;
         }
@@ -458,10 +460,10 @@ document.addEventListener("click", e => {
       const i = courant;
       action(`Suppression du but ${i + 1}`, () => {
         const x = S.butsAdv.splice(i, 1)[0];
-        if (x.periode && !x.place) S.tirs.adv[x.periode] = Math.max(0, S.tirs.adv[x.periode] - 1);
+        if (x.periode && tirLie(x)) S.tirs.adv[x.periode] = Math.max(0, S.tirs.adv[x.periode] - 1);
       });
       $("#f-but").close();
-      toast("But supprimé (−1 tir adverse). « Annuler » le remet.");
+      toast(S.origine === "pdf" ? "But supprimé (tirs inchangés). « Annuler » le remet." : "But supprimé (−1 tir adverse). « Annuler » le remet.");
       break;
     }
     case "sz": {
