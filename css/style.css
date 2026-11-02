@@ -142,10 +142,20 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 @media (prefers-color-scheme: dark) { .barre-l .rempli { background: #6E93D6; } }
 .barre-l .rempli.r { background: var(--rouge); }
 .barre-l b { text-align: right; font-variant-numeric: tabular-nums; }
-.deroulement tr.but-nous { background: color-mix(in srgb, var(--marine) 8%, transparent); }
+/* Sommaire du match : nos buts en bleu, ceux de l'adversaire en rouge (fond teinté + barre à gauche) */
+.deroulement tr.but-nous { background: color-mix(in srgb, #1E6FD9 14%, transparent); }
+.deroulement tr.but-adv { background: color-mix(in srgb, var(--rouge) 7%, transparent); }
+.deroulement tr.but-nous td:first-child { box-shadow: inset 4px 0 var(--marine); }
+.deroulement tr.but-adv td:first-child { box-shadow: inset 4px 0 var(--rouge); }
 .deroulement tr.but-nous .equipe { font-weight: 700; color: var(--marine); }
+.deroulement tr.but-adv .equipe { color: var(--rouge); }
 .deroulement .score-c { font-weight: 700; }
-@media (prefers-color-scheme: dark) { .deroulement tr.but-nous .equipe { color: #8FB0EA; } }
+@media (prefers-color-scheme: dark) {
+  .deroulement tr.but-nous { background: color-mix(in srgb, #6E93D6 22%, transparent); }
+  .deroulement tr.but-nous td:first-child { box-shadow: inset 4px 0 #6E93D6; }
+  .deroulement tr.but-nous .equipe { color: #A9C1F0; }
+  .deroulement tr.but-adv .equipe { color: #F27A87; }
+}
 .code-t { font: 700 .95rem var(--titre); color: var(--rouge); display: inline-block; min-width: 1.6rem; }
 
 /* Tirs par période */

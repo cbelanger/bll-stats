@@ -103,7 +103,7 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
 ## Le site
 
 - **Matchs** : liste des matchs de la saison, du plus vieux au plus récent ; un clic ouvre la fiche du match :
-  filet des buts accordés, déroulement du match (buts des deux équipes dans l'ordre, score après chaque but
+  filet des buts accordés, sommaire (buts des deux équipes dans l'ordre, nos buts en bleu, score après chaque but
   quand tous les temps sont connus ; le chrono descend), buts et tirs par période, sorties de zone.
 - **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, buts accordés et % d'arrêts
   par période, zones et types de jeu.

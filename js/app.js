@@ -140,7 +140,7 @@ function deroulement(m) {
   const sc = { nous: 0, adv: 0 };
   const lignes = tous.map(b => {
     sc[b.eq]++;
-    return `<tr class="${b.eq === "nous" ? "but-nous" : ""}"><td>${b.no && b.eq === "adv" ? b.no : ""}</td>
+    return `<tr class="${b.eq === "nous" ? "but-nous" : "but-adv"}">
       <td>${b.i >= 0 ? PERIODES[b.i][1] : "?"}</td><td>${esc(b.temps || "–")}</td>
       <td class="txt equipe">${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}</td>
       <td class="txt">${b.type ? `<span class="code-t">${b.type}</span><span class="opt">${TYPES[b.type] || ""}</span>` : "–"}</td>
@@ -148,7 +148,7 @@ function deroulement(m) {
   }).join("");
   const manque = m.buts.nous + m.buts.adv - tous.length;
   return `<div class="defile"><table class="deroulement">
-    <thead><tr><th title="Numéro dans le filet">#</th><th>Pér.</th><th>Temps</th><th>But</th><th>Type de jeu</th><th>Zone</th>${complet ? `<th class="n">Score</th>` : ""}</tr></thead>
+    <thead><tr><th>Pér.</th><th>Temps</th><th>But</th><th>Type de jeu</th><th>Zone</th>${complet ? `<th class="n">Score</th>` : ""}</tr></thead>
     <tbody>${lignes}</tbody></table></div>
     ${complet ? "" : `<p class="sous" style="font-size:.85rem">${manque > 0 ? `${manque} but${manque > 1 ? "s" : ""} sans détail. ` : ""}Ordre approximatif : période ou temps manquant pour certains buts.</p>`}`;
 }
@@ -177,7 +177,7 @@ function vueMatch(id) {
       ${filet(nums, "numeros")}
     </section>
     <section class="panneau">
-      <h3>Déroulement du match</h3>
+      <h3>Sommaire</h3>
       ${deroulement(m)}
     </section>
   </div>
