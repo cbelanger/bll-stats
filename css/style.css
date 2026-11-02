@@ -150,6 +150,7 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .periodes .t { font: 600 .95rem var(--titre); color: var(--doux); }
 .periodes .l { text-align: left; font-weight: 600; }
 .periodes .tot { font-weight: 700; }
+.periodes .sec { grid-column: 1 / -1; text-align: left; font: 600 .95rem var(--titre); color: var(--doux); padding: .8rem 0 .2rem; }
 
 /* Cartes gardiennes */
 .gardienne h3 { display: flex; align-items: baseline; gap: .5rem; font-size: 1.6rem; }

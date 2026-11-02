@@ -158,11 +158,15 @@ function vueMatch(id) {
 
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
-      <h3>Tirs cadrés par période</h3>
+      <h3>Par période</h3>
       <div class="periodes">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
+        <div class="sec">Buts</div>
+        ${ligneP("Nous", m.buts_par_periode?.nous, m.buts.nous)}${ligneP("Adv.", m.buts_par_periode?.adv, m.buts.adv)}
+        <div class="sec">Tirs cadrés</div>
         ${ligneP("Nous", tp.nous, m.tirs.nous)}${ligneP("Adv.", tp.adv, m.tirs.adv)}
       </div>
+      ${m.buts_par_periode?.nous && m.buts_par_periode?.adv && tp.nous && tp.adv ? "" : `<p class="sous" style="font-size:.85rem">– : donnée non disponible pour ce match.</p>`}
     </section>
     <section class="panneau">
       <h3>Sorties de zone</h3>
