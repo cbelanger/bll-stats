@@ -129,6 +129,7 @@ main {
 }
 .match-l span:first-child { color: var(--doux); }
 .match-l b { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.manque-p { color: var(--rouge); font-weight: 600; }
 .manque { font-style: normal; color: var(--rouge); background: color-mix(in srgb, var(--rouge) 14%, transparent); border-radius: 3px; padding: .1rem .3rem; }
 .vide { color: var(--doux); font-size: .9rem; margin: .2rem 0; }
 

@@ -18,6 +18,10 @@ const somme = o => Object.values(o).reduce((a, b) => a + b, 0);
 const vide = () => ({ p1: 0, p2: 0, p3: 0, p4: 0, prol: 0 });
 // Période inconnue (buts BLL d'un match venu d'un PDF) : comptée dans le total seulement
 const compteP = arr => { const o = vide(); arr.forEach(b => { if (b.periode in o) o[b.periode]++; }); return o; };
+// Buts sans période (match rouvert) : « + » dans une période en place un au lieu d'en ajouter un.
+// place = but placé ainsi : score et tirs inchangés ; « − » le remet sans période.
+const sansPeriode = arr => arr.filter(b => !b.periode).length;
+const detailButs = arr => detail(compteP(arr)) + (sansPeriode(arr) ? ` · <span class="manque-p">sans période&nbsp;${sansPeriode(arr)}</span>` : "");
 const d2 = n => String(n).padStart(2, "0");
 const aujourdhui = () => { const d = new Date(); return `${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}`; };
 const maintenant = () => { const d = new Date(); return `${d2(d.getHours())}:${d2(d.getMinutes())}`; };
@@ -93,8 +97,8 @@ function afficher() {
     $("#tot-" + c).textContent = tirsInconnus(c) ? "–" : somme(S.tirs[c]);
     $("#det-" + c).innerHTML = tirsInconnus(c) ? "non saisis" : detail(S.tirs[c]);
   }
-  $("#bn").textContent = S.butsNous.length; $("#det-bn").innerHTML = detail(compteP(S.butsNous));
-  $("#ba").textContent = S.butsAdv.length; $("#det-ba").innerHTML = detail(compteP(S.butsAdv));
+  $("#bn").textContent = S.butsNous.length; $("#det-bn").innerHTML = detailButs(S.butsNous);
+  $("#ba").textContent = S.butsAdv.length; $("#det-ba").innerHTML = detailButs(S.butsAdv);
   const tot = S.sz.r + S.sz.x;
   $("#szr").textContent = S.sz.r; $("#szx").textContent = S.sz.x;
   $("#szp").textContent = tot ? `${Math.round(100 * S.sz.r / tot)} % réussies` : "";
@@ -283,7 +287,9 @@ async function ouvrirMatch(fichier) {
     action("Ouvrir " + fichier, () => { S = depuisChamps(data.champs || {}, fichier, data.source); });
     S.exporte = true; S.ouvert = true; sauver(); afficher();   // action() les remet à false
     $("#f-ouvrir").close();
-    toast("Match ouvert. Corrige-le, puis « Terminer » pour le réexporter sous le même nom.");
+    const sp = sansPeriode(S.butsNous) + sansPeriode(S.butsAdv);
+    toast(sp ? `Match ouvert : ${sp} but${sp > 1 ? "s" : ""} sans période. Choisis la période, puis « + » pour les placer.`
+             : "Match ouvert. Corrige-le, puis « Terminer » pour le réexporter sous le même nom.");
   } catch (e) {
     toast("Impossible d’ouvrir ce match (réseau ?).");
   }
@@ -298,6 +304,8 @@ function verifications() {
   if (!tirsInconnus("nous") && S.butsNous.length > somme(S.tirs.nous)) v.push(["er", "Plus de buts BLL que de tirs BLL."]);
   if (!S.no_match.trim()) v.push(["av", "Numéro de match manquant."]);
   if (!S.gardienne.trim()) v.push(["av", "Gardienne non indiquée."]);
+  const sp = sansPeriode(S.butsNous) + sansPeriode(S.butsAdv);
+  if (sp) v.push(["av", `${sp} but${sp > 1 ? "s" : ""} sans période (choisir la période, puis « + »).`]);
   const inc = S.butsAdv.filter(b => !b.type || !b.zone).length;
   if (inc) v.push(["av", `${inc} but${inc > 1 ? "s" : ""} accordé${inc > 1 ? "s" : ""} sans type ou zone.`]);
   if (!v.length) v.push(["ok", "Tout est complet."]);
@@ -392,21 +400,43 @@ document.addEventListener("click", e => {
       action(`Retrait tir ${c === "nous" ? "BLL" : "adv."} ${lp}`, () => { S.tirs[c][P]--; });
       break;
     }
-    case "but-nous":
+    case "but-nous": {
+      const j = S.butsNous.findIndex(x => !x.periode);
+      if (j >= 0) {
+        action(`But BLL placé en ${lp}`, () => { S.butsNous[j] = { periode: P, place: true }; });
+        const n = sansPeriode(S.butsNous);
+        toast(`But BLL placé en ${lp}, score inchangé${n ? ` (${n} encore sans période)` : ""}`);
+        break;
+      }
       action(`But BLL ${lp}`, () => { S.butsNous.push({ periode: P }); S.tirs.nous[P]++; }, true);
       toast(`But BLL en ${lp} (+1 tir cadré)`);
       break;
+    }
     case "but-nous-moins": {
       const i = S.butsNous.map(x => x.periode).lastIndexOf(P);
       if (i < 0) { toast(`Aucun but BLL en ${lp} à retirer.`); break; }
+      if (S.butsNous[i].place) {
+        action(`But BLL remis sans période`, () => { S.butsNous[i] = { periode: null }; });
+        toast("But remis sans période (score inchangé)");
+        break;
+      }
       action(`Retrait but BLL ${lp}`, () => { S.butsNous.splice(i, 1); S.tirs.nous[P] = Math.max(0, S.tirs.nous[P] - 1); });
       break;
     }
-    case "but-adv":
+    case "but-adv": {
+      const j = S.butsAdv.findIndex(x => !x.periode);
+      if (j >= 0) {
+        action(`But accordé placé en ${lp}`, () => { S.butsAdv[j] = { ...S.butsAdv[j], periode: P, place: true }; });
+        const n = sansPeriode(S.butsAdv);
+        toast(`But accordé no ${j + 1} placé en ${lp}, score inchangé${n ? ` (${n} encore sans période)` : ""}`);
+        ouvrirBut(j);
+        break;
+      }
       // Le but compte tout de suite ; le détail se complète maintenant ou plus tard
       action(`But accordé ${lp}`, () => { S.butsAdv.push({ periode: P, temps: "", type: "", zone: "" }); S.tirs.adv[P]++; }, true);
       ouvrirBut(S.butsAdv.length - 1);
       break;
+    }
     case "but-edit": ouvrirBut(Number(b.dataset.i)); break;
     case "but-ok": {
       const t = normTemps($("#temps").value);
@@ -414,7 +444,8 @@ document.addEventListener("click", e => {
       const i = courant, nouv = { ...brouillon, temps: t };
       action(`Détail du but ${i + 1}`, () => {
         const ancien = S.butsAdv[i];
-        if (ancien.periode !== nouv.periode && ancien.periode && nouv.periode) {
+        // Un but placé (match rouvert) n'a jamais ajouté de tir : rien à déplacer
+        if (ancien.periode !== nouv.periode && ancien.periode && nouv.periode && !ancien.place) {
           S.tirs.adv[ancien.periode] = Math.max(0, S.tirs.adv[ancien.periode] - 1);
           S.tirs.adv[nouv.periode]++;
         }
@@ -427,7 +458,7 @@ document.addEventListener("click", e => {
       const i = courant;
       action(`Suppression du but ${i + 1}`, () => {
         const x = S.butsAdv.splice(i, 1)[0];
-        if (x.periode) S.tirs.adv[x.periode] = Math.max(0, S.tirs.adv[x.periode] - 1);
+        if (x.periode && !x.place) S.tirs.adv[x.periode] = Math.max(0, S.tirs.adv[x.periode] - 1);
       });
       $("#f-but").close();
       toast("But supprimé (−1 tir adverse). « Annuler » le remet.");

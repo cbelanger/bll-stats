@@ -10,6 +10,7 @@ Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et 
 | Ajouter un match saisi sur téléphone | Page de saisie → « Terminer » → déposer le fichier dans `data/matchs/` |
 | Ajouter un match en PDF | Déposer le PDF dans `pdf/` : GitHub Actions le convertit et le range dans `pdf/archives/` |
 | Corriger un match | Page de saisie → nom du match → « Ouvrir un match du site… » → corriger → « Terminer » → déposer (même nom, remplace l'ancien) |
+| Placer par période les buts d'un vieux match | L'ouvrir dans la saisie : « sans période n » s'affiche ; choisir la période, puis « + » (but BLL ou accordé) place un de ces buts sans changer le score ; « − » le remet sans période |
 | Retraiter un PDF | Le recopier de `pdf/archives/` vers `pdf/` : il remplace le fichier du même match |
 | Supprimer un match | Supprimer son fichier dans `data/matchs/` (sur GitHub : ouvrir le fichier → ··· → Delete file) |
 
