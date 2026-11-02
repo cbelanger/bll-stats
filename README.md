@@ -101,7 +101,8 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
 
 - **Matchs** : liste des matchs de la saison, du plus vieux au plus récent ; un clic ouvre la fiche du match.
 - **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, zones et types de jeu.
-- **Équipe** : fiche V-D-N, moyennes par match, tirs cadrés moyens par période, buts accordés par zone et par type.
+- **Équipe** : fiche V-D-N, moyennes par match, tirs cadrés moyens par période, buts pour et contre par période
+  (seulement les matchs où chaque but a sa période), buts accordés par zone et par type.
 - Bas de page : date de publication du code et date de la dernière exécution de `extract.py`.
 
 ## Ajouter une gardienne

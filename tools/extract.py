@@ -209,6 +209,37 @@ def valider(champs):
     if tirs_adv is not None and buts_adv is not None and buts_adv > tirs_adv:
         erreurs.append("plus de buts accordés que de tirs cadrés adverses (un but compte aussi comme tir cadré)")
 
+    # Buts par période : connus seulement si chaque but a sa période (sinon None).
+    # Prolongation : 0 s'il y en a eu une (tirs ou buts en prolongation), sinon None.
+    prol = any(o and o["prol"] is not None for o in (per_nous, per_adv))
+    def par_periode(compte):
+        if compte.get("prol"):
+            return compte
+        return {**compte, "prol": 0 if prol else None}
+
+    def periode_de(v):
+        # « 1 », « P1 », « Prol. »
+        v = v.strip().lower().rstrip(".")
+        if v.startswith("prol"):
+            return "prol"
+        k = "p" + v.removeprefix("p")
+        return k if k in PERIODES else None
+
+    buts_per_nous = None
+    if buts_nous is not None and any(texte(champs, f"buts_nous_{p}") for p in PERIODES):
+        compte = {p: nombre(f"buts_nous_{p}") or 0 for p in PERIODES}
+        if sum(compte.values()) == buts_nous:
+            buts_per_nous = par_periode(compte)
+        else:
+            avertissements.append(f"buts marqués par période ({sum(compte.values())}) ≠ total ({buts_nous}) : périodes ignorées")
+    elif buts_nous == 0:
+        buts_per_nous = par_periode({p: 0 for p in PERIODES})
+
+    buts_per_adv = None
+    periodes_adv = [periode_de(b["periode"] or "") for b in detail]
+    if buts_adv == 0 or (buts_adv is not None and len(detail) == buts_adv and all(periodes_adv)):
+        buts_per_adv = par_periode({p: periodes_adv.count(p) for p in PERIODES})
+
     sz_t, sz_r = nombre("sz_tentatives"), nombre("sz_reussies")
     if sz_t is not None and sz_r is not None and sz_r > sz_t:
         erreurs.append("plus de sorties de zone réussies que de tentatives")
@@ -236,6 +267,7 @@ def valider(champs):
         "buts": {"nous": buts_nous, "adv": buts_adv},
         "tirs": {"nous": tirs_nous, "adv": tirs_adv},
         "tirs_par_periode": {"nous": per_nous, "adv": per_adv},
+        "buts_par_periode": {"nous": buts_per_nous, "adv": buts_per_adv},
         "sorties_zone": {"tentatives": sz_t, "reussies": sz_r},
         "buts_accordes": detail,
         "notes": texte(champs, "notes") or None,

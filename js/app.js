@@ -230,6 +230,15 @@ function vueEquipe() {
     const vals = avecP.map(m => m.tirs_par_periode[cote][k]).filter(v => v != null);
     return vals.length ? (vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1).replace(".", ",") : "–";
   };
+  // Buts par période : seulement les matchs où chaque but a sa période (pas les premiers matchs de la saison)
+  const avecB = { nous: ms.filter(m => m.buts_par_periode?.nous), adv: ms.filter(m => m.buts_par_periode?.adv) };
+  const totB = (cote, k) => {
+    const vals = avecB[cote].map(m => m.buts_par_periode[cote][k]).filter(v => v != null);
+    return vals.length ? vals.reduce((s, v) => s + v, 0) : null;
+  };
+  const ligneB = (lab, cote) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${totB(cote, k) ?? "–"}</div>`).join("")}
+    <div class="tot">${avecB[cote].length ? PERIODES.reduce((s, [k]) => s + (totB(cote, k) ?? 0), 0) : "–"}</div>`;
+  const nbM = n => `${n} match${n > 1 ? "s" : ""}`;
   const ag = agregerButs(ms);
   return `<h1>Équipe ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}</p>
   <section class="panneau" style="margin-top:1rem">
@@ -254,12 +263,23 @@ function vueEquipe() {
       <p class="sous" style="font-size:.85rem">Sur ${avecP.length} match${avecP.length > 1 ? "s" : ""} avec tirs par période.</p>
     </section>
     <section class="panneau">
-      <h3>Buts accordés par type de jeu</h3>${barresTypes(ag.types, ag.n)}
+      <h3>Buts par période</h3>
+      <div class="periodes">
+        <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
+        ${ligneB("Pour", "nous")}${ligneB("Contre", "adv")}
+      </div>
+      <p class="sous" style="font-size:.85rem">Total de la saison. Pour : ${nbM(avecB.nous.length)}, contre : ${nbM(avecB.adv.length)} sur ${nbM(ms.length)} ;
+        les matchs sans la période de chaque but ne sont pas comptés.</p>
     </section>
   </div>
-  <section class="panneau" style="margin-top:1rem">
-    <h3>Où entrent les buts accordés</h3>${filet(ag.zones, "chaleur")}
-  </section>`;
+  <div class="grille g2" style="margin-top:1rem">
+    <section class="panneau">
+      <h3>Buts accordés par type de jeu</h3>${barresTypes(ag.types, ag.n)}
+    </section>
+    <section class="panneau">
+      <h3>Où entrent les buts accordés</h3>${filet(ag.zones, "chaleur")}
+    </section>
+  </div>`;
 }
 
 /* ---------- Navigation */
