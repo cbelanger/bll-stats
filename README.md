@@ -9,8 +9,9 @@ Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et 
 |---|---|
 | Ajouter un match saisi sur téléphone | Page de saisie → « Terminer » → déposer le fichier dans `data/matchs/` |
 | Ajouter un match en PDF | Déposer le PDF dans `pdf/` : GitHub Actions le convertit et le range dans `pdf/archives/` |
-| Corriger un match | Page de saisie → nom du match → « Ouvrir un match du site… » → corriger → « Terminer » → déposer (même nom, remplace l'ancien) |
-| Placer par période les buts d'un vieux match | L'ouvrir dans la saisie : « sans période n » s'affiche ; choisir la période, puis « + » (but BLL ou accordé) place un de ces buts sans changer le score ; « − » le remet sans période |
+| Corriger un match | Page de saisie → menu ☰ → « Ouvrir un match du site… » → corriger → « Terminer » → déposer (même nom, remplace l'ancien) |
+| Placer par période les buts d'un vieux match | L'ouvrir dans la saisie : « sans période n » s'affiche ; choisir la période, puis « + » (but BLL ou accordé) place un de ces buts sans changer le score et ouvre sa fiche (temps, type) ; « − » le remet sans période |
+| Ajouter le temps ou le type d'un but | L'ouvrir dans la saisie → toucher la ligne du but dans « Buts du match » (BLL en bleu) |
 | Retraiter un PDF | Le recopier de `pdf/archives/` vers `pdf/` : il remplace le fichier du même match |
 | Supprimer un match | Supprimer son fichier dans `data/matchs/` (sur GitHub : ouvrir le fichier → ··· → Delete file) |
 
@@ -19,11 +20,14 @@ faire **Pull origin** avant ton prochain push.
 
 ## Ajouter un match en PDF
 
-1. Pendant le match : noter les données sur la feuille papier « Saisie ».
+1. Pendant le match : noter les données sur la feuille papier `fiches/BLL - Statistiques - Saisie - Match.pdf`
+   (tirs à barrer, **nos buts** : période, temps, type, sorties de zone, **buts accordés** : période, temps, type, zone).
 2. Après le match : remplir `fiches/BLL - Statistiques - Sommaire - Match.pdf` dans **Acrobat Reader**
    (les totaux, le filet et la validation de l'heure ne fonctionnent que dans Acrobat)
-   et l'enregistrer dans `pdf/`. Le nom du fichier PDF est libre. Section 2 : buts accordés (période, temps, type, zone) ;
-   section 3 : nos buts (période, temps, type), comme dans la saisie téléphone.
+   et l'enregistrer dans `pdf/`. Le nom du fichier PDF est libre.
+   Section 1 : stats générales ; section 2 : buts accordés (période, temps, type, zone) ;
+   section 3 : nos buts (période, temps, type) ; section 4 : sorties de zone ; section 5 : notes.
+   Un ancien Sommaire (sans section 3) reste accepté ; nos buts n'auront alors pas de détail.
 3. (Facultatif) Vérifier localement : `python tools/extract.py` (ne déplace rien), puis Live Server.
 4. Commit + push. GitHub Actions convertit le PDF, l'archive et publie le site en 1 à 2 minutes
    (Ctrl+F5 dans le navigateur si l'ancienne version reste affichée). Un PDF en erreur reste dans `pdf/`.
@@ -36,17 +40,23 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
 
 1. Avant le match : toucher le nom du match en haut pour remplir les infos (équipe, adversaire, no de match, gardienne).
 2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone. « + But » (BLL) et « + But accordé »
-   enregistrent le but tout de suite ; le détail (temps, type de jeu, et zone pour un but accordé) se complète maintenant
-   ou plus tard en touchant la ligne du but dans « Buts du match ».
-   « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
+   comptent le but (et un tir cadré) tout de suite et ouvrent sa fiche : temps au chrono (845 donne 8:45), type de jeu,
+   et zone pour un but accordé. « Plus tard » ferme la fiche ; toucher la ligne du but dans « Buts du match »
+   la rouvre. « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
 3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
 4. Pour le match suivant : bandeau vert « Nouveau match », ou menu ☰ → « Nouveau match » à tout moment.
    Un match pas encore exporté est mis de côté sur le téléphone : menu ☰ → « Récupérer » le remet en place.
 
 Les fichiers vont dans `data/matchs/` et ont les mêmes champs que le PDF Sommaire.
-Si le téléphone renomme le fichier « (1) », les deux fichiers du même match coexistent : le plus récent est
-gardé (avertissement) ; supprimer l'autre.
+
+Pour un match venu d'un PDF, changer la période d'un but ou le supprimer ne change pas les tirs (comptés à part sur papier).
+Après une mise à jour de la saisie, fermer et rouvrir la page (ou l'application) deux fois pour charger la nouvelle version.
+
+**Fichier « (1) »** : Edge ajoute « (1) » si un fichier du même nom est déjà dans Téléchargements. Les deux fichiers
+du même match coexistent alors dans `data/matchs/` : le plus récemment exporté est gardé (avertissement dans l'Action).
+Supprimer l'ancien, puis renommer le nouveau sans « (1) ». Pour l'éviter : supprimer l'ancien fichier de Téléchargements
+avant de télécharger.
 
 ### Si quelque chose ne va pas
 
@@ -79,8 +89,9 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
   deux équipes cochées, date invalide, adversaire ou score manquant, plus de buts accordés que de
   tirs cadrés adverses, plus de sorties de zone réussies que de tentatives.
 - **attention** : le match est publié quand même. Exemples : numéro de match ou gardienne manquant,
-  type ou zone de but manquant, nombre de buts en section 1 différent du nombre de lignes en section 2,
-  texte non numérique dans un champ numérique (valeur ignorée).
+  type ou zone de but accordé manquant, nombre de buts en section 1 différent du nombre de lignes en section 2
+  (buts accordés) ou 3 (nos buts), buts par période dont la somme ne donne pas le total, deux fichiers pour le
+  même match, texte non numérique dans un champ numérique (valeur ignorée).
 
 ## Structure
 
@@ -91,6 +102,7 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `pdf/` | PDF déposés, en attente d'import ; `pdf/archives/` : PDF déjà importés |
 | `data/gardiennes.json` | Liste officielle des gardiennes (nom, numéro) — édité à la main |
 | `saisie.html`, `css/saisie.css`, `js/saisie.js`, `sw-saisie.js` | Page de saisie sur téléphone (hors ligne grâce à `sw-saisie.js`) |
+| `saisie.webmanifest`, `assets/icones/` | Installation de la saisie comme application (icônes : `tools/generer_icones.py`) |
 | `data/matchs.json` | Généré par `tools/extract.py` — non versionné, ne pas éditer à la main |
 | `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |
 | `tools/extract.py` | Validation, import des PDF, production de `data/matchs.json` |
@@ -103,12 +115,17 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
 ## Le site
 
 - **Matchs** : liste des matchs de la saison, du plus vieux au plus récent ; un clic ouvre la fiche du match :
-  filet des buts accordés, sommaire (buts des deux équipes dans l'ordre, nos buts en bleu, score après chaque but
-  quand tous les temps sont connus ; le chrono descend), buts et tirs par période, sorties de zone.
-- **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, buts accordés et % d'arrêts
-  par période, zones et types de jeu.
-- **Équipe** : fiche V-D-N, moyennes par match, tirs cadrés moyens par période, buts pour et contre par période
-  (seulement les matchs où chaque but a sa période), buts accordés par zone et par type.
+  - filet des buts accordés ;
+  - **Sommaire** : buts des deux équipes dans l'ordre du match (nos buts en bleu, ceux de l'adversaire en rouge),
+    avec le score après chaque but quand la période et le temps de tous les buts sont connus (le chrono descend :
+    dans une période, 7:55 vient avant 6:29) ;
+  - **Par période** : buts et tirs cadrés, nous et adversaire ;
+  - sorties de zone, notes, et nom du fichier source.
+- **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, buts accordés, moyenne et
+  % d'arrêts par période, tendance du % d'arrêts, zones et types de jeu.
+- **Équipe** : fiche V-D-N, moyennes par match, tirs cadrés moyens par période, buts pour et contre par période,
+  buts accordés par type de jeu et par zone.
+- Les stats par période ne comptent que les matchs où la période de chaque but est connue ; « – » = donnée non disponible.
 - Bas de page : date de publication du code et date de la dernière exécution de `extract.py`.
 
 ## Ajouter une gardienne
@@ -127,6 +144,9 @@ les coquilles (numéro connu → nom officiel), compléter un numéro oublié et
 - Une gardienne par match : tous les tirs adverses du match lui sont attribués.
 - Tirs par période : une période P1 à P4 laissée vide compte pour 0 ; une prolongation vide
   signifie « pas de prolongation » et n'entre pas dans la moyenne de la prolongation.
+- Buts par période : un match où un but n'a pas de période est exclu (jamais compté comme 0) ;
+  un match sans but compte pour 0 dans chaque période.
+- % d'arrêts par période (gardiennes) : seulement les matchs où les tirs adverses par période sont aussi connus.
 - Saison : d'août à juillet (un match du 2026-11-01 compte pour 2026-2027).
 
 ## Licence
