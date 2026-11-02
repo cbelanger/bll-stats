@@ -7,3 +7,6 @@ Thumbs.db
 # Générés : localement par tools/extract.py, et par GitHub Actions au moment de publier
 data/matchs.json
 data/version.json
+
+# Instructions pour Claude Code : gardées sur le poste seulement
+CLAUDE.md
