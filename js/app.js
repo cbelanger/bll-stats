@@ -268,8 +268,8 @@ function vueEquipe() {
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
         ${ligneB("Pour", "nous")}${ligneB("Contre", "adv")}
       </div>
-      <p class="sous" style="font-size:.85rem">Total de la saison. Pour : ${nbM(avecB.nous.length)}, contre : ${nbM(avecB.adv.length)} sur ${nbM(ms.length)} ;
-        les matchs sans la période de chaque but ne sont pas comptés.</p>
+      <p class="sous" style="font-size:.85rem">Total de la saison, seulement pour les matchs où la période de chaque but est connue :
+        ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne Pour, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.</p>
     </section>
   </div>
   <div class="grille g2" style="margin-top:1rem">
