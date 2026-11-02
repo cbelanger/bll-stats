@@ -22,7 +22,8 @@ faire **Pull origin** avant ton prochain push.
 1. Pendant le match : noter les données sur la feuille papier « Saisie ».
 2. Après le match : remplir `fiches/BLL - Statistiques - Sommaire - Match.pdf` dans **Acrobat Reader**
    (les totaux, le filet et la validation de l'heure ne fonctionnent que dans Acrobat)
-   et l'enregistrer dans `pdf/`. Le nom du fichier PDF est libre.
+   et l'enregistrer dans `pdf/`. Le nom du fichier PDF est libre. Section 2 : buts accordés (période, temps, type, zone) ;
+   section 3 : nos buts (période, temps, type), comme dans la saisie téléphone.
 3. (Facultatif) Vérifier localement : `python tools/extract.py` (ne déplace rien), puis Live Server.
 4. Commit + push. GitHub Actions convertit le PDF, l'archive et publie le site en 1 à 2 minutes
    (Ctrl+F5 dans le navigateur si l'ancienne version reste affichée). Un PDF en erreur reste dans `pdf/`.

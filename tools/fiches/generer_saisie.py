@@ -63,19 +63,25 @@ txt("Grilles : barrer le PROCHAIN numéro à chaque événement — le dernier n
 
 LW=420; RX=M+LW+10; RW=W-M-RX; top=H-130
 # 1. Tirs cadrés
-cw=(LW-16-46)/10; ch=15.5
+cw=(LW-16-46)/10; ch=14.5
 h1=18+8+2*(5*ch+6)+4
 section("1","TIRS CADRÉS",M,top,LW,h1,"(tir qui aurait pu entrer sans la gardienne, ou qui finit par un but)")
 gy=top-24
 for lab in ["NOUS","ADV."]:
     txt(lab,M+8,gy-5*ch/2-3,10,True,RED if lab=="ADV." else NAVY)
     gy=grid(M+54,gy,50,10,cw,ch)-6
-# 2. Buts
-top2=top-h1-8; bcw=(LW-16-46)/15; h2=18+8+2*(17+5)+2
-section("2","BUTS",M,top2,LW,h2)
-gy=top2-24
-for lab in ["NOUS","ADV."]:
-    txt(lab,M+8,gy-12,10,True,RED if lab=="ADV." else NAVY); gy=grid(M+54,gy,15,15,bcw,17,fs=8)-5
+# 2. Nos buts : une colonne par but (période, temps, type) ; les buts accordés vont à la section 4
+NB=10; top2=top-h1-8; bcw=(LW-16-46)/NB; bh=16; h2=18+8+13+3*bh+6
+section("2","NOS BUTS",M,top2,LW,h2,"(un but par colonne ; buts accordés : section 4)")
+gx=M+8; gy=top2-24; gw=LW-16
+c.setFillColor(LIGHT); c.rect(gx,gy-13,gw,13,0,1)
+txt("But",gx+5,gy-9.5,8,True)
+for j in range(NB): ctxt(str(j+1),gx+46+j*bcw+bcw/2,gy-9.5,8,True)
+for i,lab in enumerate(["Pér.","Temps","Type"]):
+    ry=gy-13-(i+1)*bh; txt(lab,gx+5,ry+5,8.5,True)
+    c.setStrokeColor(LINE); c.setLineWidth(0.5); c.line(gx,ry,gx+gw,ry)
+c.setStrokeColor(LINE); c.setLineWidth(0.7); c.rect(gx,gy-13-3*bh,gw,13+3*bh)
+for j in range(NB): c.line(gx+46+j*bcw,gy-13-3*bh,gx+46+j*bcw,gy)
 # 3. Sorties de zone
 top3=top2-h2-8; scw=(LW-16-46)/25; sch=15; h3=18+8+2*(2*sch+5)+2
 section("3","SORTIES DE ZONE",M,top3,LW,h3,"(réussie = sortie en contrôle ou passe complétée)")

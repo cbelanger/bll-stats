@@ -31,6 +31,9 @@ def tf(name,x,y,w,h,multi=False,fs=10,tip=None):
         c.restoreState()
     f.textfield(name=name,tooltip=tip or name,x=x,y=y,width=w,height=h,
                 fieldFlags='multiline' if multi else '',**kw)
+def dd(name,x,y,w,opts,fs=9,tip=None):
+    f.choice(name=name,tooltip=tip or name,value=" ",x=x,y=y,width=w,height=16,options=opts,fieldFlags="combo",
+             borderColor=LINE,fillColor=white,textColor=black,borderWidth=0.6,fontName="Helvetica",fontSize=fs)
 def cb(name,x,y,size=11,checked=False,tip=None):
     f.checkbox(name=name,tooltip=tip or name,x=x,y=y,size=size,buttonStyle='check',
                borderColor=NAVY,fillColor=white,textColor=NAVY,borderWidth=1,checked=checked)
@@ -108,8 +111,27 @@ c.setFillColor(LIGHT); c.roundRect(tx,top-h1+6,colw-16,30,4,stroke=0,fill=1)
 txt("Tir cadré : tir qui aurait pu entrer dans le but sans l’intervention",tx+5,top-h1+25,7.4,col=NAVY)
 txt("de la gardienne, ou tir qui se termine par un but.",tx+5,top-h1+14,7.4,col=NAVY)
 
-# ---------- 3. Sorties de zone
-top3=top-h1-10; h3=118; section(3,"SORTIES DE ZONE RÉUSSIES",LX,top3,colw,h3)
+# ---------- 3. Buts marqués (une colonne par but : période, temps, type)
+topB=top-h1-10; hB=120; section(3,"BUTS MARQUÉS – DÉTAIL PAR BUT",LX,topB,colw,hB)
+NB=8; by=topB-28; lwB=44; bw=colw-16; bcw=(bw-lwB)/NB
+c.setFillColor(LIGHT); c.rect(tx,by-14,bw,14,stroke=0,fill=1)
+txt("But",tx+4,by-10,8.5,True)
+for j in range(NB):
+    c.setFillColor(TXT); c.setFont("Helvetica-Bold",8.5); c.drawCentredString(tx+lwB+j*bcw+bcw/2,by-10,str(j+1))
+for i,(lab,key) in enumerate([("Pér.","periode"),("Temps","temps"),("Type","type")]):
+    ry=by-14-(i+1)*20
+    txt(lab,tx+4,ry+7,8.5,True)
+    for j in range(NB):
+        n=j+1; x=tx+lwB+j*bcw+2; w=bcw-4
+        if key=="periode": dd(f"but_nous_{n}_periode",x,ry+2,w,[" ","1","2","3","4","Prol."],fs=8.5,tip=f"Notre but {n} – période")
+        elif key=="temps": tf(f"but_nous_{n}_temps",x,ry+2,w,16,fs=8.5,tip=f"Notre but {n} – temps (mm:ss)")
+        else: dd(f"but_nous_{n}_type",x,ry+2,w,[" ","P","T","L","R","E","D","FC","A"],fs=8.5,tip=f"Notre but {n} – type de jeu (codes de la section 2)")
+c.setStrokeColor(LINE); c.setLineWidth(0.6); c.rect(tx,by-74,bw,74)
+for j in range(NB): c.line(tx+lwB+j*bcw,by-74,tx+lwB+j*bcw,by)
+txt("Type de jeu : mêmes codes qu’à la section 2 (P, T, L, R, E, D, FC, A).",tx+2,topB-hB+6,7.4,col=NAVY)
+
+# ---------- 4. Sorties de zone
+top3=topB-hB-10; h3=118; section(4,"SORTIES DE ZONE RÉUSSIES",LX,top3,colw,h3)
 c.setFillColor(LIGHT); c.roundRect(tx,top3-66,colw-16,40,4,stroke=0,fill=1)
 for k,l in enumerate(["Réussie si l’équipe sort l’anneau de sa zone défensive en",
                       "conservant le contrôle ou par une passe complétée à une",
@@ -119,7 +141,7 @@ for i,(lab,key) in enumerate([("Tentatives de sortie de zone :","sz_tentatives")
     ry=top3-88-i*24; txt(lab,tx+4,ry+5,9,True); tf(key,LX+colw-78,ry,62,18,fs=12)
 
 # ---------- 6. Notes
-top6=top3-h3-10; h6=top6-M; section(4,"OBSERVATIONS ET NOTES",LX,top6,colw,h6)
+top6=top3-h3-10; h6=top6-M; section(5,"OBSERVATIONS ET NOTES",LX,top6,colw,h6)
 tf("notes",tx,M+8,colw-16,h6-36,multi=True)
 
 # ---------- 2. Buts accordés (une ligne par but)
@@ -157,12 +179,9 @@ xs=[rx];
 for _,w in cols: xs.append(xs[-1]+w)
 for (lab,w),x0 in zip(cols,xs): txt(lab,x0+4,ty-11.5,8.8,True)
 LEGENDE=[("P","Pick / tir après écran ou action de blocage"),("T","Entrée dans le triangle"),("L","Tir de loin"),("R","Rebond"),
-         ("E","Échappée / joueuse seule devant la gardienne"),("D","Déviation"),("FC","Fille de coin"),("A","Autre (préciser à la section 4)")]
+         ("E","Échappée / joueuse seule devant la gardienne"),("D","Déviation"),("FC","Fille de coin"),("A","Autre (préciser à la section 5)")]
 types=[" "]+[f"{k} – {v.split(' (')[0] if k=='A' else v}" for k,v in LEGENDE]
 types=[" ","P – Pick / écran","T – Triangle","L – Tir de loin","R – Rebond","E – Échappée","D – Déviation","FC – Fille de coin","A – Autre"]
-def dd(name,x,y,w,opts,fs=9,tip=None):
-    f.choice(name=name,tooltip=tip or name,value=" ",x=x,y=y,width=w,height=16,options=opts,fieldFlags="combo",
-             borderColor=LINE,fillColor=white,textColor=black,borderWidth=0.6,fontName="Helvetica",fontSize=fs)
 for n in range(1,N+1):
     ry=ty-16-n*rh
     txt(str(n),rx+9 if n<10 else rx+6,ry+rh/2-3.5,9.5,True)

@@ -216,8 +216,8 @@ def valider(champs):
         if typ and typ not in CODES_TYPE:
             avertissements.append(f"but BLL {n} : type inconnu « {typ} »")
         marques.append({"no": n, "periode": per or None, "temps": tps or None, "type": typ or None})
-    if buts_nous is not None and len(marques) > buts_nous:
-        avertissements.append(f"{buts_nous} but(s) marqué(s), mais {len(marques)} but(s) BLL détaillé(s)")
+    if buts_nous is not None and marques and len(marques) != buts_nous:
+        avertissements.append(f"{buts_nous} but(s) marqué(s) en section 1, mais {len(marques)} but(s) BLL détaillé(s) en section 3")
 
     if buts_adv is not None and detail and len(detail) != buts_adv:
         avertissements.append(f"{buts_adv} but(s) accordé(s) en section 1, mais {len(detail)} ligne(s) en section 2")
