@@ -111,15 +111,17 @@ main {
   font-weight: 600;
 }
 
-/* Buts accordés */
+/* Buts du match (BLL et accordés) */
 .liste { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; }
 .but {
-  width: 100%; display: grid; grid-template-columns: 1.6rem 2.6rem 3.2rem 1fr 2.4rem .8rem; align-items: center; gap: .3rem;
+  width: 100%; display: grid; grid-template-columns: 2rem 2.6rem 3.2rem 1fr 2.4rem .8rem; align-items: center; gap: .3rem;
   min-height: 46px; padding: 0 .5rem; border: 1px solid var(--trait); border-radius: 8px;
   background: var(--glace); text-align: left; font: 600 1.05rem/1 var(--titre); font-variant-numeric: tabular-nums;
 }
 .but .no, .but .fl { color: var(--doux); }
 .but .fl { text-align: right; }
+.but.nous { background: color-mix(in srgb, var(--marine) 12%, var(--surface)); border-color: color-mix(in srgb, var(--marine) 35%, transparent); }
+.but.nous .no { color: var(--marine); font-size: .9rem; }
 .but .ty { color: var(--rouge); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .but .ty span { color: var(--encre); font-weight: 500; }
 .match-l {

@@ -34,8 +34,9 @@ Pour l'installer comme une application (icône BLL sur l'écran d'accueil, plein
 menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes se régénèrent avec `python tools/generer_icones.py`.
 
 1. Avant le match : toucher le nom du match en haut pour remplir les infos (équipe, adversaire, no de match, gardienne).
-2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone. « + But accordé » enregistre le but
-   tout de suite ; le détail (temps, type, zone) se complète maintenant ou plus tard en touchant la ligne du but.
+2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone. « + But » (BLL) et « + But accordé »
+   enregistrent le but tout de suite ; le détail (temps, type de jeu, et zone pour un but accordé) se complète maintenant
+   ou plus tard en touchant la ligne du but dans « Buts du match ».
    « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
 3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
@@ -100,7 +101,9 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
 
 ## Le site
 
-- **Matchs** : liste des matchs de la saison, du plus vieux au plus récent ; un clic ouvre la fiche du match.
+- **Matchs** : liste des matchs de la saison, du plus vieux au plus récent ; un clic ouvre la fiche du match :
+  filet des buts accordés, déroulement du match (buts des deux équipes dans l'ordre, score après chaque but
+  quand tous les temps sont connus ; le chrono descend), buts et tirs par période, sorties de zone.
 - **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, buts accordés et % d'arrêts
   par période, zones et types de jeu.
 - **Équipe** : fiche V-D-N, moyennes par match, tirs cadrés moyens par période, buts pour et contre par période

@@ -51,7 +51,8 @@ const tirsInconnus = c => !!(S.tirsInconnus && S.tirsInconnus[c]);
 const aDesDonnees = () => somme(S.tirs.nous) + somme(S.tirs.adv) + S.butsNous.length + S.butsAdv.length + S.sz.r + S.sz.x > 0;
 
 let S = lireStockage(CLE) || nouveau();
-let hist = [], courant = null, brouillon = null;
+let hist = [], courant = null, courantCote = "adv", brouillon = null;   // but ouvert dans la feuille
+const buts = c => c === "nous" ? S.butsNous : S.butsAdv;
 
 // Liste officielle (data/gardiennes.json) ; dernière copie gardée pour le hors-ligne
 const CLE_GARDIENNES = "bll-saisie-gardiennes";
@@ -107,15 +108,22 @@ function afficher() {
   $("#szp").textContent = tot ? `${Math.round(100 * S.sz.r / tot)} % réussies` : "";
   $("#gard").textContent = S.gardienne;
 
+  // Buts des deux équipes dans l'ordre du match : période, puis temps décroissant (chrono qui descend),
+  // sinon ordre de saisie. Les buts accordés gardent leur numéro (celui du filet sur le site).
   const m = '<i class="manque">?</i>';
-  $("#liste").innerHTML = S.butsAdv.length ? S.butsAdv.map((b, i) => `
-    <li><button type="button" class="but" data-act="but-edit" data-i="${i}" aria-label="Modifier le but accordé ${i + 1}">
-      <span class="no">${i + 1}</span><span>${nomP(b.periode)}</span><span>${b.temps || m}</span>
+  const ordreP = k => { const i = PER.findIndex(p => p[0] === k); return i < 0 ? 9 : i; };
+  const sec = t => { const x = /^(\d+):(\d{2})$/.exec(t || ""); return x ? 60 * x[1] + Number(x[2]) : null; };
+  const tous = ["adv", "nous"].flatMap(c => buts(c).map((b, i) => ({ b, i, c })))
+    .sort((x, y) => ordreP(x.b.periode) - ordreP(y.b.periode)
+      || (sec(x.b.temps) != null && sec(y.b.temps) != null ? sec(y.b.temps) - sec(x.b.temps) : 0));
+  $("#liste").innerHTML = tous.length ? tous.map(({ b, i, c }) => `
+    <li><button type="button" class="but ${c}" data-act="but-edit" data-c="${c}" data-i="${i}" aria-label="Modifier le but ${c === "nous" ? "BLL" : "accordé"} ${i + 1}">
+      <span class="no">${c === "nous" ? "BLL" : i + 1}</span><span>${nomP(b.periode)}</span><span>${b.temps || m}</span>
       <span class="ty">${b.type ? `${b.type} <span>${TYPES.find(t => t[0] === b.type)[1]}</span>` : m}</span>
-      <span>${b.zone || m}</span><span class="fl" aria-hidden="true">›</span>
+      <span>${c === "nous" ? "" : b.zone || m}</span><span class="fl" aria-hidden="true">›</span>
     </button></li>`).join("")
-    : `<li class="vide">Aucun but accordé. Touche « + But accordé » au moment du but.</li>`;
-  const incomplets = S.butsAdv.filter(b => !b.temps || !b.type || !b.zone).length;
+    : `<li class="vide">Aucun but. Touche « + But » ou « + But accordé » au moment du but.</li>`;
+  const incomplets = S.butsAdv.filter(b => !b.temps || !b.type || !b.zone).length + S.butsNous.filter(b => !b.temps || !b.type).length;
   $("#note-liste").textContent = incomplets ? `${incomplets} but${incomplets > 1 ? "s" : ""} à compléter (?) : touche la ligne quand le jeu est arrêté.` : "";
   $("#note-liste").hidden = !incomplets;
 
@@ -138,9 +146,10 @@ function majFeuilleBut() {
   document.querySelectorAll("[data-bt]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bt === brouillon.type));
   document.querySelectorAll("[data-bz]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bz === brouillon.zone));
 }
-function ouvrirBut(i) {
-  courant = i; brouillon = { ...S.butsAdv[i] };
-  $("#fb-titre").textContent = `But accordé no ${i + 1}`;
+function ouvrirBut(cote, i) {
+  courant = i; courantCote = cote; brouillon = { temps: "", type: "", ...buts(cote)[i] };
+  $("#fb-titre").textContent = cote === "nous" ? `But BLL no ${i + 1}` : `But accordé no ${i + 1}`;
+  $("#fb-zone").hidden = cote === "nous";   // la zone n'est notée que pour les buts accordés
   $("#temps").value = brouillon.temps;
   $("#err-temps").hidden = true;
   majFeuilleBut();
@@ -212,9 +221,15 @@ function champs() {
     c[`but_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
     c[`but_${n}_temps`] = b.temps; c[`but_${n}_type`] = b.type; c[`but_${n}_zone`] = b.zone;
   });
-  // Buts BLL par période : absent du PDF, gardé pour pouvoir rouvrir le match (ignoré par extract.py)
+  // Buts BLL (absents du PDF) : nombre par période, et une ligne par but détaillé (période, temps, type)
   const bp = compteP(S.butsNous);
   for (const [k] of PER) if (bp[k]) c[`buts_nous_${k}`] = bp[k];
+  S.butsNous.forEach((b, i) => {
+    if (!b.periode && !b.temps && !b.type) return;
+    const n = i + 1;
+    c[`but_nous_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
+    c[`but_nous_${n}_temps`] = b.temps || ""; c[`but_nous_${n}_type`] = b.type || "";
+  });
   return c;
 }
 // Même règle que nom_fichier() dans tools/extract.py ; un match rouvert garde son nom pour remplacer le fichier
@@ -235,10 +250,15 @@ function depuisChamps(c, fichier, origine) {
     if (!somme(s.tirs[cote])) s.tirs[cote].p1 = n(`tirs_${cote}`);   // PDF sans détail par période
     s.tirsInconnus[cote] = !PER.some(([k]) => t(`tirs_${cote}_${k}`)) && !t(`tirs_${cote}`);
   }
-  // Buts BLL : par période si connue, sinon période inconnue (le total reste exact)
-  for (const [k] of PER) for (let i = 0; i < n(`buts_nous_${k}`); i++) s.butsNous.push({ periode: k });
-  while (s.butsNous.length < n("buts_nous")) s.butsNous.push({ periode: null });
+  // Buts BLL : lignes détaillées si présentes, sinon nombre par période ; le reste sans période (le total reste exact)
   const per = { "1": "p1", "2": "p2", "3": "p3", "4": "p4", "Prol.": "prol" };
+  const maxN = Math.max(0, ...Object.keys(c).map(k => (k.match(/^but_nous_(\d+)_/) || [])[1] || 0).map(Number));
+  for (let i = 1; i <= maxN; i++) {
+    const b = { periode: per[t(`but_nous_${i}_periode`)] || null, temps: t(`but_nous_${i}_temps`), type: t(`but_nous_${i}_type`).split(/\s+[–-]\s+/)[0] };
+    if (t(`but_nous_${i}_periode`) || b.temps || b.type) s.butsNous.push(b);
+  }
+  if (!maxN) for (const [k] of PER) for (let i = 0; i < n(`buts_nous_${k}`); i++) s.butsNous.push({ periode: k, temps: "", type: "" });
+  while (s.butsNous.length < n("buts_nous")) s.butsNous.push({ periode: null, temps: "", type: "" });
   const max = Math.max(15, ...Object.keys(c).map(k => (k.match(/^but_(\d+)_periode$/) || [])[1] || 0).map(Number));
   for (let i = 1; i <= max; i++) {
     const b = { periode: per[t(`but_${i}_periode`)] || null, temps: t(`but_${i}_temps`),
@@ -406,13 +426,15 @@ document.addEventListener("click", e => {
     case "but-nous": {
       const j = S.butsNous.findIndex(x => !x.periode);
       if (j >= 0) {
-        action(`But BLL placé en ${lp}`, () => { S.butsNous[j] = { periode: P, place: true }; });
+        action(`But BLL placé en ${lp}`, () => { S.butsNous[j] = { ...S.butsNous[j], periode: P, place: true }; });
         const n = sansPeriode(S.butsNous);
         toast(`But BLL placé en ${lp}, score inchangé${n ? ` (${n} encore sans période)` : ""}`);
+        ouvrirBut("nous", j);
         break;
       }
-      action(`But BLL ${lp}`, () => { S.butsNous.push({ periode: P }); S.tirs.nous[P]++; }, true);
-      toast(`But BLL en ${lp} (+1 tir cadré)`);
+      // Comme un but accordé : compte tout de suite, temps et type maintenant ou plus tard
+      action(`But BLL ${lp}`, () => { S.butsNous.push({ periode: P, temps: "", type: "" }); S.tirs.nous[P]++; }, true);
+      ouvrirBut("nous", S.butsNous.length - 1);
       break;
     }
     case "but-nous-moins": {
@@ -432,38 +454,39 @@ document.addEventListener("click", e => {
         action(`But accordé placé en ${lp}`, () => { S.butsAdv[j] = { ...S.butsAdv[j], periode: P, place: true }; });
         const n = sansPeriode(S.butsAdv);
         toast(`But accordé no ${j + 1} placé en ${lp}, score inchangé${n ? ` (${n} encore sans période)` : ""}`);
-        ouvrirBut(j);
+        ouvrirBut("adv", j);
         break;
       }
       // Le but compte tout de suite ; le détail se complète maintenant ou plus tard
       action(`But accordé ${lp}`, () => { S.butsAdv.push({ periode: P, temps: "", type: "", zone: "" }); S.tirs.adv[P]++; }, true);
-      ouvrirBut(S.butsAdv.length - 1);
+      ouvrirBut("adv", S.butsAdv.length - 1);
       break;
     }
-    case "but-edit": ouvrirBut(Number(b.dataset.i)); break;
+    case "but-edit": ouvrirBut(b.dataset.c, Number(b.dataset.i)); break;
     case "but-ok": {
       const t = normTemps($("#temps").value);
       if (t === null) { $("#err-temps").hidden = false; break; }
-      const i = courant, nouv = { ...brouillon, temps: t };
-      action(`Détail du but ${i + 1}`, () => {
-        const ancien = S.butsAdv[i];
+      const i = courant, c = courantCote, nouv = { ...brouillon, temps: t };
+      action(`Détail du but ${c === "nous" ? "BLL " : ""}${i + 1}`, () => {
+        const ancien = buts(c)[i];
         if (ancien.periode !== nouv.periode && ancien.periode && nouv.periode && tirLie(ancien)) {
-          S.tirs.adv[ancien.periode] = Math.max(0, S.tirs.adv[ancien.periode] - 1);
-          S.tirs.adv[nouv.periode]++;
+          S.tirs[c][ancien.periode] = Math.max(0, S.tirs[c][ancien.periode] - 1);
+          S.tirs[c][nouv.periode]++;
         }
-        S.butsAdv[i] = nouv;
+        buts(c)[i] = nouv;
       });
       $("#f-but").close();
       break;
     }
     case "but-suppr": {
-      const i = courant;
-      action(`Suppression du but ${i + 1}`, () => {
-        const x = S.butsAdv.splice(i, 1)[0];
-        if (x.periode && tirLie(x)) S.tirs.adv[x.periode] = Math.max(0, S.tirs.adv[x.periode] - 1);
+      const i = courant, c = courantCote;
+      action(`Suppression du but ${c === "nous" ? "BLL " : ""}${i + 1}`, () => {
+        const x = buts(c).splice(i, 1)[0];
+        if (x.periode && tirLie(x)) S.tirs[c][x.periode] = Math.max(0, S.tirs[c][x.periode] - 1);
       });
       $("#f-but").close();
-      toast(S.origine === "pdf" ? "But supprimé (tirs inchangés). « Annuler » le remet." : "But supprimé (−1 tir adverse). « Annuler » le remet.");
+      toast(S.origine === "pdf" ? "But supprimé (tirs inchangés). « Annuler » le remet."
+        : `But supprimé (−1 tir ${c === "nous" ? "BLL" : "adverse"}). « Annuler » le remet.`);
       break;
     }
     case "sz": {

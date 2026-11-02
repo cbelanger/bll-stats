@@ -123,6 +123,36 @@ function vueMatchs() {
       </tr>`).join("")}</tbody></table></div>`;
 }
 
+// Buts des deux équipes dans l'ordre du match : période, puis temps décroissant (le chrono descend).
+// Score après chaque but seulement si tous les buts ont leur période et leur temps (sinon l'ordre est incertain).
+function deroulement(m) {
+  const idxP = p => { const v = String(p ?? "").trim().toLowerCase().replace(/^p/, "").replace(/\.$/, "");
+    return v.startsWith("rol") || v.startsWith("prol") ? 4 : ["1", "2", "3", "4"].indexOf(v); };
+  const sec = t => { const x = /^(\d+):(\d{2})$/.exec(t || ""); return x ? 60 * x[1] + Number(x[2]) : null; };
+  const adv = m.buts_accordes.map(b => ({ eq: "adv", ...b }));
+  let nous = (m.buts_marques || []).map(b => ({ eq: "nous", ...b }));
+  if (!nous.length && m.buts_par_periode?.nous)   // vieux matchs : seulement le nombre de buts par période
+    nous = PERIODES.flatMap(([k], i) => Array.from({ length: m.buts_par_periode.nous[k] || 0 }, () => ({ eq: "nous", periode: String(i + 1), temps: null })));
+  const tous = [...adv, ...nous].map(b => ({ ...b, i: idxP(b.periode), s: sec(b.temps) }));
+  if (!tous.length) return m.buts.nous + m.buts.adv ? `<p class="vide">Détail des buts non disponible.</p>` : `<p class="vide">Aucun but.</p>`;
+  tous.sort((a, b) => ((a.i < 0 ? 9 : a.i) - (b.i < 0 ? 9 : b.i)) || ((b.s ?? -1) - (a.s ?? -1)));
+  const complet = adv.length === m.buts.adv && nous.length === m.buts.nous && tous.every(b => b.i >= 0 && b.s != null);
+  const sc = { nous: 0, adv: 0 };
+  const lignes = tous.map(b => {
+    sc[b.eq]++;
+    return `<tr class="${b.eq === "nous" ? "but-nous" : ""}"><td>${b.no && b.eq === "adv" ? b.no : ""}</td>
+      <td>${b.i >= 0 ? PERIODES[b.i][1] : "?"}</td><td>${esc(b.temps || "–")}</td>
+      <td class="txt equipe">${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}</td>
+      <td class="txt">${b.type ? `<span class="code-t">${b.type}</span><span class="opt">${TYPES[b.type] || ""}</span>` : "–"}</td>
+      <td>${esc(b.zone || "")}</td>${complet ? `<td class="n score-c">${sc.nous}–${sc.adv}</td>` : ""}</tr>`;
+  }).join("");
+  const manque = m.buts.nous + m.buts.adv - tous.length;
+  return `<div class="defile"><table class="deroulement">
+    <thead><tr><th title="Numéro dans le filet">#</th><th>Pér.</th><th>Temps</th><th>But</th><th>Type de jeu</th><th>Zone</th>${complet ? `<th class="n">Score</th>` : ""}</tr></thead>
+    <tbody>${lignes}</tbody></table></div>
+    ${complet ? "" : `<p class="sous" style="font-size:.85rem">${manque > 0 ? `${manque} but${manque > 1 ? "s" : ""} sans détail. ` : ""}Ordre approximatif : période ou temps manquant pour certains buts.</p>`}`;
+}
+
 function vueMatch(id) {
   const m = etat.matchs.find(x => x.id === id);
   if (!m) return `<a class="retour" href="#/matchs">← Matchs</a><p class="vide">Ce match n’existe pas ou n’a pas encore été publié.</p>`;
@@ -147,12 +177,8 @@ function vueMatch(id) {
       ${filet(nums, "numeros")}
     </section>
     <section class="panneau">
-      <h3>Détail par but</h3>
-      ${m.buts_accordes.length ? `<div class="defile"><table>
-        <thead><tr><th>But</th><th>Pér.</th><th>Temps</th><th>Type de jeu</th><th>Zone</th></tr></thead>
-        <tbody>${m.buts_accordes.map(b => `<tr><td>${b.no}</td><td>${esc(b.periode || "–")}</td><td>${esc(b.temps || "–")}</td>
-          <td class="txt">${b.type ? `<span class="code-t">${b.type}</span>${TYPES[b.type] || ""}` : "–"}</td><td>${esc(b.zone || "–")}</td></tr>`).join("")}</tbody>
-      </table></div>` : `<p class="vide">Aucun but accordé détaillé.</p>`}
+      <h3>Déroulement du match</h3>
+      ${deroulement(m)}
     </section>
   </div>
 

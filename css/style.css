@@ -142,6 +142,10 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 @media (prefers-color-scheme: dark) { .barre-l .rempli { background: #6E93D6; } }
 .barre-l .rempli.r { background: var(--rouge); }
 .barre-l b { text-align: right; font-variant-numeric: tabular-nums; }
+.deroulement tr.but-nous { background: color-mix(in srgb, var(--marine) 8%, transparent); }
+.deroulement tr.but-nous .equipe { font-weight: 700; color: var(--marine); }
+.deroulement .score-c { font-weight: 700; }
+@media (prefers-color-scheme: dark) { .deroulement tr.but-nous .equipe { color: #8FB0EA; } }
 .code-t { font: 700 .95rem var(--titre); color: var(--rouge); display: inline-block; min-width: 1.6rem; }
 
 /* Tirs par période */

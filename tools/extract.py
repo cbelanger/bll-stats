@@ -204,6 +204,21 @@ def valider(champs):
         detail.append({"no": n, "periode": per or None, "temps": tps or None,
                        "type": typ or None, "zone": zon or None})
 
+    # Nos buts détaillés (saisie téléphone seulement : but_nous_n_periode / _temps / _type)
+    marques = []
+    nums = [int(m.group(1)) for k in champs if (m := re.fullmatch(r"but_nous_(\d+)_(?:periode|temps|type)", k))]
+    for n in range(1, max(nums, default=0) + 1):
+        per = texte(champs, f"but_nous_{n}_periode")
+        tps = texte(champs, f"but_nous_{n}_temps")
+        typ = re.split(r"\s+[–-]\s+", texte(champs, f"but_nous_{n}_type"))[0].strip()
+        if not any([per, tps, typ]):
+            continue
+        if typ and typ not in CODES_TYPE:
+            avertissements.append(f"but BLL {n} : type inconnu « {typ} »")
+        marques.append({"no": n, "periode": per or None, "temps": tps or None, "type": typ or None})
+    if buts_nous is not None and len(marques) > buts_nous:
+        avertissements.append(f"{buts_nous} but(s) marqué(s), mais {len(marques)} but(s) BLL détaillé(s)")
+
     if buts_adv is not None and detail and len(detail) != buts_adv:
         avertissements.append(f"{buts_adv} but(s) accordé(s) en section 1, mais {len(detail)} ligne(s) en section 2")
     if tirs_adv is not None and buts_adv is not None and buts_adv > tirs_adv:
@@ -234,6 +249,9 @@ def valider(champs):
             avertissements.append(f"buts marqués par période ({sum(compte.values())}) ≠ total ({buts_nous}) : périodes ignorées")
     elif buts_nous == 0:
         buts_per_nous = par_periode({p: 0 for p in PERIODES})
+    elif marques and len(marques) == buts_nous and all(periode_de(b["periode"] or "") for b in marques):
+        p_marques = [periode_de(b["periode"]) for b in marques]
+        buts_per_nous = par_periode({p: p_marques.count(p) for p in PERIODES})
 
     buts_per_adv = None
     periodes_adv = [periode_de(b["periode"] or "") for b in detail]
@@ -270,6 +288,7 @@ def valider(champs):
         "buts_par_periode": {"nous": buts_per_nous, "adv": buts_per_adv},
         "sorties_zone": {"tentatives": sz_t, "reussies": sz_r},
         "buts_accordes": detail,
+        "buts_marques": marques,
         "notes": texte(champs, "notes") or None,
     }, [], avertissements
 
