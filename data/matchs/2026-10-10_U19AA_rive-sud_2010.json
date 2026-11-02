@@ -1,6 +1,6 @@
 {
   "format": "bll-match-1",
-  "exporte_le": "2026-11-02T01:52:10.776Z",
+  "exporte_le": "2026-11-02T02:07:34.108Z",
   "source": "pdf",
   "champs": {
     "equipe_U16AA": "",
@@ -56,6 +56,7 @@
     "but_7_periode": "4",
     "but_7_temps": "1:34",
     "but_7_type": "",
-    "but_7_zone": ""
+    "but_7_zone": "",
+    "buts_nous_p1": 1
   }
 }
