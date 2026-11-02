@@ -17,6 +17,9 @@ La source de vérité est `data/matchs/`, un fichier par match, nommé `AAAA-MM-
    (localStorage, `sw-saisie.js` pour le hors-ligne) ; « Terminer » télécharge le JSON, déposé à la main dans `data/matchs/`.
    « Ouvrir un match du site » recharge n'importe quel fichier de `data/matchs/` pour le corriger et le réexporter
    sous le même nom (les tirs jamais saisis restent vides, les buts sans détail gardent une période inconnue).
+   Menu ☰ (en-tête) : Nouveau match (une touche), Ouvrir un match du site, Infos, Récupérer. Un match non exporté
+   est mis de côté (localStorage `bll-saisie-precedent`, un seul) avant Nouveau/Ouvrir ; « Récupérer » échange
+   le match en cours et celui mis de côté. Installable comme application (PWA, menu Edge → Ajouter au téléphone).
 2. **PDF** : « Sommaire » rempli dans Acrobat → déposé dans `pdf/`. Au push sur `main`, GitHub Actions
    (`.github/workflows/publier.yml`) lance `extract.py --importer` : chaque PDF valide devient `data/matchs/….json`
    (remplace le même match s'il existe) et est déplacé dans `pdf/archives/` ; commit « Import automatique des PDF »
@@ -34,13 +37,18 @@ generer_sommaire.py (liste du PDF) et extract.py (`normaliser_gardienne` : numé
 nom connu sans numéro → numéro ajouté ; inconnue → avertissement). Le site regroupe les gardiennes par numéro.
 
 `data/matchs.json` et `data/version.json` ne sont pas versionnés (`.gitignore`) : lancer `extract.py` localement
-sert seulement à vérifier avec Live Server. Tag `avant-github-action` = état du site avant ce fonctionnement.
+sert seulement à vérifier avec Live Server. Tags de retour en arrière : `avant-github-action` (avant l'Action)
+et `avant-un-fichier-par-match` (avant `data/matchs/`).
+
+Git : Christian commit/push avec GitHub Desktop (le git en ligne de commande n'a pas d'identifiants pour pousser ;
+un tag créé en CLI n'est pas poussé par Desktop). Il fait Pull après chaque import automatique de PDF.
+GitHub Pages : Settings → Pages → Source = « GitHub Actions ». Une exécution en échec envoie un courriel.
 
 ## Structure
 
 | Chemin | Rôle |
 |---|---|
-| `index.html` | Page unique ; navigation par hash `#/matchs`, `#/match/<id>`, `#/gardiennes`, `#/equipe` |
+| `index.html` | Page unique ; navigation par hash `#/matchs`, `#/match/<id>`, `#/gardiennes`, `#/equipe` ; bas de page : date du code (`data/version.json`, écrit par l'Action) et des stats (`genere_le` de matchs.json) |
 | `js/app.js` | Toute la logique (JS vanilla, aucune dépendance, aucun build) |
 | `css/style.css` | Styles ; jetons de couleur dans `:root` (marine #16336B, rouge #D7192D), mode sombre |
 | `tools/extract.py` | Validation (erreurs bloquantes / avertissements), import PDF → `data/matchs/`, écrit `data/matchs.json` |
@@ -88,3 +96,10 @@ Périodes : P1 à P4 + Prolongation.
   Éviter `AFTime_FormatEx` : la valeur devenait invisible hors focus ; on utilise une validation maison.
 - Tester localement avec Live Server ou `python -m http.server 8000` (pas en ouvrant index.html directement).
 - Après toute modification d'extract.py : relancer `python tools/extract.py` et vérifier le site.
+- Licence MIT pour le code seulement ; logo et données de match : tous droits réservés (voir LICENSE, README).
+
+## Idées proposées, pas encore choisies
+
+⚠ dans « Ouvrir un match du site » pour les matchs incomplets ; nos buts par période sur le site ;
+bilan par adversaire ; tests automatiques dans l'Action ; bouton « Publier » dans la saisie (API GitHub,
+jeton fin gardé dans le téléphone) ; vérifier avec le club la publication des données (dépôt public).
