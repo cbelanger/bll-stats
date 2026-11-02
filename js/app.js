@@ -108,7 +108,7 @@ function agregerButs(matchs) {
 function vueMatchs() {
   // Du plus vieux au plus récent
   const ms = filtres().sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
-  if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}. Dépose un sommaire dans pdf/ et lance tools/extract.py.</p>`;
+  if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
   return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}</p>
   <div class="panneau defile" style="margin-top:1rem"><table>
     <thead><tr><th class="opt">No</th><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n opt">Tirs</th><th class="opt">Gardienne</th><th class="n">% arrêts</th></tr></thead>
@@ -364,7 +364,8 @@ async function demarrer() {
     $("#maj").textContent = `Dernière mise à jour des stats : ${data.genere_le.includes("T") ? dateHeure(new Date(data.genere_le)) : dateFr(data.genere_le)}`;
     versionCode();
   } catch (e) {
-    el.innerHTML = `<p class="vide">Impossible de lire data/matchs.json. Lance tools/extract.py, puis ouvre le site par un serveur (Live Server ou python -m http.server), pas en double-cliquant sur le fichier.</p>`;
+    el.innerHTML = `<p class="vide">Les statistiques ne sont pas disponibles pour le moment. Réessayer plus tard.</p>`;
+    // En local : lancer tools/extract.py, puis ouvrir le site par un serveur (Live Server ou python -m http.server)
     return;
   }
   const saisons = [...new Set(etat.matchs.map(m => m.saison))].sort().reverse();
