@@ -191,6 +191,29 @@ function vueGardiennes() {
     const ag = agregerButs(ms);
     const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length, n = ms.length - v - d;
     const pts = [...avecTirs].sort((a, b) => a.date.localeCompare(b.date)).map(m => ({ date: m.date, v: svArret(m) }));
+    // Par période : matchs où chaque but accordé a sa période ; % d'arrêts si les tirs par période sont connus aussi.
+    // Prolongation null = pas jouée : seuls les matchs avec prolongation comptent dans sa colonne.
+    const avecBP = ms.filter(m => m.buts_par_periode?.adv), avecTP = avecBP.filter(m => m.tirs_par_periode.adv);
+    const parP = k => {
+      const b = avecBP.map(m => m.buts_par_periode.adv[k]).filter(v => v != null);
+      const t = avecTP.filter(m => m.tirs_par_periode.adv[k] != null && m.buts_par_periode.adv[k] != null);
+      const tirsP = t.reduce((s, m) => s + m.tirs_par_periode.adv[k], 0), butsT = t.reduce((s, m) => s + m.buts_par_periode.adv[k], 0);
+      return { buts: b.length ? b.reduce((s, v) => s + v, 0) : null, n: b.length,
+               arrets: tirsP ? `${Math.round(100 * (tirsP - butsT) / tirsP)} %` : "–" };
+    };
+    const P = Object.fromEntries(PERIODES.map(([k]) => [k, parP(k)]));
+    const totBP = PERIODES.reduce((s, [k]) => s + (P[k].buts ?? 0), 0);
+    const tirsTP = avecTP.reduce((s, m) => s + m.tirs.adv, 0), butsTP = avecTP.reduce((s, m) => s + m.buts.adv, 0);
+    const blocP = avecBP.length ? `
+      <h3 style="margin-top:1.25rem">Buts accordés par période</h3>
+      <div class="periodes">
+        <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
+        <div class="l">Buts</div>${PERIODES.map(([k]) => `<div>${P[k].buts ?? "–"}</div>`).join("")}<div class="tot">${totBP}</div>
+        <div class="l">Moy.</div>${PERIODES.map(([k]) => `<div>${P[k].n ? moy(P[k].buts, P[k].n) : "–"}</div>`).join("")}<div class="tot">${moy(totBP, avecBP.length)}</div>
+        <div class="l">% arr.</div>${PERIODES.map(([k]) => `<div>${P[k].arrets}</div>`).join("")}<div class="tot">${tirsTP ? `${Math.round(100 * (tirsTP - butsTP) / tirsTP)} %` : "–"}</div>
+      </div>
+      <p class="sous" style="font-size:.85rem">Moy. = buts accordés par match. Buts et moyenne : ${avecBP.length} sur ${ms.length} match${ms.length > 1 ? "s" : ""}
+        (ceux où la période de chaque but est connue). % d’arrêts : ${avecTP.length} match${avecTP.length > 1 ? "s" : ""} où les tirs par période sont connus aussi.</p>` : "";
     // Tableau match par match, du plus vieux au plus récent ; la moyenne de la saison n'apparaît qu'au total
     const lignes = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || ""))).map(m => `
       <tr class="lien" tabindex="0" data-id="${esc(m.id)}">
@@ -214,6 +237,7 @@ function vueGardiennes() {
         <tfoot><tr><td>Total</td><td>${ms.length} match${ms.length > 1 ? "s" : ""}</td>
           <td class="n">${tirs}</td><td class="n">${ba}</td><td class="n">${pct(tirs - baTirs, tirs)}</td><td class="n opt">${moy(ba, ms.length)}</td></tr></tfoot>
       </table></div>
+      ${blocP}
       ${pts.length > 1 ? `<h3 style="margin-top:1.25rem">% d’arrêts match après match</h3>${tendance(pts)}` : ""}
       <div class="grille g2" style="margin-top:1.25rem">
         <div><h3>Où entrent les buts</h3>${filet(ag.zones, "chaleur")}</div>
