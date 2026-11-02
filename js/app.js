@@ -28,11 +28,20 @@ function filtres() {
 }
 
 /* ---------- Composants */
+let nbFilets = 0;   // identifiant unique du motif de mailles (plusieurs filets par page)
 function filet(valeurs, mode) {
   // mode "numeros" : valeurs[zone] = [1, 4] ; mode "chaleur" : valeurs[zone] = nombre
-  const W = 360, H = 240, x0 = 14, y0 = 14, w = W - 28, h = H - 18, cw = w / 3, ch = h / 3;
+  // Ouverture 6 pi × 4 pi (ratio 1,5), poteaux arrondis, mailles en losange, ligne des buts au sol
+  const W = 360, H = 250, x0 = 20, y0 = 18, w = W - 40, h = 214, cw = w / 3, ch = h / 3, yb = y0 + h, r = 14;
   const max = mode === "chaleur" ? Math.max(1, ...Object.values(valeurs)) : 1;
-  let s = `<svg class="filet" viewBox="0 0 ${W} ${H}" role="img" aria-label="Filet vu de face">`;
+  const id = `mailles-${++nbFilets}`;
+  const cadre = (dx, dy) => `M${x0 + dx} ${yb} V${y0 + r + dy} Q${x0 + dx} ${y0 + dy} ${x0 + r + dx} ${y0 + dy} H${x0 + w - r + dx} Q${x0 + w + dx} ${y0 + dy} ${x0 + w + dx} ${y0 + r + dy} V${yb}`;
+  let s = `<svg class="filet" viewBox="0 0 ${W} ${H}" role="img" aria-label="Filet vu de face">
+    <defs><pattern id="${id}" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <path class="mailles" d="M0 0H13M0 0V13"/></pattern></defs>
+    <line class="ligne-but" x1="0" y1="${yb + 1}" x2="${W}" y2="${yb + 1}"/>
+    <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="url(#${id})"/>
+    <path class="fond-filet" d="M${x0 + 8} ${yb} C${x0 + 40} ${yb - 26} ${x0 + w - 40} ${yb - 26} ${x0 + w - 8} ${yb}"/>`;
   ZONES.forEach((ligne, r) => ligne.forEach((z, k) => {
     const x = x0 + k * cw, y = y0 + r * ch;
     let fond = "transparent", txt = "", coul = "var(--rouge)", codeCoul = "";
@@ -42,15 +51,16 @@ function filet(valeurs, mode) {
     } else {
       txt = (valeurs[z] || []).join(", ");
     }
-    s += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fond}"/>`;
-    s += `<text class="code" x="${x + 7}" y="${y + 17}"${codeCoul}>${z}</text>`;
+    s += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fond}" fill-opacity=".85"/>`;
+    s += `<text class="code" x="${x + 10}" y="${y + 20}"${codeCoul}>${z}</text>`;
     if (txt !== "") s += `<text class="val" x="${x + cw / 2}" y="${y + ch / 2 + 6}" fill="${coul}"${String(txt).length > 6 ? ' style="font-size:20px"' : ""}>${txt}</text>`;
   }));
   for (let k = 1; k < 3; k++) {
     s += `<line class="maille" x1="${x0 + k * cw}" y1="${y0}" x2="${x0 + k * cw}" y2="${y0 + h}"/>`;
     s += `<line class="maille" x1="${x0}" y1="${y0 + k * ch}" x2="${x0 + w}" y2="${y0 + k * ch}"/>`;
   }
-  s += `<path class="cadre" d="M${x0} ${y0 + h} V${y0} H${x0 + w} V${y0 + h}"/></svg>`;
+  // Poteaux et barre horizontale : ombre, tube rouge, reflet
+  s += `<path class="cadre-ombre" d="${cadre(1.5, 1.5)}"/><path class="cadre" d="${cadre(0, 0)}"/><path class="cadre-reflet" d="${cadre(-2, -2)}"/></svg>`;
   if (mode === "chaleur") {
     s += `<div class="legende-chaleur">moins ${[0, 1, 2, 3, 4].map(i => `<i style="background:var(--chaleur-${i})"></i>`).join("")} plus</div>`;
   }

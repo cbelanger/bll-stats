@@ -121,8 +121,14 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 
 /* Filet */
 .filet { width: 100%; max-width: 360px; display: block; margin: 0 auto; }
-.filet .cadre { fill: none; stroke: var(--rouge); stroke-width: 9; stroke-linejoin: round; }
-.filet .maille { stroke: var(--trait); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.filet .cadre, .filet .cadre-ombre, .filet .cadre-reflet { fill: none; stroke-linecap: butt; }
+.filet .cadre { stroke: var(--rouge); stroke-width: 10; }
+.filet .cadre-ombre { stroke: #7E0E1A; stroke-width: 10; }
+.filet .cadre-reflet { stroke: #fff; stroke-opacity: .4; stroke-width: 2.5; }
+.filet .mailles { stroke: var(--doux); stroke-opacity: .35; stroke-width: .9; fill: none; }
+.filet .fond-filet { fill: none; stroke: var(--doux); stroke-opacity: .45; stroke-width: 3; }
+.filet .ligne-but { stroke: var(--rouge); stroke-opacity: .55; stroke-width: 4; }
+.filet .maille { stroke: var(--doux); stroke-opacity: .6; stroke-width: 1.2; stroke-dasharray: 5 4; }
 .filet .code { font: 600 13px var(--titre); fill: var(--doux); }
 .filet .val { font: 700 30px var(--titre); text-anchor: middle; dominant-baseline: central; }
 .legende-chaleur { display: flex; align-items: center; gap: .35rem; justify-content: center; font-size: .8rem; color: var(--doux); margin-top: .5rem; }
