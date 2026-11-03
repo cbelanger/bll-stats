@@ -122,6 +122,8 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
 ## Le site
 
 - **Matchs** : liste des matchs de la saison, du plus vieux au plus récent ; un clic ouvre la fiche du match :
+  - **Ligne du temps** : une bande par période (10 minutes), nos buts au-dessus, ceux de l'adversaire en dessous,
+    score à la fin de chaque période ; seuls les buts avec période et temps y sont placés ;
   - **Sommaire** : buts des deux équipes dans l'ordre du match (nos buts en bleu, ceux de l'adversaire en rouge),
     avec le score après chaque but quand la période et le temps de tous les buts sont connus (le chrono descend :
     dans une période, 7:55 vient avant 6:29) ;

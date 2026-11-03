@@ -161,12 +161,14 @@ function vueMatchs() {
       </tr>`).join("")}</tbody></table></div>`;
 }
 
+// Index dans PERIODES (0 à 4, -1 si inconnue) et temps au chrono en secondes
+const idxP = p => { const v = String(p ?? "").trim().toLowerCase().replace(/^p/, "").replace(/\.$/, "");
+  return v.startsWith("rol") || v.startsWith("prol") ? 4 : ["1", "2", "3", "4"].indexOf(v); };
+const sec = t => { const x = /^(\d+):(\d{2})$/.exec(t || ""); return x ? 60 * x[1] + Number(x[2]) : null; };
+
 // Buts des deux équipes dans l'ordre du match : période, puis temps décroissant (le chrono descend).
 // Score après chaque but seulement si tous les buts ont leur période et leur temps (sinon l'ordre est incertain).
 function deroulement(m) {
-  const idxP = p => { const v = String(p ?? "").trim().toLowerCase().replace(/^p/, "").replace(/\.$/, "");
-    return v.startsWith("rol") || v.startsWith("prol") ? 4 : ["1", "2", "3", "4"].indexOf(v); };
-  const sec = t => { const x = /^(\d+):(\d{2})$/.exec(t || ""); return x ? 60 * x[1] + Number(x[2]) : null; };
   const adv = m.buts_accordes.map(b => ({ eq: "adv", ...b }));
   let nous = (m.buts_marques || []).map(b => ({ eq: "nous", ...b }));
   if (!nous.length && m.buts_par_periode?.nous)   // vieux matchs : seulement le nombre de buts par période
@@ -191,6 +193,47 @@ function deroulement(m) {
     ${complet ? "" : `<p class="sous" style="font-size:.85rem">${manque > 0 ? `${manque} but${manque > 1 ? "s" : ""} sans détail. ` : ""}Ordre approximatif : période ou temps manquant pour certains buts.</p>`}`;
 }
 
+// Ligne du temps : une bande par période, nos buts au-dessus (bleu), ceux de l'adversaire en dessous (rouge).
+// Seuls les buts avec période et temps sont placés ; score à la fin de chaque période si tous le sont.
+const DUREE_P = 600;   // périodes de 10 minutes
+function ligneTemps(m) {
+  const buts = [...m.buts_accordes.map(b => ({ eq: "adv", ...b })), ...(m.buts_marques || []).map(b => ({ eq: "nous", ...b }))]
+    .map(b => ({ ...b, i: idxP(b.periode), s: sec(b.temps) })).filter(b => b.i >= 0 && b.s != null);
+  if (!buts.length) return "";
+  const duree = Math.max(DUREE_P, ...buts.map(b => b.s));
+  const complet = buts.length === m.buts.nous + m.buts.adv;
+  const prol = buts.some(b => b.i === 4) || [m.tirs_par_periode?.nous, m.tirs_par_periode?.adv].some(o => o && o.prol != null);
+  buts.sort((a, b) => a.i - b.i || b.s - a.s);
+  const sc = { nous: 0, adv: 0 };
+  buts.forEach(b => { sc[b.eq]++; b.score = `${sc.nous}–${sc.adv}`; b.x = (duree - b.s) / duree; });
+  // Buts rapprochés de la même équipe : empilés vers l'extérieur
+  let voies = 1;
+  const bandes = PERIODES.slice(0, prol ? 5 : 4).map(([, lab], i) => {
+    const bp = buts.filter(b => b.i === i);
+    ["nous", "adv"].forEach(eq => {
+      const fins = [];
+      bp.filter(b => b.eq === eq).forEach(b => {
+        let v = fins.findIndex(x => b.x - x >= 0.15);
+        if (v < 0) v = fins.length;
+        fins[v] = b.x; b.v = v; voies = Math.max(voies, v + 1);
+      });
+    });
+    const fin = buts.filter(b => b.i <= i);
+    const score = complet ? `${fin.filter(b => b.eq === "nous").length}–${fin.filter(b => b.eq === "adv").length}` : "";
+    return `<div class="lt-per"><div class="lt-piste">${bp.map(b => `<span class="lt-but ${b.eq}" style="left:calc(8px + (100% - 16px) * ${b.x.toFixed(3)});--v:${b.v}"
+      title="${lab} ${esc(b.temps)} – ${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}${b.type ? ` (${esc(TYPES[b.type] || b.type)})` : ""}${complet ? `, ${b.score}` : ""}"></span>`).join("")}</div>
+      <div class="lt-lab"><span>${lab}</span>${score ? `<b>${score}</b>` : ""}</div></div>`;
+  }).join("");
+  const manque = m.buts.nous + m.buts.adv - buts.length;
+  return `<section class="panneau" style="margin-top:1rem">
+    <h3>Ligne du temps</h3>
+    <div class="legende-l" style="margin:0 0 .6rem"><span><i class="pt nous"></i>BLL ${esc(m.equipe)}</span><span><i class="pt adv"></i>${esc(m.adversaire)}</span></div>
+    <div class="ligne-temps" style="--voies:${voies}">${bandes}</div>
+    ${complet ? `<p class="sous" style="font-size:.85rem;margin-top:.4rem">Score à la fin de chaque période.</p>`
+      : `<p class="sous" style="font-size:.85rem;margin-top:.4rem">${manque} but${manque > 1 ? "s" : ""} sans période ou sans temps, non placé${manque > 1 ? "s" : ""}.</p>`}
+  </section>`;
+}
+
 function vueMatch(id) {
   const m = etat.matchs.find(x => x.id === id);
   if (!m) return `<a class="retour" href="#/matchs">← Matchs</a><p class="vide">Ce match n’existe pas ou n’a pas encore été publié.</p>`;
@@ -209,6 +252,7 @@ function vueMatch(id) {
     <div class="pts">${m.buts.nous}–${m.buts.adv}</div>
     <div class="eq droite">${esc(m.adversaire)}<small>${m.tirs.adv ?? "–"} tirs cadrés</small></div>
   </div>
+  ${ligneTemps(m)}
 
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">

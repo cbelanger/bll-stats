@@ -32,10 +32,12 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--glace);
+  /* Glace marquée par les patins : texture générée par tools/generer_glace.py */
+  background: #E6EEF8 url("../assets/glace.svg");
   color: var(--encre);
   font: 400 16px/1.5 var(--texte);
 }
+@media (prefers-color-scheme: dark) { body { background: #0E1A33 url("../assets/glace-sombre.svg"); } }
 a { color: inherit; }
 :focus-visible { outline: 3px solid var(--rouge); outline-offset: 2px; }
 main:focus, main:focus-visible { outline: none; }
@@ -222,10 +224,26 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .legende-l i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: .4rem; }
 .legende-l i.nous { background: var(--marine); }
 .legende-l i.adv { background: var(--rouge); }
+.legende-l i.pt { width: 11px; height: 11px; border-radius: 50%; }
 @media (prefers-color-scheme: dark) {
   .progression .nous { stroke: #8FB0EA; }
   .progression .pt.nous, .legende-l i.nous { fill: #8FB0EA; background: #8FB0EA; }
 }
+
+/* Ligne du temps du match : une bande par période, nos buts au-dessus, ceux de l'adversaire en dessous */
+.ligne-temps { display: flex; gap: 6px; }
+.lt-per { flex: 1; min-width: 0; }
+.lt-piste { position: relative; height: calc(24px + 32px * var(--voies)); background: var(--glace); border-radius: 6px; }
+.lt-piste::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid var(--trait); }
+.lt-but {
+  position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--surface); transform: translate(-50%, -50%); cursor: default;
+}
+.lt-but.nous { background: var(--marine); top: calc(50% - 13px - 16px * var(--v)); }
+.lt-but.adv { background: var(--rouge); top: calc(50% + 13px + 16px * var(--v)); }
+.lt-lab { display: flex; justify-content: space-between; gap: .25rem; padding: .2rem .15rem 0; font-size: .85rem; color: var(--doux); }
+.lt-lab b { color: var(--encre); font-weight: 600; }
+@media (prefers-color-scheme: dark) { .lt-but.nous { background: #8FB0EA; } }
 
 .notes { white-space: pre-wrap; }
 .pied { text-align: center; color: var(--doux); font-size: .85rem; padding: 0 1rem 2rem; }
