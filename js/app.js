@@ -29,8 +29,8 @@ function filtres() {
 
 /* ---------- Composants */
 let nbFilets = 0;   // identifiant unique du motif de mailles (plusieurs filets par page)
-function filet(valeurs, mode) {
-  // mode "numeros" : valeurs[zone] = [1, 4] ; mode "chaleur" : valeurs[zone] = nombre
+function filet(valeurs, mode, nous = false) {
+  // mode "numeros" : valeurs[zone] = [1, 4] (en bleu pour nos buts) ; mode "chaleur" : valeurs[zone] = nombre
   // Ouverture 6 pi × 4 pi (ratio 1,5), poteaux arrondis, mailles en losange, ligne des buts au sol
   const W = 360, H = 250, x0 = 20, y0 = 18, w = W - 40, h = 214, cw = w / 3, ch = h / 3, yb = y0 + h, r = 14;
   const max = mode === "chaleur" ? Math.max(1, ...Object.values(valeurs)) : 1;
@@ -53,7 +53,7 @@ function filet(valeurs, mode) {
     }
     s += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fond}" fill-opacity=".85"/>`;
     s += `<text class="code" x="${x + 10}" y="${y + 20}"${codeCoul}>${z}</text>`;
-    if (txt !== "") s += `<text class="val" x="${x + cw / 2}" y="${y + ch / 2 + 6}" fill="${coul}"${String(txt).length > 6 ? ' style="font-size:20px"' : ""}>${txt}</text>`;
+    if (txt !== "") s += `<text class="val${nous && mode !== "chaleur" ? " nous" : ""}" x="${x + cw / 2}" y="${y + ch / 2 + 6}" fill="${coul}"${String(txt).length > 6 ? ' style="font-size:20px"' : ""}>${txt}</text>`;
   }));
   for (let k = 1; k < 3; k++) {
     s += `<line class="maille" x1="${x0 + k * cw}" y1="${y0}" x2="${x0 + k * cw}" y2="${y0 + h}"/>`;
@@ -158,11 +158,13 @@ function deroulement(m) {
 function vueMatch(id) {
   const m = etat.matchs.find(x => x.id === id);
   if (!m) return `<a class="retour" href="#/matchs">← Matchs</a><p class="vide">Ce match n’existe pas ou n’a pas encore été publié.</p>`;
-  const nums = {};
+  const nums = {}, numsN = {};
   m.buts_accordes.forEach(b => { if (b.zone) (nums[b.zone] = nums[b.zone] || []).push(b.no); });
+  (m.buts_marques || []).forEach(b => { if (b.zone) (numsN[b.zone] = numsN[b.zone] || []).push(b.no); });
   const tp = m.tirs_par_periode;
   const ligneP = (lab, o, tot) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${o ? o[k] ?? "–" : "–"}</div>`).join("")}<div class="tot">${tot ?? "–"}</div>`;
-  const sz = m.sorties_zone;
+  const sz = m.sorties_zone, szp = sz.par_periode;
+  const pctP = k => szp && szp.tentatives[k] ? pct(szp.reussies[k], szp.tentatives[k]) : "–";
   return `<a class="retour" href="#/matchs">← Matchs</a>
   <h1>${esc(m.equipe)} contre ${esc(m.adversaire)}</h1>
   <p class="sous">${dateFr(m.date)}${m.heure_debut ? `, ${m.heure_debut}${m.heure_fin ? "–" + m.heure_fin : ""}` : ""}${m.no_match ? `, match no ${esc(m.no_match)}` : ""}</p>
@@ -174,17 +176,9 @@ function vueMatch(id) {
 
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
-      <h3>Buts accordés</h3>
-      <p class="sous" style="margin-bottom:.75rem">Gardienne : ${esc(nomGardienne(m.gardienne))}, ${pct(m.tirs.adv - m.buts.adv, m.tirs.adv)} d’arrêts</p>
-      ${filet(nums, "numeros")}
-    </section>
-    <section class="panneau">
       <h3>Sommaire</h3>
       ${deroulement(m)}
     </section>
-  </div>
-
-  <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Par période</h3>
       <div class="periodes">
@@ -196,6 +190,22 @@ function vueMatch(id) {
       </div>
       ${m.buts_par_periode?.nous && m.buts_par_periode?.adv && tp.nous && tp.adv ? "" : `<p class="sous" style="font-size:.85rem">– : donnée non disponible pour ce match.</p>`}
     </section>
+  </div>
+
+  <div class="grille g2" style="margin-top:1rem">
+    <section class="panneau">
+      <h3>Buts accordés</h3>
+      <p class="sous" style="margin-bottom:.75rem">Gardienne : ${esc(nomGardienne(m.gardienne))}, ${pct(m.tirs.adv - m.buts.adv, m.tirs.adv)} d’arrêts</p>
+      ${filet(nums, "numeros")}
+    </section>
+    <section class="panneau">
+      <h3>Où entrent nos buts</h3>
+      ${Object.keys(numsN).length ? `<p class="sous" style="margin-bottom:.75rem">Numéros des buts BLL dans le filet adverse</p>${filet(numsN, "numeros", true)}`
+        : `<p class="vide">${m.buts.nous ? "Zone non notée pour nos buts." : "Aucun but marqué."}</p>`}
+    </section>
+  </div>
+
+  <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Sorties de zone</h3>
       <div class="chiffres">
@@ -203,9 +213,14 @@ function vueMatch(id) {
         <div class="chiffre"><b>${sz.tentatives ?? "–"}</b><span>tentatives</span></div>
         <div class="chiffre accent"><b>${pct(sz.reussies, sz.tentatives)}</b><span>taux de réussite</span></div>
       </div>
+      ${szp ? `<div class="periodes" style="margin-top:1rem">
+        <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
+        ${ligneP("Réussies", szp.reussies, sz.reussies)}${ligneP("Tent.", szp.tentatives, sz.tentatives)}
+        <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pctP(k)}</div>`).join("")}<div class="tot">${pct(sz.reussies, sz.tentatives)}</div>
+      </div>` : sz.tentatives ? `<p class="sous" style="font-size:.85rem">Détail par période non disponible pour ce match.</p>` : ""}
     </section>
+    ${m.notes ? `<section class="panneau"><h3>Observations et notes</h3><p class="notes">${esc(m.notes)}</p></section>` : ""}
   </div>
-  ${m.notes ? `<section class="panneau" style="margin-top:1rem"><h3>Observations et notes</h3><p class="notes">${esc(m.notes)}</p></section>` : ""}
   ${m.fichier ? `<p class="source">Fichier : <a href="https://github.com/cbelanger/bll-stats/blob/main/data/matchs/${encodeURIComponent(m.fichier)}">${esc(m.fichier)}</a>
     (${m.source === "pdf" ? "PDF Sommaire" : "saisie téléphone"})</p>` : ""}`;
 }
@@ -305,6 +320,12 @@ function vueEquipe() {
   const ligneB = (lab, cote) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${totB(cote, k) ?? "–"}</div>`).join("")}
     <div class="tot">${avecB[cote].length ? PERIODES.reduce((s, [k]) => s + (totB(cote, k) ?? 0), 0) : "–"}</div>`;
   const nbM = n => `${n} match${n > 1 ? "s" : ""}`;
+  // Sorties de zone par période : totaux des matchs où le détail par période est connu
+  const avecSz = ms.filter(m => m.sorties_zone.par_periode);
+  const totSz = (x, k) => { const v = avecSz.map(m => m.sorties_zone.par_periode[x][k]).filter(v => v != null);
+    return v.length ? v.reduce((s, n) => s + n, 0) : null; };
+  const szP = Object.fromEntries(PERIODES.map(([k]) => [k, { r: totSz("reussies", k), t: totSz("tentatives", k) }]));
+  const szPt = avecSz.reduce((s, m) => s + m.sorties_zone.tentatives, 0), szPr = avecSz.reduce((s, m) => s + m.sorties_zone.reussies, 0);
   const ag = agregerButs(ms), agN = agregerButs(ms, "buts_marques");
   const detN = ms.reduce((s, m) => s + (m.buts_marques || []).filter(b => b.type || b.zone).length, 0);
   return `<h1>Équipe ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}</p>
@@ -339,6 +360,16 @@ function vueEquipe() {
         ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne Pour, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.</p>
     </section>
   </div>
+  ${avecSz.length ? `<section class="panneau" style="margin-top:1rem">
+    <h3>Sorties de zone par période</h3>
+    <div class="periodes">
+      <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
+      <div class="l">Réussies</div>${PERIODES.map(([k]) => `<div>${szP[k].r ?? "–"}</div>`).join("")}<div class="tot">${szPr}</div>
+      <div class="l">Tent.</div>${PERIODES.map(([k]) => `<div>${szP[k].t ?? "–"}</div>`).join("")}<div class="tot">${szPt}</div>
+      <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pct(szP[k].r, szP[k].t)}</div>`).join("")}<div class="tot">${pct(szPr, szPt)}</div>
+    </div>
+    <p class="sous" style="font-size:.85rem">Total de la saison, seulement pour les matchs où les sorties de zone sont notées par période : ${avecSz.length} sur ${nbM(ms.length)}.</p>
+  </section>` : ""}
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Nos buts par type de jeu</h3>${barresTypes(agN.types, agN.n, true)}

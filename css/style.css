@@ -131,6 +131,8 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .filet .maille { stroke: var(--doux); stroke-opacity: .6; stroke-width: 1.2; stroke-dasharray: 5 4; }
 .filet .code { font: 600 13px var(--titre); fill: var(--doux); }
 .filet .val { font: 700 30px var(--titre); text-anchor: middle; dominant-baseline: central; }
+.filet .val.nous { fill: var(--marine); }
+@media (prefers-color-scheme: dark) { .filet .val.nous { fill: #A9C1F0; } }
 .legende-chaleur { display: flex; align-items: center; gap: .35rem; justify-content: center; font-size: .8rem; color: var(--doux); margin-top: .5rem; }
 .legende-chaleur i { width: 18px; height: 10px; border-radius: 2px; display: inline-block; }
 

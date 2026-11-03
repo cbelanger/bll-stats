@@ -41,16 +41,22 @@ function nouveau() {
   return {
     equipe: p.equipe || "U19AA", adversaire: "", date: aujourdhui(), no_match: "",
     heure_debut: "", heure_fin: "", responsable: p.responsable || "", gardienne: p.gardienne || "",
-    periode: "p1", tirs: { nous: vide(), adv: vide() }, butsNous: [], butsAdv: [], sz: { r: 0, x: 0 },
+    periode: "p1", tirs: { nous: vide(), adv: vide() }, butsNous: [], butsAdv: [], sz: { r: vide(), x: vide() },
     notes: "", exporte: false,
     fichier: null, origine: "saisie", ouvert: false,   // ouvert = rechargé depuis le site, pas encore modifié
     tirsInconnus: { nous: false, adv: false }          // tirs jamais saisis (match rouvert venu d'un PDF incomplet)
   };
 }
+// Sorties de zone par période ; inc = sorties sans période (match venu d'un fichier qui n'avait que les totaux)
+function migrer(s) {
+  if (s && s.sz && typeof s.sz.r === "number") s.sz = { r: { ...vide(), inc: s.sz.r }, x: { ...vide(), inc: s.sz.x } };
+  return s;
+}
+const szInc = s => (s.sz.r.inc || 0) + (s.sz.x.inc || 0);
 const tirsInconnus = c => !!(S.tirsInconnus && S.tirsInconnus[c]);
-const aDesDonnees = () => somme(S.tirs.nous) + somme(S.tirs.adv) + S.butsNous.length + S.butsAdv.length + S.sz.r + S.sz.x > 0;
+const aDesDonnees = () => somme(S.tirs.nous) + somme(S.tirs.adv) + S.butsNous.length + S.butsAdv.length + somme(S.sz.r) + somme(S.sz.x) > 0;
 
-let S = lireStockage(CLE) || nouveau();
+let S = migrer(lireStockage(CLE)) || nouveau();
 let hist = [], courant = null, courantCote = "adv", brouillon = null;   // but ouvert dans la feuille
 const buts = c => c === "nous" ? S.butsNous : S.butsAdv;
 
@@ -103,9 +109,12 @@ function afficher() {
   }
   $("#bn").textContent = S.butsNous.length; $("#det-bn").innerHTML = detailButs(S.butsNous);
   $("#ba").textContent = S.butsAdv.length; $("#det-ba").innerHTML = detailButs(S.butsAdv);
-  const tot = S.sz.r + S.sz.x;
-  $("#szr").textContent = S.sz.r; $("#szx").textContent = S.sz.x;
-  $("#szp").textContent = tot ? `${Math.round(100 * S.sz.r / tot)} % réussies` : "";
+  const szR = somme(S.sz.r), tot = szR + somme(S.sz.x);
+  for (const r of ["r", "x"]) {
+    $("#sz" + r).textContent = somme(S.sz[r]);
+    $("#det-sz" + r).innerHTML = detail(S.sz[r]) + (S.sz[r].inc ? ` · <span class="manque-p">sans période&nbsp;${S.sz[r].inc}</span>` : "");
+  }
+  $("#szp").textContent = tot ? `${Math.round(100 * szR / tot)} % réussies` : "";
   $("#gard").textContent = S.gardienne;
 
   // Buts des deux équipes dans l'ordre du match : période, puis temps décroissant (chrono qui descend),
@@ -194,20 +203,25 @@ function gardienneChoisie() {
 
 /* ---------- Export (mêmes champs que le PDF Sommaire) */
 function prolJouee() {
-  return S.periode === "prol" || S.tirs.nous.prol > 0 || S.tirs.adv.prol > 0 ||
+  return S.periode === "prol" || S.tirs.nous.prol > 0 || S.tirs.adv.prol > 0 || S.sz.r.prol + S.sz.x.prol > 0 ||
     S.butsNous.concat(S.butsAdv).some(b => b.periode === "prol");
 }
 function champs() {
-  const tot = S.sz.r + S.sz.x;
+  const tot = somme(S.sz.r) + somme(S.sz.x);
   const c = {
     equipe_U16AA: S.equipe === "U16AA" ? "Oui" : "", equipe_U19AA: S.equipe === "U19AA" ? "Oui" : "",
     adversaire: S.adversaire, date: S.date, heure_debut: S.heure_debut, heure_fin: S.heure_fin,
     no_match: S.no_match, responsable: S.responsable, gardienne: S.gardienne,
     buts_nous: S.butsNous.length, buts_adv: S.butsAdv.length,
     tirs_nous: somme(S.tirs.nous), tirs_adv: somme(S.tirs.adv),
-    sz_tentatives: tot || "", sz_reussies: tot ? S.sz.r : "",
+    sz_tentatives: tot || "", sz_reussies: tot ? somme(S.sz.r) : "",
     notes: S.notes
   };
+  // Sorties de zone par période, seulement si toutes en ont une (sinon les totaux suffisent)
+  if (tot && !szInc(S)) for (const [k] of PER) {
+    if (k === "prol" && !prolJouee()) continue;
+    c[`sz_tentatives_${k}`] = S.sz.r[k] + S.sz.x[k]; c[`sz_reussies_${k}`] = S.sz.r[k];
+  }
   for (const cote of ["nous", "adv"]) {
     // Prolongation vide = pas de prolongation (extract.py la laisse à null) ; tirs jamais saisis = vides
     if (tirsInconnus(cote)) { c[`tirs_${cote}`] = ""; for (const [k] of PER) c[`tirs_${cote}_${k}`] = ""; continue; }
@@ -267,7 +281,9 @@ function depuisChamps(c, fichier, origine) {
   }
   // Buts accordés sans ligne de détail : lignes vides à compléter, pour garder le bon score
   while (s.butsAdv.length < n("buts_adv")) s.butsAdv.push({ periode: null, temps: "", type: "", zone: "" });
-  const tot = n("sz_tentatives"); s.sz = { r: n("sz_reussies"), x: Math.max(0, tot - n("sz_reussies")) };
+  if (PER.some(([k]) => t(`sz_tentatives_${k}`) || t(`sz_reussies_${k}`)))
+    for (const [k] of PER) { s.sz.r[k] = n(`sz_reussies_${k}`); s.sz.x[k] = Math.max(0, n(`sz_tentatives_${k}`) - n(`sz_reussies_${k}`)); }
+  else migrer(Object.assign(s, { sz: { r: n("sz_reussies"), x: Math.max(0, n("sz_tentatives") - n("sz_reussies")) } }));
   s.periode = [...PER].reverse().map(([k]) => k).find(k => s.tirs.nous[k] || s.tirs.adv[k]) || "p1";
   return s;
 }
@@ -288,14 +304,14 @@ async function listerMatchs() {
   }
 }
 /* ---------- Match mis de côté (un seul, gardé même si l'application est fermée) */
-const nonExporte = s => !s.exporte && somme(s.tirs.nous) + somme(s.tirs.adv) + s.butsNous.length + s.butsAdv.length + s.sz.r + s.sz.x > 0;
+const nonExporte = s => !s.exporte && somme(s.tirs.nous) + somme(s.tirs.adv) + s.butsNous.length + s.butsAdv.length + somme(s.sz.r) + somme(s.sz.x) > 0;
 const resume = s => `${s.equipe} contre ${s.adversaire || "adversaire ?"}, ${s.butsNous.length}–${s.butsAdv.length}`;
 function mettreDeCote() {
   if (nonExporte(S)) { ecrireStockage(CLE_PRECEDENT, S); return true; }
   return false;
 }
 function ouvrirMenu() {
-  const p = lireStockage(CLE_PRECEDENT);
+  const p = migrer(lireStockage(CLE_PRECEDENT));
   $("#b-recuperer").hidden = !p;
   if (p) $("#b-recuperer").textContent = `Récupérer : ${resume(p)}`;
   if (!$("#f-menu").open) $("#f-menu").showModal();
@@ -359,7 +375,7 @@ function telecharger() {
 }
 /* ---------- PDF Sommaire rempli (fiche vierge du site + pdf-lib, chargé seulement au besoin) */
 const FICHE_SOMMAIRE = "fiches/BLL - Statistiques - Sommaire - Match.pdf";
-const LIGNES_PDF = { adv: 15, nous: 8 };   // lignes de la section 2 et colonnes de la section 3 du Sommaire
+const LIGNES_PDF = { adv: 15, nous: 7 };   // lignes de la section 2 et colonnes de la section 3 du Sommaire
 function chargerPdfLib() {
   if (window.PDFLib) return Promise.resolve(window.PDFLib);
   return new Promise((ok, ko) => {
@@ -546,13 +562,13 @@ document.addEventListener("click", e => {
     }
     case "sz": {
       const r = b.dataset.r;
-      action(r === "r" ? "Sortie réussie" : "Sortie ratée", () => { S.sz[r]++; }, true);
+      action(`${r === "r" ? "Sortie réussie" : "Sortie ratée"} ${lp}`, () => { S.sz[r][P]++; }, true);
       break;
     }
     case "sz-moins": {
       const r = b.dataset.r;
-      if (!S.sz[r]) break;
-      action(r === "r" ? "Retrait sortie réussie" : "Retrait sortie ratée", () => { S.sz[r]--; });
+      if (!S.sz[r][P]) { toast(`Aucune sortie ${r === "r" ? "réussie" : "ratée"} en ${lp} à retirer.`); break; }
+      action(`Retrait sortie ${r === "r" ? "réussie" : "ratée"} ${lp}`, () => { S.sz[r][P]--; });
       break;
     }
     case "annuler": annuler(); break;
@@ -583,7 +599,7 @@ document.addEventListener("click", e => {
     }
     case "recuperer": {
       // Échange : le match mis de côté revient, le match en cours (s'il n'est pas exporté) prend sa place
-      const p = lireStockage(CLE_PRECEDENT); if (!p) break;
+      const p = migrer(lireStockage(CLE_PRECEDENT)); if (!p) break;
       if (nonExporte(S)) ecrireStockage(CLE_PRECEDENT, S);
       else try { localStorage.removeItem(CLE_PRECEDENT); } catch (e) { /* rien */ }
       action("Récupérer le match précédent", () => { S = p; });

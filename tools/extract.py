@@ -261,7 +261,17 @@ def valider(champs):
     if buts_adv == 0 or (buts_adv is not None and len(detail) == buts_adv and all(periodes_adv)):
         buts_per_adv = par_periode({p: periodes_adv.count(p) for p in PERIODES})
 
+    # Sorties de zone : comme les tirs, somme des périodes si elles sont remplies, sinon les totaux
     sz_t, sz_r = nombre("sz_tentatives"), nombre("sz_reussies")
+    sz_per = None
+    if any(texte(champs, f"sz_{x}_{p}") for x in ("tentatives", "reussies") for p in PERIODES):
+        sz_per = {x: {p: nombre(f"sz_{x}_{p}") or 0 for p in PERIODES} for x in ("tentatives", "reussies")}
+        if not prol and not sz_per["tentatives"]["prol"]:
+            sz_per["tentatives"]["prol"] = sz_per["reussies"]["prol"] = None
+        sz_t, sz_r = (sum(v or 0 for v in sz_per[x].values()) for x in ("tentatives", "reussies"))
+        for p in PERIODES:
+            if (sz_per["reussies"][p] or 0) > (sz_per["tentatives"][p] or 0):
+                avertissements.append(f"sorties de zone {p.upper()} : plus de réussies que de tentatives")
     if sz_t is not None and sz_r is not None and sz_r > sz_t:
         erreurs.append("plus de sorties de zone réussies que de tentatives")
 
@@ -289,7 +299,7 @@ def valider(champs):
         "tirs": {"nous": tirs_nous, "adv": tirs_adv},
         "tirs_par_periode": {"nous": per_nous, "adv": per_adv},
         "buts_par_periode": {"nous": buts_per_nous, "adv": buts_per_adv},
-        "sorties_zone": {"tentatives": sz_t, "reussies": sz_r},
+        "sorties_zone": {"tentatives": sz_t, "reussies": sz_r, "par_periode": sz_per},
         "buts_accordes": detail,
         "buts_marques": marques,
         "notes": texte(champs, "notes") or None,

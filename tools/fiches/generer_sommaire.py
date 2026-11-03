@@ -113,7 +113,8 @@ txt("de la gardienne, ou tir qui se termine par un but.",tx+5,top-h1+14,7.4,col=
 
 # ---------- 3. Buts marqués (une colonne par but : période, temps, type, zone du filet adverse)
 topB=top-h1-10; hB=140; section(3,"BUTS MARQUÉS – DÉTAIL PAR BUT",LX,topB,colw,hB)
-NB=8; by=topB-28; lwB=44; bw=colw-16; bcw=(bw-lwB)/NB
+# 7 colonnes : assez larges pour que le code reste visible à côté de la flèche des listes
+NB=7; by=topB-28; lwB=34; bw=colw-16; bcw=(bw-lwB)/NB
 c.setFillColor(LIGHT); c.rect(tx,by-14,bw,14,stroke=0,fill=1)
 txt("But",tx+4,by-10,8.5,True)
 for j in range(NB):
@@ -123,23 +124,33 @@ for i,(lab,key) in enumerate([("Pér.","periode"),("Temps","temps"),("Type","typ
     txt(lab,tx+4,ry+7,8.5,True)
     for j in range(NB):
         n=j+1; x=tx+lwB+j*bcw+2; w=bcw-4
-        if key=="periode": dd(f"but_nous_{n}_periode",x,ry+2,w,[" ","1","2","3","4","Prol."],fs=8.5,tip=f"Notre but {n} – période")
-        elif key=="temps": tf(f"but_nous_{n}_temps",x,ry+2,w,16,fs=8.5,tip=f"Notre but {n} – temps (mm:ss)")
-        elif key=="type": dd(f"but_nous_{n}_type",x,ry+2,w,[" ","P","T","L","R","E","D","FC","A"],fs=8.5,tip=f"Notre but {n} – type de jeu (codes de la section 2)")
-        else: dd(f"but_nous_{n}_zone",x,ry+2,w,[" ","HG","HC","HD","CG","C","CD","BG","BC","BD"],fs=8,tip=f"Notre but {n} – zone du filet adverse (vue de face)")
+        if key=="periode": dd(f"but_nous_{n}_periode",x,ry+2,w,[" ","1","2","3","4","Prol."],fs=9,tip=f"Notre but {n} – période")
+        elif key=="temps": tf(f"but_nous_{n}_temps",x,ry+2,w,16,fs=9,tip=f"Notre but {n} – temps (mm:ss)")
+        elif key=="type": dd(f"but_nous_{n}_type",x,ry+2,w,[" ","P","T","L","R","E","D","FC","A"],fs=9,tip=f"Notre but {n} – type de jeu (codes de la section 2)")
+        else: dd(f"but_nous_{n}_zone",x,ry+2,w,[" ","HG","HC","HD","CG","C","CD","BG","BC","BD"],fs=9,tip=f"Notre but {n} – zone du filet adverse (vue de face)")
 c.setStrokeColor(LINE); c.setLineWidth(0.6); c.rect(tx,by-94,bw,94)
 for j in range(NB): c.line(tx+lwB+j*bcw,by-94,tx+lwB+j*bcw,by)
 txt("Type et zone : mêmes codes qu’à la section 2 (zone = filet adverse, vu de face).",tx+2,topB-hB+6,7.4,col=NAVY)
 
 # ---------- 4. Sorties de zone
-top3=topB-hB-10; h3=118; section(4,"SORTIES DE ZONE RÉUSSIES",LX,top3,colw,h3)
-c.setFillColor(LIGHT); c.roundRect(tx,top3-66,colw-16,40,4,stroke=0,fill=1)
-for k,l in enumerate(["Réussie si l’équipe sort l’anneau de sa zone défensive en",
-                      "conservant le contrôle ou par une passe complétée à une",
-                      "coéquipière."]):
-    txt(l,tx+5,top3-37-k*10,7.8)
-for i,(lab,key) in enumerate([("Tentatives de sortie de zone :","sz_tentatives"),("Sorties de zone réussies :","sz_reussies")]):
-    ry=top3-88-i*24; txt(lab,tx+4,ry+5,9,True); tf(key,LX+colw-78,ry,62,18,fs=12)
+# Par période comme les tirs ; les totaux (colonne Total) se calculent seuls
+top3=topB-hB-10; h3=118; section(4,"SORTIES DE ZONE",LX,top3,colw,h3)
+c.setFillColor(LIGHT); c.roundRect(tx,top3-50,colw-16,24,4,stroke=0,fill=1)
+for k,l in enumerate(["Réussie : l’équipe sort l’anneau de sa zone défensive en conservant",
+                      "le contrôle ou par une passe complétée à une coéquipière."]):
+    txt(l,tx+5,top3-35-k*9.5,7.4)
+lwS=58; per_sz=["P1","P2","P3","P4","Prol.","Total"]; scw=(pw-lwS)/len(per_sz)
+hy=top3-56; c.setFillColor(LIGHT); c.rect(tx,hy-14,pw,14,stroke=0,fill=1)
+for j,p in enumerate(per_sz):
+    c.setFillColor(TXT); c.setFont("Helvetica-Bold",8.5); c.drawCentredString(tx+lwS+j*scw+scw/2,hy-10,p)
+for i,(lab,key) in enumerate([("Tentatives","sz_tentatives"),("Réussies","sz_reussies")]):
+    ry=hy-14-(i+1)*20
+    txt(lab,tx+5,ry+7,9,True)
+    for j,p in enumerate(per_sz):
+        nom=key if p=="Total" else f"{key}_{p.strip('.').lower()}"
+        tf(nom,tx+lwS+j*scw+3,ry+3,scw-6,15,fs=10.5,tip=f"Sorties de zone – {lab.lower()} – {p}")
+c.setStrokeColor(LINE); c.setLineWidth(0.6); c.rect(tx,hy-14-40,pw,54)
+c.line(tx+lwS+5*scw,hy-14-40,tx+lwS+5*scw,hy)
 
 # ---------- 6. Notes
 top6=top3-h3-10; h6=top6-M; section(5,"OBSERVATIONS ET NOTES",LX,top6,colw,h6)
@@ -210,22 +221,24 @@ af=w._root_object["/AcroForm"]
 refs={f.get_object()["/T"]:f for f in af["/Fields"]}
 def js(code): return DictionaryObject({NameObject("/S"):NameObject("/JavaScript"),NameObject("/JS"):TextStringObject(code)})
 per=["p1","p2","p3","p4","prol"]
-for side in ["nous","adv"]:
+TOTAUX=["tirs_nous","tirs_adv","sz_tentatives","sz_reussies"]
+for base in TOTAUX:
     for p in per:
-        o=refs[f"tirs_{side}_{p}"].get_object()
+        o=refs[f"{base}_{p}"].get_object()
         o[NameObject("/AA")]=DictionaryObject({NameObject("/K"):js('AFNumber_Keystroke(0,0,0,0,"",true);')})
-    tot=refs[f"tirs_{side}"].get_object()
-    code=("var s=0,n=0,p=[%s];for(var i=0;i<p.length;i++){var v=this.getField('tirs_%s_'+p[i]).valueAsString;"
-          "if(v!==''){s+=Number(v);n++;}}event.value=(n?s:'');") % (",".join(f"'{x}'" for x in per),side)
+    tot=refs[base].get_object()
+    code=("var s=0,n=0,p=[%s];for(var i=0;i<p.length;i++){var v=this.getField('%s_'+p[i]).valueAsString;"
+          "if(v!==''){s+=Number(v);n++;}}event.value=(n?s:'');") % (",".join(f"'{x}'" for x in per),base)
     tot[NameObject("/AA")]=DictionaryObject({NameObject("/C"):js(code)})
     tot[NameObject("/Ff")]=NumberObject(int(tot.get("/Ff",0))|1)  # lecture seule
     tot[NameObject("/TU")]=TextStringObject(f"Total calculé automatiquement (somme des périodes)")
-for t in ["buts_nous","buts_adv","sz_tentatives","sz_reussies"]:
+for t in ["buts_nous","buts_adv"]:
     refs[t].get_object()[NameObject("/AA")]=DictionaryObject({NameObject("/K"):js('AFNumber_Keystroke(0,0,0,0,"",true);')})
 EXCL={"gardienne","adversaire","date","responsable","observations_generales","notes","note_buts_accordes"}
 for t,ref in refs.items():
     o=ref.get_object()
-    if o.get("/FT")=="/Btn" or t in EXCL or t.endswith("_type"): continue
+    # Types de la section 2 (« R – Rebond ») alignés à gauche ; codes seuls de la section 3 centrés
+    if o.get("/FT")=="/Btn" or t in EXCL or (t.endswith("_type") and not t.startswith("but_nous_")): continue
     o[NameObject("/Q")]=NumberObject(1)
 od=refs["date"].get_object()
 od[NameObject("/AA")]=DictionaryObject({NameObject("/F"):js('AFDate_FormatEx("yyyy-mm-dd");'),
@@ -247,6 +260,6 @@ for z in ZON:
     o=refs[f"zone_{z}"].get_object()
     o[NameObject("/AA")]=DictionaryObject({NameObject("/C"):js(
         "var a=[];for(var i=1;i<=15;i++){var f=this.getField('but_'+i+'_zone');if(f&&f.valueAsString==='%s')a.push(i);}event.value=a.join(', ');" % z)})
-af[NameObject("/CO")]=ArrayObject([refs["tirs_nous"],refs["tirs_adv"]]+[refs[f"zone_{z}"] for z in ZON])
+af[NameObject("/CO")]=ArrayObject([refs[t] for t in TOTAUX]+[refs[f"zone_{z}"] for z in ZON])
 af[NameObject("/NeedAppearances")]=BooleanObject(True)
 w.write(OUT)

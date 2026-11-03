@@ -26,8 +26,10 @@ faire **Pull origin** avant ton prochain push.
    (les totaux, le filet et la validation de l'heure ne fonctionnent que dans Acrobat)
    et l'enregistrer dans `pdf/`. Le nom du fichier PDF est libre.
    Section 1 : stats générales ; section 2 : buts accordés (période, temps, type, zone) ;
-   section 3 : nos buts (période, temps, type, zone du filet adverse) ; section 4 : sorties de zone ; section 5 : notes.
-   Un ancien Sommaire (sans section 3) reste accepté ; nos buts n'auront alors pas de détail.
+   section 3 : nos buts (7 colonnes : période, temps, type, zone du filet adverse) ; section 4 : sorties de zone
+   par période (tentatives et réussies, totaux calculés) ; section 5 : notes.
+   Sur la feuille papier, un trait épais marque la fin de chaque période dans les grilles des sorties de zone, comme pour les tirs.
+   Un ancien Sommaire (sans section 3, ou sorties de zone sans période) reste accepté.
 3. (Facultatif) Vérifier localement : `python tools/extract.py` (ne déplace rien), puis Live Server.
 4. Commit + push. GitHub Actions convertit le PDF, l'archive et publie le site en 1 à 2 minutes
    (Ctrl+F5 dans le navigateur si l'ancienne version reste affichée). Un PDF en erreur reste dans `pdf/`.
@@ -39,7 +41,7 @@ Pour l'installer comme une application (icône BLL sur l'écran d'accueil, plein
 menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes se régénèrent avec `python tools/generer_icones.py`.
 
 1. Avant le match : toucher le nom du match en haut pour remplir les infos (équipe, adversaire, no de match, gardienne).
-2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone. « + But » (BLL) et « + But accordé »
+2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone (tous notés par période). « + But » (BLL) et « + But accordé »
    comptent le but (et un tir cadré) tout de suite et ouvrent sa fiche : temps au chrono (845 donne 8:45), type de jeu
    et zone (filet vu de face ; pour nos buts, le filet adverse). « Plus tard » ferme la fiche ; toucher la ligne du but dans « Buts du match »
    la rouvre. « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
@@ -47,7 +49,7 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
    « Télécharger aussi le PDF Sommaire » produit en plus la fiche Sommaire remplie avec les données du match
    (pour archiver ou partager) : ne déposer que le fichier `.json` sur GitHub. Au-delà de 15 buts accordés
-   ou 8 buts BLL, les buts de plus sont recopiés dans les notes du PDF.
+   ou 7 buts BLL, les buts de plus sont recopiés dans les notes du PDF.
 4. Pour le match suivant : bandeau vert « Nouveau match », ou menu ☰ → « Nouveau match » à tout moment.
    Un match pas encore exporté est mis de côté sur le téléphone : menu ☰ → « Récupérer » le remet en place.
 
@@ -93,7 +95,8 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
   tirs cadrés adverses, plus de sorties de zone réussies que de tentatives.
 - **attention** : le match est publié quand même. Exemples : numéro de match ou gardienne manquant,
   type ou zone de but accordé manquant, nombre de buts en section 1 différent du nombre de lignes en section 2
-  (buts accordés) ou 3 (nos buts), buts par période dont la somme ne donne pas le total, deux fichiers pour le
+  (buts accordés) ou 3 (nos buts), buts par période dont la somme ne donne pas le total, plus de sorties réussies que de tentatives
+  dans une période, deux fichiers pour le
   même match, texte non numérique dans un champ numérique (valeur ignorée).
 
 ## Structure
@@ -119,16 +122,16 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
 ## Le site
 
 - **Matchs** : liste des matchs de la saison, du plus vieux au plus récent ; un clic ouvre la fiche du match :
-  - filet des buts accordés ;
   - **Sommaire** : buts des deux équipes dans l'ordre du match (nos buts en bleu, ceux de l'adversaire en rouge),
     avec le score après chaque but quand la période et le temps de tous les buts sont connus (le chrono descend :
     dans une période, 7:55 vient avant 6:29) ;
   - **Par période** : buts et tirs cadrés, nous et adversaire ;
-  - sorties de zone, notes, et nom du fichier source.
+  - filet des buts accordés et filet de nos buts (numéros des buts dans chaque zone) ;
+  - sorties de zone (avec le détail par période s'il est connu), notes, et nom du fichier source.
 - **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, buts accordés, moyenne et
   % d'arrêts par période, tendance du % d'arrêts, zones et types de jeu.
 - **Équipe** : fiche V-D-N, moyennes par match, tirs cadrés moyens par période, buts pour et contre par période,
-  nos buts par type de jeu et par zone (filet adverse), buts accordés par type de jeu et par zone.
+  sorties de zone par période, nos buts par type de jeu et par zone (filet adverse), buts accordés par type de jeu et par zone.
 - Les stats par période ne comptent que les matchs où la période de chaque but est connue ; « – » = donnée non disponible.
 - Bas de page : date de publication du code et date de la dernière exécution de `extract.py`.
 
