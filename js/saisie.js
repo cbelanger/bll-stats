@@ -341,7 +341,7 @@ function ouvrirTerminer() {
   const ic = { er: "✗", av: "!", ok: "✓" };
   $("#verifs").innerHTML = v.map(([n, t]) => `<li class="${n}"><span aria-hidden="true">${ic[n]}</span><span></span></li>`).join("");
   $("#verifs").querySelectorAll("li > span:last-child").forEach((s, i) => { s.textContent = v[i][1]; });
-  $("#b-telecharger").disabled = v.some(([n]) => n === "er");
+  $("#b-telecharger").disabled = $("#b-pdf").disabled = v.some(([n]) => n === "er");
   $("#nom-fichier").textContent = nomFichier() + (S.exporte ? " (déjà téléchargé)" : "");
   sauver();
   $("#f-fin").showModal();
@@ -357,6 +357,61 @@ function telecharger() {
   toast("Fichier enregistré dans Téléchargements");
   afficher();   // bandeau « Nouveau match »
 }
+/* ---------- PDF Sommaire rempli (fiche vierge du site + pdf-lib, chargé seulement au besoin) */
+const FICHE_SOMMAIRE = "fiches/BLL - Statistiques - Sommaire - Match.pdf";
+const LIGNES_PDF = { adv: 15, nous: 8 };   // lignes de la section 2 et colonnes de la section 3 du Sommaire
+function chargerPdfLib() {
+  if (window.PDFLib) return Promise.resolve(window.PDFLib);
+  return new Promise((ok, ko) => {
+    const s = document.createElement("script");
+    s.src = "js/vendor/pdf-lib.min.js"; s.onload = () => ok(window.PDFLib); s.onerror = ko;
+    document.head.append(s);
+  });
+}
+async function telechargerPdf() {
+  const b = $("#b-pdf"); b.disabled = true; b.textContent = "Préparation du PDF…";
+  try {
+    const PDFLib = await chargerPdfLib();
+    const r = await fetch(FICHE_SOMMAIRE);
+    if (!r.ok) throw new Error("fiche " + r.status);
+    const doc = await PDFLib.PDFDocument.load(await r.arrayBuffer());
+    const form = doc.getForm();
+    const c = champs();
+    // Filet du PDF (calculé par Acrobat) : numéros des buts accordés par zone
+    for (const z of ZONES) c[`zone_${z}`] = S.butsAdv.map((x, i) => x.zone === z && i < LIGNES_PDF.adv ? i + 1 : 0).filter(Boolean).join(", ");
+    // Buts au-delà des lignes du PDF : recopiés dans les notes
+    const extra = [
+      ...S.butsAdv.slice(LIGNES_PDF.adv).map((x, i) => `But accordé ${LIGNES_PDF.adv + i + 1} : ${nomP(x.periode)} ${x.temps || "?"} ${x.type || "?"} ${x.zone || "?"}`),
+      ...S.butsNous.slice(LIGNES_PDF.nous).map((x, i) => `But BLL ${LIGNES_PDF.nous + i + 1} : ${nomP(x.periode)} ${x.temps || "?"} ${x.type || "?"} ${x.zone || "?"}`)];
+    if (extra.length) c.notes = [c.notes, ...extra].filter(Boolean).join("\n");
+    for (const [nom, v] of Object.entries(c)) {
+      const f = form.getFieldMaybe(nom);
+      if (!f) continue;
+      const val = v == null ? "" : String(v);
+      if (f instanceof PDFLib.PDFCheckBox) { val ? f.check() : f.uncheck(); continue; }
+      if (f instanceof PDFLib.PDFDropdown) {
+        if (!val) continue;
+        // Types de la section 2 : « R – Rebond » dans le PDF, « R » dans la saisie
+        const opt = f.getOptions().find(o => o === val) || f.getOptions().find(o => o.startsWith(val + " –"));
+        try { f.select(opt || val); } catch (e) { /* valeur absente d'une liste non éditable */ }
+        continue;
+      }
+      if (f instanceof PDFLib.PDFTextField) f.setText(val);
+    }
+    form.updateFieldAppearances();
+    const url = URL.createObjectURL(new Blob([await doc.save()], { type: "application/pdf" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = nomFichier().replace(/\.json$/, ".pdf");
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    toast(extra.length ? `PDF enregistré ; ${extra.length} but(s) de plus sont dans les notes` : "PDF enregistré dans Téléchargements");
+  } catch (e) {
+    toast("PDF impossible : " + (e.message || e));
+  } finally {
+    b.disabled = false; b.textContent = "Télécharger aussi le PDF Sommaire";
+  }
+}
+
 function copier() {
   const txt = contenuExport();
   const repli = () => {
@@ -543,6 +598,7 @@ document.addEventListener("click", e => {
     case "ouvrir": if ($("#f-menu").open) $("#f-menu").close(); listerMatchs(); break;
     case "terminer": ouvrirTerminer(); break;
     case "telecharger": telecharger(); break;
+    case "telecharger-pdf": telechargerPdf(); break;
     case "copier": copier(); break;
     case "fermer": b.closest("dialog").close(); break;
   }

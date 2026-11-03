@@ -2,9 +2,10 @@
 // Garde la page de saisie disponible sans réseau (aréna).
 // Réseau d'abord (toujours la dernière version publiée), copie en cache si le réseau manque.
 // Seuls les fichiers de la saisie sont concernés ; le reste du site n'est pas touché.
-const CACHE = "bll-saisie-v11";
+const CACHE = "bll-saisie-v12";
 const FICHIERS = ["saisie.html", "css/saisie.css", "js/saisie.js", "data/gardiennes.json", "saisie.webmanifest",
-                  "assets/icones/saisie-192.png", "assets/icones/saisie-512.png", "assets/icones/saisie-maskable-512.png"];
+                  "assets/icones/saisie-192.png", "assets/icones/saisie-512.png", "assets/icones/saisie-maskable-512.png",
+                  "js/vendor/pdf-lib.min.js", "fiches/BLL - Statistiques - Sommaire - Match.pdf"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));
@@ -18,7 +19,8 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
-  const chemin = url.pathname.slice(new URL(self.registration.scope).pathname.length);
+  // decodeURIComponent : le nom de la fiche PDF contient des espaces (%20 dans l'adresse)
+  const chemin = decodeURIComponent(url.pathname.slice(new URL(self.registration.scope).pathname.length));
   if (e.request.method !== "GET" || url.origin !== location.origin || !FICHIERS.includes(chemin)) return;
   // cache: "no-cache" : contourne le cache HTTP de GitHub Pages (10 min), sinon la page et le script
   // peuvent venir de deux versions différentes juste après une publication

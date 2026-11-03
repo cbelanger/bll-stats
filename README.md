@@ -45,6 +45,9 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
    la rouvre. « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
 3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
+   « Télécharger aussi le PDF Sommaire » produit en plus la fiche Sommaire remplie avec les données du match
+   (pour archiver ou partager) : ne déposer que le fichier `.json` sur GitHub. Au-delà de 15 buts accordés
+   ou 8 buts BLL, les buts de plus sont recopiés dans les notes du PDF.
 4. Pour le match suivant : bandeau vert « Nouveau match », ou menu ☰ → « Nouveau match » à tout moment.
    Un match pas encore exporté est mis de côté sur le téléphone : menu ☰ → « Récupérer » le remet en place.
 
@@ -103,6 +106,7 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `data/gardiennes.json` | Liste officielle des gardiennes (nom, numéro) — édité à la main |
 | `saisie.html`, `css/saisie.css`, `js/saisie.js`, `sw-saisie.js` | Page de saisie sur téléphone (hors ligne grâce à `sw-saisie.js`) |
 | `saisie.webmanifest`, `assets/icones/` | Installation de la saisie comme application (icônes : `tools/generer_icones.py`) |
+| `js/vendor/pdf-lib.min.js` | Bibliothèque [pdf-lib](https://pdf-lib.js.org/) 1.17.1 (licence MIT, `js/vendor/pdf-lib-LICENSE.md`) : remplit le PDF Sommaire dans la saisie |
 | `data/matchs.json` | Généré par `tools/extract.py` — non versionné, ne pas éditer à la main |
 | `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |
 | `tools/extract.py` | Validation, import des PDF, production de `data/matchs.json` |
@@ -151,6 +155,7 @@ les coquilles (numéro connu → nom officiel), compléter un numéro oublié et
 
 ## Licence
 
-Le code (`index.html`, `css/`, `js/`, `tools/`) est sous [licence MIT](LICENSE), © 2026 Christian Bélanger.
+Le code (`index.html`, `css/`, `js/`, `tools/`) est sous [licence MIT](LICENSE), © 2026 Christian Bélanger,
+sauf `js/vendor/pdf-lib.min.js` (pdf-lib, © 2019 Andrew Dillon, licence MIT).
 Le logo du BLL Élite (`assets/`) appartient au club ; les données de match (`pdf/`, `data/`) ne sont pas
 sous licence libre (tous droits réservés).
