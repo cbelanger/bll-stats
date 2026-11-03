@@ -14,6 +14,8 @@ const el = $("#contenu");
 /* ---------- Utilitaires */
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const pct = (n, d) => (d ? (100 * n / d).toFixed(1).replace(".", ",") + " %" : "–");
+// Sans « % » : rangées « % » des tableaux par période (l'étiquette le dit ; sinon trop large sur téléphone)
+const pctN = (n, d) => pct(n, d).replace(" %", "");
 const moy = (n, d, dec = 2) => (d ? (n / d).toFixed(dec).replace(".", ",") : "–");
 const dateFr = iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
 const dateHeure = d => d.toLocaleString("fr-CA", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -198,7 +200,7 @@ function vueMatch(id) {
   const tp = m.tirs_par_periode;
   const ligneP = (lab, o, tot) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${o ? o[k] ?? "–" : "–"}</div>`).join("")}<div class="tot">${tot ?? "–"}</div>`;
   const sz = m.sorties_zone, szp = sz.par_periode;
-  const pctP = k => szp && szp.tentatives[k] ? pct(szp.reussies[k], szp.tentatives[k]) : "–";
+  const pctP = k => szp && szp.tentatives[k] ? pctN(szp.reussies[k], szp.tentatives[k]) : "–";
   return `<a class="retour" href="#/matchs">← Matchs</a>
   <h1>${esc(m.equipe)} contre ${esc(m.adversaire)}</h1>
   <p class="sous">${dateFr(m.date)}${m.heure_debut ? `, ${m.heure_debut}${m.heure_fin ? "–" + m.heure_fin : ""}` : ""}${m.no_match ? `, match no ${esc(m.no_match)}` : ""}</p>
@@ -250,7 +252,7 @@ function vueMatch(id) {
       ${szp ? `<div class="periodes" style="margin-top:1rem">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
         ${ligneP("Réussies", szp.reussies, sz.reussies)}${ligneP("Tent.", szp.tentatives, sz.tentatives)}
-        <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pctP(k)}</div>`).join("")}<div class="tot">${pct(sz.reussies, sz.tentatives)}</div>
+        <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pctP(k)}</div>`).join("")}<div class="tot">${pctN(sz.reussies, sz.tentatives)}</div>
       </div>` : sz.tentatives ? `<p class="sous" style="font-size:.85rem">Détail par période non disponible pour ce match.</p>` : ""}
     </section>
     ${m.notes ? `<section class="panneau"><h3>Observations et notes</h3><p class="notes">${esc(m.notes)}</p></section>` : ""}
@@ -302,7 +304,7 @@ function vueGardiennes() {
       const t = avecTP.filter(m => m.tirs_par_periode.adv[k] != null && m.buts_par_periode.adv[k] != null);
       const tirsP = t.reduce((s, m) => s + m.tirs_par_periode.adv[k], 0), butsT = t.reduce((s, m) => s + m.buts_par_periode.adv[k], 0);
       return { buts: b.length ? b.reduce((s, v) => s + v, 0) : null, n: b.length,
-               arrets: pct(tirsP - butsT, tirsP) };   // 1 décimale : l'écart entre gardiennes est souvent minime
+               arrets: pctN(tirsP - butsT, tirsP) };   // 1 décimale : l'écart entre gardiennes est souvent minime
     };
     const P = Object.fromEntries(PERIODES.map(([k]) => [k, parP(k)]));
     const totBP = PERIODES.reduce((s, [k]) => s + (P[k].buts ?? 0), 0);
@@ -313,7 +315,7 @@ function vueGardiennes() {
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
         <div class="l">Buts</div>${PERIODES.map(([k]) => `<div>${P[k].buts ?? "–"}</div>`).join("")}<div class="tot">${totBP}</div>
         <div class="l">Moy.</div>${PERIODES.map(([k]) => `<div>${P[k].n ? moy(P[k].buts, P[k].n) : "–"}</div>`).join("")}<div class="tot">${moy(totBP, avecBP.length)}</div>
-        <div class="l">% arr.</div>${PERIODES.map(([k]) => `<div>${P[k].arrets}</div>`).join("")}<div class="tot">${pct(tirsTP - butsTP, tirsTP)}</div>
+        <div class="l">% arr.</div>${PERIODES.map(([k]) => `<div>${P[k].arrets}</div>`).join("")}<div class="tot">${pctN(tirsTP - butsTP, tirsTP)}</div>
       </div>
       <p class="sous" style="font-size:.85rem">Moy. = buts accordés par match. Buts et moyenne : ${avecBP.length} sur ${ms.length} match${ms.length > 1 ? "s" : ""}
         (ceux où la période de chaque but est connue). % d’arrêts : ${avecTP.length} match${avecTP.length > 1 ? "s" : ""} où les tirs par période sont connus aussi.</p>` : "";
@@ -438,7 +440,7 @@ function vueEquipe() {
       <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
       <div class="l">Réussies</div>${PERIODES.map(([k]) => `<div>${szP[k].r ?? "–"}</div>`).join("")}<div class="tot">${szPr}</div>
       <div class="l">Tent.</div>${PERIODES.map(([k]) => `<div>${szP[k].t ?? "–"}</div>`).join("")}<div class="tot">${szPt}</div>
-      <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pct(szP[k].r, szP[k].t)}</div>`).join("")}<div class="tot">${pct(szPr, szPt)}</div>
+      <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pctN(szP[k].r, szP[k].t)}</div>`).join("")}<div class="tot">${pctN(szPr, szPt)}</div>
     </div>
     <p class="sous" style="font-size:.85rem">Total de la saison, seulement pour les matchs où les sorties de zone sont notées par période : ${avecSz.length} sur ${nbM(ms.length)}.</p>
   </section>` : ""}
