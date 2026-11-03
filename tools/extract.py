@@ -204,18 +204,21 @@ def valider(champs):
         detail.append({"no": n, "periode": per or None, "temps": tps or None,
                        "type": typ or None, "zone": zon or None})
 
-    # Nos buts détaillés (saisie téléphone seulement : but_nous_n_periode / _temps / _type)
+    # Nos buts détaillés (section 3 du PDF, saisie téléphone) : période, temps, type, zone du filet adverse
     marques = []
-    nums = [int(m.group(1)) for k in champs if (m := re.fullmatch(r"but_nous_(\d+)_(?:periode|temps|type)", k))]
+    nums = [int(m.group(1)) for k in champs if (m := re.fullmatch(r"but_nous_(\d+)_(?:periode|temps|type|zone)", k))]
     for n in range(1, max(nums, default=0) + 1):
         per = texte(champs, f"but_nous_{n}_periode")
         tps = texte(champs, f"but_nous_{n}_temps")
         typ = re.split(r"\s+[–-]\s+", texte(champs, f"but_nous_{n}_type"))[0].strip()
-        if not any([per, tps, typ]):
+        zon = texte(champs, f"but_nous_{n}_zone")
+        if not any([per, tps, typ, zon]):
             continue
         if typ and typ not in CODES_TYPE:
             avertissements.append(f"but BLL {n} : type inconnu « {typ} »")
-        marques.append({"no": n, "periode": per or None, "temps": tps or None, "type": typ or None})
+        if zon and zon not in ZONES:
+            avertissements.append(f"but BLL {n} : zone inconnue « {zon} »")
+        marques.append({"no": n, "periode": per or None, "temps": tps or None, "type": typ or None, "zone": zon or None})
     if buts_nous is not None and marques and len(marques) != buts_nous:
         avertissements.append(f"{buts_nous} but(s) marqué(s) en section 1, mais {len(marques)} but(s) BLL détaillé(s) en section 3")
 

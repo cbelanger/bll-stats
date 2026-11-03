@@ -111,24 +111,25 @@ c.setFillColor(LIGHT); c.roundRect(tx,top-h1+6,colw-16,30,4,stroke=0,fill=1)
 txt("Tir cadré : tir qui aurait pu entrer dans le but sans l’intervention",tx+5,top-h1+25,7.4,col=NAVY)
 txt("de la gardienne, ou tir qui se termine par un but.",tx+5,top-h1+14,7.4,col=NAVY)
 
-# ---------- 3. Buts marqués (une colonne par but : période, temps, type)
-topB=top-h1-10; hB=120; section(3,"BUTS MARQUÉS – DÉTAIL PAR BUT",LX,topB,colw,hB)
+# ---------- 3. Buts marqués (une colonne par but : période, temps, type, zone du filet adverse)
+topB=top-h1-10; hB=140; section(3,"BUTS MARQUÉS – DÉTAIL PAR BUT",LX,topB,colw,hB)
 NB=8; by=topB-28; lwB=44; bw=colw-16; bcw=(bw-lwB)/NB
 c.setFillColor(LIGHT); c.rect(tx,by-14,bw,14,stroke=0,fill=1)
 txt("But",tx+4,by-10,8.5,True)
 for j in range(NB):
     c.setFillColor(TXT); c.setFont("Helvetica-Bold",8.5); c.drawCentredString(tx+lwB+j*bcw+bcw/2,by-10,str(j+1))
-for i,(lab,key) in enumerate([("Pér.","periode"),("Temps","temps"),("Type","type")]):
+for i,(lab,key) in enumerate([("Pér.","periode"),("Temps","temps"),("Type","type"),("Zone","zone")]):
     ry=by-14-(i+1)*20
     txt(lab,tx+4,ry+7,8.5,True)
     for j in range(NB):
         n=j+1; x=tx+lwB+j*bcw+2; w=bcw-4
         if key=="periode": dd(f"but_nous_{n}_periode",x,ry+2,w,[" ","1","2","3","4","Prol."],fs=8.5,tip=f"Notre but {n} – période")
         elif key=="temps": tf(f"but_nous_{n}_temps",x,ry+2,w,16,fs=8.5,tip=f"Notre but {n} – temps (mm:ss)")
-        else: dd(f"but_nous_{n}_type",x,ry+2,w,[" ","P","T","L","R","E","D","FC","A"],fs=8.5,tip=f"Notre but {n} – type de jeu (codes de la section 2)")
-c.setStrokeColor(LINE); c.setLineWidth(0.6); c.rect(tx,by-74,bw,74)
-for j in range(NB): c.line(tx+lwB+j*bcw,by-74,tx+lwB+j*bcw,by)
-txt("Type de jeu : mêmes codes qu’à la section 2 (P, T, L, R, E, D, FC, A).",tx+2,topB-hB+6,7.4,col=NAVY)
+        elif key=="type": dd(f"but_nous_{n}_type",x,ry+2,w,[" ","P","T","L","R","E","D","FC","A"],fs=8.5,tip=f"Notre but {n} – type de jeu (codes de la section 2)")
+        else: dd(f"but_nous_{n}_zone",x,ry+2,w,[" ","HG","HC","HD","CG","C","CD","BG","BC","BD"],fs=8,tip=f"Notre but {n} – zone du filet adverse (vue de face)")
+c.setStrokeColor(LINE); c.setLineWidth(0.6); c.rect(tx,by-94,bw,94)
+for j in range(NB): c.line(tx+lwB+j*bcw,by-94,tx+lwB+j*bcw,by)
+txt("Type et zone : mêmes codes qu’à la section 2 (zone = filet adverse, vu de face).",tx+2,topB-hB+6,7.4,col=NAVY)
 
 # ---------- 4. Sorties de zone
 top3=topB-hB-10; h3=118; section(4,"SORTIES DE ZONE RÉUSSIES",LX,top3,colw,h3)

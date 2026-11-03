@@ -120,10 +120,10 @@ function afficher() {
     <li><button type="button" class="but ${c}" data-act="but-edit" data-c="${c}" data-i="${i}" aria-label="Modifier le but ${c === "nous" ? "BLL" : "accordé"} ${i + 1}">
       <span class="no">${c === "nous" ? "BLL" : i + 1}</span><span>${nomP(b.periode)}</span><span>${b.temps || m}</span>
       <span class="ty">${b.type ? `${b.type} <span>${TYPES.find(t => t[0] === b.type)[1]}</span>` : m}</span>
-      <span>${c === "nous" ? "" : b.zone || m}</span><span class="fl" aria-hidden="true">›</span>
+      <span>${b.zone || m}</span><span class="fl" aria-hidden="true">›</span>
     </button></li>`).join("")
     : `<li class="vide">Aucun but. Touche « + But » ou « + But accordé » au moment du but.</li>`;
-  const incomplets = S.butsAdv.filter(b => !b.temps || !b.type || !b.zone).length + S.butsNous.filter(b => !b.temps || !b.type).length;
+  const incomplets = S.butsAdv.filter(b => !b.temps || !b.type || !b.zone).length + S.butsNous.filter(b => !b.temps || !b.type || !b.zone).length;
   $("#note-liste").textContent = incomplets ? `${incomplets} but${incomplets > 1 ? "s" : ""} à compléter (?) : touche la ligne quand le jeu est arrêté.` : "";
   $("#note-liste").hidden = !incomplets;
 
@@ -147,9 +147,8 @@ function majFeuilleBut() {
   document.querySelectorAll("[data-bz]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bz === brouillon.zone));
 }
 function ouvrirBut(cote, i) {
-  courant = i; courantCote = cote; brouillon = { temps: "", type: "", ...buts(cote)[i] };
+  courant = i; courantCote = cote; brouillon = { temps: "", type: "", zone: "", ...buts(cote)[i] };
   $("#fb-titre").textContent = cote === "nous" ? `But BLL no ${i + 1}` : `But accordé no ${i + 1}`;
-  $("#fb-zone").hidden = cote === "nous";   // la zone n'est notée que pour les buts accordés
   $("#temps").value = brouillon.temps;
   $("#err-temps").hidden = true;
   majFeuilleBut();
@@ -221,14 +220,14 @@ function champs() {
     c[`but_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
     c[`but_${n}_temps`] = b.temps; c[`but_${n}_type`] = b.type; c[`but_${n}_zone`] = b.zone;
   });
-  // Buts BLL (absents du PDF) : nombre par période, et une ligne par but détaillé (période, temps, type)
+  // Buts BLL : nombre par période, et une ligne par but détaillé (période, temps, type, zone du filet adverse)
   const bp = compteP(S.butsNous);
   for (const [k] of PER) if (bp[k]) c[`buts_nous_${k}`] = bp[k];
   S.butsNous.forEach((b, i) => {
-    if (!b.periode && !b.temps && !b.type) return;
+    if (!b.periode && !b.temps && !b.type && !b.zone) return;
     const n = i + 1;
     c[`but_nous_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
-    c[`but_nous_${n}_temps`] = b.temps || ""; c[`but_nous_${n}_type`] = b.type || "";
+    c[`but_nous_${n}_temps`] = b.temps || ""; c[`but_nous_${n}_type`] = b.type || ""; c[`but_nous_${n}_zone`] = b.zone || "";
   });
   return c;
 }
@@ -254,11 +253,12 @@ function depuisChamps(c, fichier, origine) {
   const per = { "1": "p1", "2": "p2", "3": "p3", "4": "p4", "Prol.": "prol" };
   const maxN = Math.max(0, ...Object.keys(c).map(k => (k.match(/^but_nous_(\d+)_/) || [])[1] || 0).map(Number));
   for (let i = 1; i <= maxN; i++) {
-    const b = { periode: per[t(`but_nous_${i}_periode`)] || null, temps: t(`but_nous_${i}_temps`), type: t(`but_nous_${i}_type`).split(/\s+[–-]\s+/)[0] };
-    if (t(`but_nous_${i}_periode`) || b.temps || b.type) s.butsNous.push(b);
+    const b = { periode: per[t(`but_nous_${i}_periode`)] || null, temps: t(`but_nous_${i}_temps`),
+                type: t(`but_nous_${i}_type`).split(/\s+[–-]\s+/)[0], zone: t(`but_nous_${i}_zone`) };
+    if (t(`but_nous_${i}_periode`) || b.temps || b.type || b.zone) s.butsNous.push(b);
   }
-  if (!maxN) for (const [k] of PER) for (let i = 0; i < n(`buts_nous_${k}`); i++) s.butsNous.push({ periode: k, temps: "", type: "" });
-  while (s.butsNous.length < n("buts_nous")) s.butsNous.push({ periode: null, temps: "", type: "" });
+  if (!maxN) for (const [k] of PER) for (let i = 0; i < n(`buts_nous_${k}`); i++) s.butsNous.push({ periode: k, temps: "", type: "", zone: "" });
+  while (s.butsNous.length < n("buts_nous")) s.butsNous.push({ periode: null, temps: "", type: "", zone: "" });
   const max = Math.max(15, ...Object.keys(c).map(k => (k.match(/^but_(\d+)_periode$/) || [])[1] || 0).map(Number));
   for (let i = 1; i <= max; i++) {
     const b = { periode: per[t(`but_${i}_periode`)] || null, temps: t(`but_${i}_temps`),
@@ -433,7 +433,7 @@ document.addEventListener("click", e => {
         break;
       }
       // Comme un but accordé : compte tout de suite, temps et type maintenant ou plus tard
-      action(`But BLL ${lp}`, () => { S.butsNous.push({ periode: P, temps: "", type: "" }); S.tirs.nous[P]++; }, true);
+      action(`But BLL ${lp}`, () => { S.butsNous.push({ periode: P, temps: "", type: "", zone: "" }); S.tirs.nous[P]++; }, true);
       ouvrirBut("nous", S.butsNous.length - 1);
       break;
     }

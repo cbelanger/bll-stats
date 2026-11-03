@@ -21,12 +21,12 @@ faire **Pull origin** avant ton prochain push.
 ## Ajouter un match en PDF
 
 1. Pendant le match : noter les données sur la feuille papier `fiches/BLL - Statistiques - Saisie - Match.pdf`
-   (tirs à barrer, **nos buts** : période, temps, type, sorties de zone, **buts accordés** : période, temps, type, zone).
+   (tirs à barrer, **nos buts** : période, temps, type, zone, sorties de zone, **buts accordés** : période, temps, type, zone).
 2. Après le match : remplir `fiches/BLL - Statistiques - Sommaire - Match.pdf` dans **Acrobat Reader**
    (les totaux, le filet et la validation de l'heure ne fonctionnent que dans Acrobat)
    et l'enregistrer dans `pdf/`. Le nom du fichier PDF est libre.
    Section 1 : stats générales ; section 2 : buts accordés (période, temps, type, zone) ;
-   section 3 : nos buts (période, temps, type) ; section 4 : sorties de zone ; section 5 : notes.
+   section 3 : nos buts (période, temps, type, zone du filet adverse) ; section 4 : sorties de zone ; section 5 : notes.
    Un ancien Sommaire (sans section 3) reste accepté ; nos buts n'auront alors pas de détail.
 3. (Facultatif) Vérifier localement : `python tools/extract.py` (ne déplace rien), puis Live Server.
 4. Commit + push. GitHub Actions convertit le PDF, l'archive et publie le site en 1 à 2 minutes
@@ -40,8 +40,8 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
 
 1. Avant le match : toucher le nom du match en haut pour remplir les infos (équipe, adversaire, no de match, gardienne).
 2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone. « + But » (BLL) et « + But accordé »
-   comptent le but (et un tir cadré) tout de suite et ouvrent sa fiche : temps au chrono (845 donne 8:45), type de jeu,
-   et zone pour un but accordé. « Plus tard » ferme la fiche ; toucher la ligne du but dans « Buts du match »
+   comptent le but (et un tir cadré) tout de suite et ouvrent sa fiche : temps au chrono (845 donne 8:45), type de jeu
+   et zone (filet vu de face ; pour nos buts, le filet adverse). « Plus tard » ferme la fiche ; toucher la ligne du but dans « Buts du match »
    la rouvre. « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
 3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
