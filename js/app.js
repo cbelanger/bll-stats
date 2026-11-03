@@ -345,9 +345,7 @@ function vueEquipe() {
       <p class="sous" style="font-size:.85rem">${detN} de nos ${bp} buts ont un type ou une zone notés (saisie téléphone ou section 3 du Sommaire).</p>
     </section>
     <section class="panneau">
-      <h3>Où entrent nos buts</h3>${Object.keys(agN.zones).length ? filet(agN.zones, "chaleur") : `<p class="vide">Aucun de nos buts n’a de zone notée.</p>`}
-      <p class="sous" style="font-size:.85rem">Filet adverse, vu de face.</p>
-    </section>
+      <h3>Où entrent nos buts</h3>${Object.keys(agN.zones).length ? filet(agN.zones, "chaleur") : `<p class="vide">Aucun de nos buts n’a de zone notée.</p>`}    </section>
   </div>
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
