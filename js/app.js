@@ -302,7 +302,7 @@ function vueGardiennes() {
       const t = avecTP.filter(m => m.tirs_par_periode.adv[k] != null && m.buts_par_periode.adv[k] != null);
       const tirsP = t.reduce((s, m) => s + m.tirs_par_periode.adv[k], 0), butsT = t.reduce((s, m) => s + m.buts_par_periode.adv[k], 0);
       return { buts: b.length ? b.reduce((s, v) => s + v, 0) : null, n: b.length,
-               arrets: tirsP ? `${Math.round(100 * (tirsP - butsT) / tirsP)} %` : "–" };
+               arrets: pct(tirsP - butsT, tirsP) };   // 1 décimale : l'écart entre gardiennes est souvent minime
     };
     const P = Object.fromEntries(PERIODES.map(([k]) => [k, parP(k)]));
     const totBP = PERIODES.reduce((s, [k]) => s + (P[k].buts ?? 0), 0);
@@ -313,7 +313,7 @@ function vueGardiennes() {
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
         <div class="l">Buts</div>${PERIODES.map(([k]) => `<div>${P[k].buts ?? "–"}</div>`).join("")}<div class="tot">${totBP}</div>
         <div class="l">Moy.</div>${PERIODES.map(([k]) => `<div>${P[k].n ? moy(P[k].buts, P[k].n) : "–"}</div>`).join("")}<div class="tot">${moy(totBP, avecBP.length)}</div>
-        <div class="l">% arr.</div>${PERIODES.map(([k]) => `<div>${P[k].arrets}</div>`).join("")}<div class="tot">${tirsTP ? `${Math.round(100 * (tirsTP - butsTP) / tirsTP)} %` : "–"}</div>
+        <div class="l">% arr.</div>${PERIODES.map(([k]) => `<div>${P[k].arrets}</div>`).join("")}<div class="tot">${pct(tirsTP - butsTP, tirsTP)}</div>
       </div>
       <p class="sous" style="font-size:.85rem">Moy. = buts accordés par match. Buts et moyenne : ${avecBP.length} sur ${ms.length} match${ms.length > 1 ? "s" : ""}
         (ceux où la période de chaque but est connue). % d’arrêts : ${avecTP.length} match${avecTP.length > 1 ? "s" : ""} où les tirs par période sont connus aussi.</p>` : "";
