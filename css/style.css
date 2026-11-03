@@ -169,9 +169,20 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .periodes .sec { grid-column: 1 / -1; text-align: left; font: 600 .95rem var(--titre); color: var(--doux); padding: .8rem 0 .2rem; }
 
 /* Cartes gardiennes */
-.gardienne h3 { display: flex; align-items: baseline; gap: .5rem; font-size: 1.6rem; }
-.gardienne h3 .no { color: var(--rouge); }
-.gardienne { scroll-margin-top: 1rem; }
+/* Fiche d'une gardienne : bandeau marine (dossard rouge, nom, bilan) pour bien voir où commence chaque fiche */
+.gardienne { scroll-margin-top: 1rem; padding-top: 0; overflow: hidden; }
+.grille > .gardienne + .gardienne { margin-top: 1.5rem; }
+.entete-g {
+  display: flex; align-items: center; gap: .9rem; flex-wrap: wrap;
+  margin: 0 -1.25rem 1.1rem; padding: .9rem 1.25rem;
+  background: var(--marine); color: #fff; border-bottom: 4px solid var(--rouge);
+}
+.entete-g h2 { margin: 0; font: 700 1.8rem/1.1 var(--titre); color: #fff; }
+.entete-g .dossard {
+  display: grid; place-items: center; min-width: 2.8rem; height: 2.8rem; padding: 0 .4rem; border-radius: 6px;
+  background: var(--rouge); color: #fff; font: 700 1.5rem/1 var(--titre); box-shadow: inset 0 0 0 2px #fff;
+}
+.entete-g .bilan-g { margin-left: auto; font: 600 1.05rem var(--titre); color: #C9D6EE; letter-spacing: .02em; }
 
 /* Tableau comparatif des gardiennes : en-tête marine, V en vert, D et BA en rouge */
 .sommaire-g { padding: 0; overflow: hidden; }
@@ -242,6 +253,9 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
   .periodes { grid-template-columns: 3rem repeat(5, 1fr) 3rem; }
   .periodes div { padding: .4rem .1rem; }
   .sommaire-g { padding: 0; }
+  .entete-g { margin: 0 -.8rem 1rem; padding: .75rem .8rem; gap: .6rem; }
+  .entete-g h2 { font-size: 1.4rem; }
+  .entete-g .bilan-g { margin-left: 0; width: 100%; font-size: .95rem; }
   .sommaire-g thead th { padding: .55rem .25rem; letter-spacing: 0; font-size: .85rem; }
   .sommaire-g td { padding: .55rem .25rem; font-size: .92rem; }
   .sommaire-g th:first-child, .sommaire-g td:first-child { padding-left: .6rem; }

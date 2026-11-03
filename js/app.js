@@ -325,7 +325,11 @@ function vueGardiennes() {
         <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
         <td class="n opt">${moy(m.buts.adv, 1)}</td></tr>`).join("");
     return `<section class="panneau gardienne" id="g-${esc(cle.replace(/[^\w-]/g, "_"))}">
-      <h3>${esc(g.nom || "Gardienne")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}</h3>
+      <header class="entete-g">
+        ${g.numero != null ? `<span class="dossard">${g.numero}</span>` : ""}
+        <h2>${esc(g.nom || "Gardienne")}</h2>
+        <span class="bilan-g">${ms.length} PJ · ${v}-${d}-${n} · ${pct(tirs - baTirs, tirs)}</span>
+      </header>
       <div class="chiffres">
         <div class="chiffre accent"><b>${pct(tirs - baTirs, tirs)}</b><span>% d’arrêts</span></div>
         <div class="chiffre"><b>${moy(ba, ms.length)}</b><span>buts accordés / match</span></div>
