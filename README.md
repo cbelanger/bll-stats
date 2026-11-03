@@ -128,7 +128,8 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
   - **Par période** : buts et tirs cadrés, nous et adversaire ;
   - filet des buts accordés et filet de nos buts (numéros des buts dans chaque zone) ;
   - sorties de zone (avec le détail par période s'il est connu), notes, et nom du fichier source.
-- **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, buts accordés, moyenne et
+- **Gardiennes** : tableau comparatif (PJ, V, D, N, BA, TC, % arr., MOY, ligne Équipe ; un clic mène à la fiche
+  de la gardienne), puis pour chacune : % d'arrêts, buts accordés par match, tableau match par match, buts accordés, moyenne et
   % d'arrêts par période, tendance du % d'arrêts, zones et types de jeu.
 - **Équipe** : fiche V-D-N, moyennes par match, progression de la saison (graphiques match après match : buts,
   tirs cadrés, % de sorties de zone réussies), tirs cadrés moyens par période, buts pour et contre par période,

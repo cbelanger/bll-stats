@@ -264,7 +264,29 @@ function vueGardiennes() {
   if (!ms.length) return `<h1>Gardiennes ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
   const groupes = {};
   ms.forEach(m => { const k = cleGardienne(m.gardienne); (groupes[k] = groupes[k] || { g: m.gardienne, ms: [] }).ms.push(m); });
-  const cartes = Object.values(groupes).sort((a, b) => b.ms.length - a.ms.length).map(({ g, ms }) => {
+  const tries = Object.entries(groupes).sort(([, a], [, b]) => b.ms.length - a.ms.length);
+  // Tableau comparatif : une ligne par gardienne (un clic descend à sa fiche détaillée)
+  const ligneG = (nom, ms, cle) => {
+    const avecTirs = ms.filter(m => m.tirs.adv != null);
+    const tc = avecTirs.reduce((s, m) => s + m.tirs.adv, 0), baT = avecTirs.reduce((s, m) => s + m.buts.adv, 0);
+    const ba = ms.reduce((s, m) => s + m.buts.adv, 0);
+    const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length;
+    return `<tr${cle ? ` class="lien" tabindex="0" data-g="${esc(cle)}"` : ""}>
+      <td class="txt nom-g">${nom}</td><td class="n">${ms.length}</td>
+      <td class="n v">${v}</td><td class="n d">${d}</td><td class="n">${ms.length - v - d}</td>
+      <td class="n d">${ba}</td><td class="n">${tc}</td>
+      <td class="n fort">${pct(tc - baT, tc)}</td><td class="n">${moy(ba, ms.length)}</td></tr>`;
+  };
+  const tableau = `<section class="panneau sommaire-g" style="margin-top:1rem"><div class="defile"><table>
+    <thead><tr><th>Gardienne</th><th class="n">PJ</th><th class="n">V</th><th class="n">D</th><th class="n">N</th>
+      <th class="n">BA</th><th class="n">TC</th><th class="n">% arr.</th><th class="n">MOY</th></tr></thead>
+    <tbody>${tries.map(([cle, { g, ms }]) => ligneG(`${esc(g.nom || "Non indiquée")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}`, ms, cle)).join("")}</tbody>
+    ${tries.length > 1 ? `<tfoot>${ligneG("Équipe", ms)}</tfoot>` : ""}
+  </table></div>
+  <p class="legende-g"><b>PJ</b> parties jouées · <b>V/D/N</b> victoires, défaites, nuls · <b>BA</b> buts accordés ·
+    <b>TC</b> tirs cadrés contre · <b>% arr.</b> pourcentage d’arrêts · <b>MOY</b> moyenne de buts accordés par match.
+    TC et % arr. : matchs où les tirs sont notés.</p></section>`;
+  const cartes = tries.map(([cle, { g, ms }]) => {
     const avecTirs = ms.filter(m => m.tirs.adv != null);
     const tirs = avecTirs.reduce((s, m) => s + m.tirs.adv, 0);
     const ba = ms.reduce((s, m) => s + m.buts.adv, 0);
@@ -302,7 +324,7 @@ function vueGardiennes() {
         <td class="n">${m.tirs.adv ?? "–"}</td><td class="n">${m.buts.adv}</td>
         <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
         <td class="n opt">${moy(m.buts.adv, 1)}</td></tr>`).join("");
-    return `<section class="panneau gardienne">
+    return `<section class="panneau gardienne" id="g-${esc(cle.replace(/[^\w-]/g, "_"))}">
       <h3>${esc(g.nom || "Gardienne")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}</h3>
       <div class="chiffres">
         <div class="chiffre accent"><b>${pct(tirs - baTirs, tirs)}</b><span>% d’arrêts</span></div>
@@ -327,6 +349,7 @@ function vueGardiennes() {
     </section>`;
   });
   return `<h1>Gardiennes ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}. V-D-N = victoires, défaites, nuls.</p>
+    ${tableau}
     <div class="grille" style="margin-top:1rem">${cartes.join("")}</div>`;
 }
 
@@ -493,7 +516,11 @@ async function demarrer() {
     etat.equipe = b.dataset.equipe; majFiltres();
     if (location.hash.startsWith("#/match/")) location.hash = "#/matchs"; else afficher();
   }));
-  el.addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id); });
+  el.addEventListener("click", e => {
+    const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
+    const g = e.target.closest("tr[data-g]");
+    if (g) document.getElementById("g-" + g.dataset.g.replace(/[^\w-]/g, "_"))?.scrollIntoView({ behavior: "smooth" });
+  });
   // Graphiques de progression dessinés à la largeur de l'écran : redessiner si la largeur change (rotation du téléphone)
   let largeur = el.clientWidth, minuterie;
   window.addEventListener("resize", () => {
@@ -504,7 +531,7 @@ async function demarrer() {
       const y = window.scrollY; el.innerHTML = vueEquipe(); window.scrollTo(0, y);
     }, 200);
   });
-  el.addEventListener("keydown", e => { const tr = e.target.closest("tr[data-id]"); if (tr && e.key === "Enter") location.hash = "#/match/" + encodeURIComponent(tr.dataset.id); });
+  el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], tr[data-g]")) e.target.click(); });
   window.addEventListener("hashchange", afficher);
   majFiltres();
   afficher();

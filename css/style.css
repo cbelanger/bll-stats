@@ -171,6 +171,20 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 /* Cartes gardiennes */
 .gardienne h3 { display: flex; align-items: baseline; gap: .5rem; font-size: 1.6rem; }
 .gardienne h3 .no { color: var(--rouge); }
+.gardienne { scroll-margin-top: 1rem; }
+
+/* Tableau comparatif des gardiennes : en-tête marine, V en vert, D et BA en rouge */
+.sommaire-g { padding: 0; overflow: hidden; }
+.sommaire-g thead th { background: var(--marine); color: #fff; text-transform: uppercase; letter-spacing: .04em; padding: .7rem .8rem; }
+.sommaire-g td { padding: .7rem .8rem; font-size: 1.05rem; }
+.sommaire-g .nom-g { font: 700 1.2rem var(--titre); }
+.sommaire-g .nom-g .no { color: var(--rouge); }
+.sommaire-g td.v { color: #1E7A46; font-weight: 700; }
+.sommaire-g td.d { color: var(--rouge); font-weight: 700; }
+.sommaire-g td.fort { font-weight: 700; }
+.sommaire-g tfoot td { background: var(--glace); }
+.legende-g { font-size: .8rem; color: var(--doux); padding: .7rem .9rem; margin: 0; background: var(--glace); border-top: 1px solid var(--trait); }
+@media (prefers-color-scheme: dark) { .sommaire-g td.v { color: #5FD08F; } .sommaire-g td.d { color: #F27A87; } }
 .tendance { width: 100%; height: auto; display: block; margin-top: .5rem; max-height: 140px; }
 .tendance .ligne { fill: none; stroke: var(--marine); stroke-width: 2.5; }
 @media (prefers-color-scheme: dark) { .tendance .ligne { stroke: #8FB0EA; } }
@@ -227,5 +241,11 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
   .score .pts { font-size: 2.2rem; }
   .periodes { grid-template-columns: 3rem repeat(5, 1fr) 3rem; }
   .periodes div { padding: .4rem .1rem; }
+  .sommaire-g { padding: 0; }
+  .sommaire-g thead th { padding: .55rem .25rem; letter-spacing: 0; font-size: .85rem; }
+  .sommaire-g td { padding: .55rem .25rem; font-size: .92rem; }
+  .sommaire-g th:first-child, .sommaire-g td:first-child { padding-left: .6rem; }
+  .sommaire-g th:last-child, .sommaire-g td:last-child { padding-right: .6rem; }
+  .sommaire-g .nom-g { font-size: 1rem; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
