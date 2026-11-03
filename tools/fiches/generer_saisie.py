@@ -70,10 +70,16 @@ gy=top-24
 for lab in ["NOUS","ADV."]:
     txt(lab,M+8,gy-5*ch/2-3,10,True,RED if lab=="ADV." else NAVY)
     gy=grid(M+54,gy,50,10,cw,ch)-6
-# 2. Nos buts : une colonne par but (période, temps, type, zone) ; les buts accordés vont à la section 4
-NB=10; top2=top-h1-8; bcw=(LW-16-46)/NB; bh=14.5; zh=24; h2=18+8+13+3*bh+zh+6
-section("2","NOS BUTS",M,top2,LW,h2,"(un but par colonne ; type : codes de la section 4 ; zone : X dans le filet adverse)")
-gx=M+8; gy=top2-24; gw=LW-16
+# 2. Sorties de zone (juste sous les tirs : ce sont les événements les plus fréquents, comme dans la saisie téléphone)
+top2=top-h1-8; scw=(LW-16-46)/25; sch=15; h2=18+8+2*(2*sch+5)+2
+section("2","SORTIES DE ZONE",M,top2,LW,h2,"(réussie = sortie en contrôle ou passe complétée)")
+gy=top2-24
+for lab,col in [("RÉUSSIES",NAVY),("RATÉES",RED)]:
+    txt(lab,M+8,gy-sch-3,8.2,True,col); gy=grid(M+54,gy,50,25,scw,sch,fs=6.3)-5
+# 3. Nos buts : une colonne par but (période, temps, type, zone) ; les buts accordés vont à la section 4
+NB=10; top3=top2-h2-8; bcw=(LW-16-46)/NB; bh=14.5; zh=24; h3=18+8+13+3*bh+zh+6
+section("3","NOS BUTS",M,top3,LW,h3,"(un but par colonne ; type : codes de la section 4 ; zone : X dans le filet adverse)")
+gx=M+8; gy=top3-24; gw=LW-16
 c.setFillColor(LIGHT); c.rect(gx,gy-13,gw,13,0,1)
 txt("But",gx+5,gy-9.5,8,True)
 for j in range(NB): ctxt(str(j+1),gx+46+j*bcw+bcw/2,gy-9.5,8,True)
@@ -90,12 +96,6 @@ for j in range(NB):
     c.line(nx,ny,nx,ny+nh); c.line(nx,ny+nh,nx+nw,ny+nh); c.line(nx+nw,ny+nh,nx+nw,ny)
 c.setStrokeColor(LINE); c.setLineWidth(0.7); c.rect(gx,zy,gw,13+3*bh+zh)
 for j in range(NB): c.line(gx+46+j*bcw,zy,gx+46+j*bcw,gy)
-# 3. Sorties de zone
-top3=top2-h2-8; scw=(LW-16-46)/25; sch=15; h3=18+8+2*(2*sch+5)+2
-section("3","SORTIES DE ZONE",M,top3,LW,h3,"(réussie = sortie en contrôle ou passe complétée)")
-gy=top3-24
-for lab,col in [("RÉUSSIES",NAVY),("RATÉES",RED)]:
-    txt(lab,M+8,gy-sch-3,8.2,True,col); gy=grid(M+54,gy,50,25,scw,sch,fs=6.3)-5
 # 5. Notes
 top5=top3-h3-8; h5=top5-M
 section("5","NOTES RAPIDES",M,top5,LW,h5)

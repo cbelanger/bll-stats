@@ -21,7 +21,7 @@ faire **Pull origin** avant ton prochain push.
 ## Ajouter un match en PDF
 
 1. Pendant le match : noter les données sur la feuille papier `fiches/BLL - Statistiques - Saisie - Match.pdf`
-   (tirs à barrer, **nos buts** : période, temps, type, zone, sorties de zone, **buts accordés** : période, temps, type, zone).
+   (tirs et sorties de zone à barrer, **nos buts** : période, temps, type, zone, **buts accordés** : période, temps, type, zone).
 2. Après le match : remplir `fiches/BLL - Statistiques - Sommaire - Match.pdf` dans **Acrobat Reader**
    (les totaux, le filet et la validation de l'heure ne fonctionnent que dans Acrobat)
    et l'enregistrer dans `pdf/`. Le nom du fichier PDF est libre.
