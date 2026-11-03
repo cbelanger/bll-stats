@@ -274,7 +274,7 @@ function vueGardiennes() {
     return `<tr${cle ? ` class="lien" tabindex="0" data-g="${esc(cle)}"` : ""}>
       <td class="txt nom-g">${nom}</td><td class="n">${ms.length}</td>
       <td class="n v">${v}</td><td class="n d">${d}</td><td class="n">${ms.length - v - d}</td>
-      <td class="n d">${ba}</td><td class="n">${tc}</td>
+      <td class="n">${ba}</td><td class="n">${tc}</td>
       <td class="n fort">${pct(tc - baT, tc)}</td><td class="n">${moy(ba, ms.length)}</td></tr>`;
   };
   const tableau = `<section class="panneau sommaire-g" style="margin-top:1rem"><div class="defile"><table>
