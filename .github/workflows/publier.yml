@@ -74,6 +74,13 @@ jobs:
           d=$(git log -1 --format=%cI -- index.html css js assets)
           echo "{\"code\": \"$d\"}" > data/version.json
 
+      - name: Numéro de version sur le code (copie publiée seulement)
+        # Nouvelle adresse à chaque publication : les téléphones ne gardent pas l'ancien code en cache
+        run: |
+          v=$(git rev-parse --short HEAD)
+          sed -i "s#\"css/style.css\"#\"css/style.css?v=$v\"#; s#\"js/app.js\"#\"js/app.js?v=$v\"#" index.html
+          grep -q "app.js?v=$v" index.html
+
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
         with:
