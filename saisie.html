@@ -62,6 +62,26 @@
       </div>
     </section>
 
+    <section class="carte" aria-labelledby="h-sz">
+      <h2 id="h-sz">Sorties de zone <span id="szp"></span></h2>
+      <div class="deux">
+        <div class="cote">
+          <div class="haut"><span class="etiq">Réussies</span><span class="total" id="szr">0</span></div>
+          <div class="actions">
+            <button type="button" class="moins" data-act="sz-moins" data-r="r" aria-label="Retirer une sortie réussie">−</button>
+            <button type="button" class="plus vert" data-act="sz" data-r="r">✓ Réussie</button>
+          </div>
+        </div>
+        <div class="cote">
+          <div class="haut"><span class="etiq">Ratées</span><span class="total" id="szx">0</span></div>
+          <div class="actions">
+            <button type="button" class="moins" data-act="sz-moins" data-r="x" aria-label="Retirer une sortie ratée">−</button>
+            <button type="button" class="plus neutre" data-act="sz" data-r="x">✗ Ratée</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="carte" aria-labelledby="h-buts">
       <h2 id="h-buts">Buts <span>chaque but compte aussi 1 tir cadré</span></h2>
       <div class="deux">
@@ -78,26 +98,6 @@
           <div class="detail" id="det-ba"></div>
           <div class="actions seul">
             <button type="button" class="plus" data-act="but-adv">+ But accordé</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="carte" aria-labelledby="h-sz">
-      <h2 id="h-sz">Sorties de zone <span id="szp"></span></h2>
-      <div class="deux">
-        <div class="cote">
-          <div class="haut"><span class="etiq">Réussies</span><span class="total" id="szr">0</span></div>
-          <div class="actions">
-            <button type="button" class="moins" data-act="sz-moins" data-r="r" aria-label="Retirer une sortie réussie">−</button>
-            <button type="button" class="plus vert" data-act="sz" data-r="r">✓ Réussie</button>
-          </div>
-        </div>
-        <div class="cote">
-          <div class="haut"><span class="etiq">Ratées</span><span class="total" id="szx">0</span></div>
-          <div class="actions">
-            <button type="button" class="moins" data-act="sz-moins" data-r="x" aria-label="Retirer une sortie ratée">−</button>
-            <button type="button" class="plus neutre" data-act="sz" data-r="x">✗ Ratée</button>
           </div>
         </div>
       </div>
