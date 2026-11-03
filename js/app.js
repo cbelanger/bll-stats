@@ -256,9 +256,7 @@ function vueMatch(id) {
       </div>` : sz.tentatives ? `<p class="sous" style="font-size:.85rem">Détail par période non disponible pour ce match.</p>` : ""}
     </section>
     ${m.notes ? `<section class="panneau"><h3>Observations et notes</h3><p class="notes">${esc(m.notes)}</p></section>` : ""}
-  </div>
-  ${m.fichier ? `<p class="source">Fichier : <a href="https://github.com/cbelanger/bll-stats/blob/main/data/matchs/${encodeURIComponent(m.fichier)}">${esc(m.fichier)}</a>
-    (${m.source === "pdf" ? "PDF Sommaire" : "saisie téléphone"})</p>` : ""}`;
+  </div>`;
 }
 
 function vueGardiennes() {

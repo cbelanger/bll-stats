@@ -3,7 +3,7 @@
 Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et U19AA.
 
 **Un match = un fichier** dans `data/matchs/`, nommé `AAAA-MM-JJ_EQUIPE_adversaire_no.json`
-(ex. `2026-10-31_U19AA_ontario-rush_2016.json`). Le nom du fichier est affiché au bas de la fiche du match sur le site.
+(ex. `2026-10-31_U19AA_ontario-rush_2016.json`).
 
 | Je veux… | Comment |
 |---|---|
@@ -127,7 +127,7 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
     dans une période, 7:55 vient avant 6:29) ;
   - **Par période** : buts et tirs cadrés, nous et adversaire ;
   - filet des buts accordés et filet de nos buts (numéros des buts dans chaque zone) ;
-  - sorties de zone (avec le détail par période s'il est connu), notes, et nom du fichier source.
+  - sorties de zone (avec le détail par période s'il est connu), et notes.
 - **Gardiennes** : tableau comparatif (PJ, V, D, N, BA, TC, % arr., MOY, ligne Équipe ; un clic mène à la fiche
   de la gardienne), puis pour chacune : % d'arrêts, buts accordés par match, tableau match par match, buts accordés, moyenne et
   % d'arrêts par période, tendance du % d'arrêts, zones et types de jeu.

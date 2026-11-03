@@ -228,7 +228,6 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 }
 
 .notes { white-space: pre-wrap; }
-.source { margin: 1.25rem 0 0; font-size: .8rem; color: var(--doux); overflow-wrap: anywhere; }
 .pied { text-align: center; color: var(--doux); font-size: .85rem; padding: 0 1rem 2rem; }
 .pied span { display: block; }
 
