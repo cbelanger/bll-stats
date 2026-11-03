@@ -67,12 +67,13 @@ function filet(valeurs, mode) {
   return s;
 }
 
-function barresTypes(compte, total) {
+// nous = nos buts (barres bleues) ; sinon buts accordés (barres rouges)
+function barresTypes(compte, total, nous = false) {
   const lignes = Object.keys(TYPES).filter(c => compte[c]).sort((a, b) => compte[b] - compte[a]);
-  if (!lignes.length) return `<p class="vide">Aucun but accordé détaillé.</p>`;
+  if (!lignes.length) return `<p class="vide">${nous ? "Aucun de nos buts n’a de type de jeu noté." : "Aucun but accordé détaillé."}</p>`;
   return `<div class="barres">${lignes.map(c => `
     <div class="barre-l"><span><span class="code-t">${c}</span>${TYPES[c]}</span>
-      <div class="piste"><div class="rempli r" style="width:${100 * compte[c] / total}%"></div></div>
+      <div class="piste"><div class="rempli${nous ? "" : " r"}" style="width:${100 * compte[c] / total}%"></div></div>
       <b>${compte[c]}</b></div>`).join("")}</div>`;
 }
 
@@ -93,10 +94,11 @@ function tendance(points) {
   </svg>`;
 }
 
-function agregerButs(matchs) {
+// cle : "buts_accordes" (buts contre) ou "buts_marques" (nos buts, zone = filet adverse)
+function agregerButs(matchs, cle = "buts_accordes") {
   const zones = {}, types = {};
   let n = 0;
-  matchs.forEach(m => m.buts_accordes.forEach(b => {
+  matchs.forEach(m => (m[cle] || []).forEach(b => {
     if (b.zone) zones[b.zone] = (zones[b.zone] || 0) + 1;
     if (b.type) types[b.type] = (types[b.type] || 0) + 1;
     n++;
@@ -303,7 +305,8 @@ function vueEquipe() {
   const ligneB = (lab, cote) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${totB(cote, k) ?? "–"}</div>`).join("")}
     <div class="tot">${avecB[cote].length ? PERIODES.reduce((s, [k]) => s + (totB(cote, k) ?? 0), 0) : "–"}</div>`;
   const nbM = n => `${n} match${n > 1 ? "s" : ""}`;
-  const ag = agregerButs(ms);
+  const ag = agregerButs(ms), agN = agregerButs(ms, "buts_marques");
+  const detN = ms.reduce((s, m) => s + (m.buts_marques || []).filter(b => b.type || b.zone).length, 0);
   return `<h1>Équipe ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}</p>
   <section class="panneau" style="margin-top:1rem">
     <div class="chiffres" style="margin-top:0">
@@ -334,6 +337,16 @@ function vueEquipe() {
       </div>
       <p class="sous" style="font-size:.85rem">Total de la saison, seulement pour les matchs où la période de chaque but est connue :
         ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne Pour, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.</p>
+    </section>
+  </div>
+  <div class="grille g2" style="margin-top:1rem">
+    <section class="panneau">
+      <h3>Nos buts par type de jeu</h3>${barresTypes(agN.types, agN.n, true)}
+      <p class="sous" style="font-size:.85rem">${detN} de nos ${bp} buts ont un type ou une zone notés (saisie téléphone ou section 3 du Sommaire).</p>
+    </section>
+    <section class="panneau">
+      <h3>Où entrent nos buts</h3>${Object.keys(agN.zones).length ? filet(agN.zones, "chaleur") : `<p class="vide">Aucun de nos buts n’a de zone notée.</p>`}
+      <p class="sous" style="font-size:.85rem">Filet adverse, vu de face.</p>
     </section>
   </div>
   <div class="grille g2" style="margin-top:1rem">
