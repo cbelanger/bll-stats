@@ -234,6 +234,75 @@ function ligneTemps(m) {
   </section>`;
 }
 
+// Faits saillants : quelques phrases neutres tirées des données (retournement, séries de buts, but gagnant,
+// période décisive, gardienne, tirs, records de la saison). Les records exigent au moins 3 matchs comparables.
+function faitsSaillants(m) {
+  const saison = etat.matchs.filter(x => x.saison === m.saison && x.equipe === m.equipe);
+  const nomEq = eq => (eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire));
+  const ord = i => (i === 4 ? "la prolongation" : `la ${i + 1}<sup>${i ? "e" : "re"}</sup> période`);
+  const duree = s => [Math.floor(s / 60) ? `${Math.floor(s / 60)} min` : "", s % 60 ? `${s % 60} s` : ""].filter(Boolean).join(" ");
+  const record = (val, liste) => liste.length >= 3 && val(m) != null && liste.every(x => x === m || val(x) == null || val(x) < val(m));
+  const f = [];
+  const buts = [...m.buts_accordes.map(b => ({ eq: "adv", ...b })), ...(m.buts_marques || []).map(b => ({ eq: "nous", ...b }))]
+    .map(b => ({ ...b, i: idxP(b.periode), s: sec(b.temps) })).filter(b => b.i >= 0 && b.s != null)
+    .sort((a, b) => a.i - b.i || b.s - a.s);
+  const r = resultat(m);
+  if (buts.length && buts.length === m.buts.nous + m.buts.adv) {
+    const sc = { nous: 0, adv: 0 };
+    let pire = 0, meilleur = 0;
+    buts.forEach(b => {
+      b.avant = `${sc.nous}–${sc.adv}`; sc[b.eq]++; b.apres = `${sc.nous}–${sc.adv}`;
+      b.t = b.i * DUREE_P + (DUREE_P - b.s);   // temps écoulé dans le match
+      pire = Math.min(pire, sc.nous - sc.adv); meilleur = Math.max(meilleur, sc.nous - sc.adv);
+    });
+    if (pire <= -2 && r !== "D") f.push(`BLL ${esc(m.equipe)} efface un retard de ${-pire} buts et ${r === "V" ? "gagne" : "obtient la nulle"}.`);
+    if (meilleur >= 2 && r !== "V") f.push(`${nomEq("adv")} efface une avance de ${meilleur} buts de BLL ${esc(m.equipe)}.`);
+    if (r === "V") {
+      const gb = buts.filter(b => b.eq === "nous")[m.buts.adv];
+      f.push(`But gagnant à ${esc(gb.temps)} dans ${ord(gb.i)}${gb.type ? ` (${esc(TYPES[gb.type] || gb.type)})` : ""}.`);
+    }
+    // Plus longue série de buts d'une même équipe (sauf si elle a marqué tous les buts du match)
+    let serie = null;
+    for (let a = 0; a < buts.length;) {
+      let z = a; while (z + 1 < buts.length && buts[z + 1].eq === buts[a].eq) z++;
+      if (!serie || z - a > serie.n - 1) serie = { eq: buts[a].eq, n: z - a + 1, de: buts[a].avant, a: buts[z].apres };
+      a = z + 1;
+    }
+    if (serie.n >= 3 && serie.n < buts.length) f.push(`${serie.n} buts de suite pour ${nomEq(serie.eq)}, de ${serie.de} à ${serie.a}.`);
+    // Rafale : au moins 3 buts d'une même équipe en 5 minutes de jeu ou moins
+    ["nous", "adv"].forEach(eq => {
+      const t = buts.filter(b => b.eq === eq);
+      let best = null;
+      for (let a = 0; a < t.length; a++) for (let z = a + 2; z < t.length && t[z].t - t[a].t <= 300; z++)
+        if (!best || z - a + 1 > best.n || (z - a + 1 === best.n && t[z].t - t[a].t < best.duree)) best = { n: z - a + 1, duree: t[z].t - t[a].t, i: t[a].i, j: t[z].i };
+      if (best) f.push(`${best.n} buts de ${nomEq(eq)} en ${duree(best.duree)}${best.i === best.j ? ` dans ${ord(best.i)}` : ""}.`);
+    });
+  }
+  // Période décisive : écart de 3 buts ou plus dans une période
+  const bp = m.buts_par_periode;
+  if (bp?.nous && bp?.adv) PERIODES.forEach(([k], i) => {
+    const n = bp.nous[k] ?? 0, a = bp.adv[k] ?? 0;
+    if (Math.abs(n - a) >= 3) f.push(`${nomEq(n > a ? "nous" : "adv")} remporte ${ord(i)} ${Math.max(n, a)}–${Math.min(n, a)}.`);
+  });
+  const g = m.gardienne?.nom ? esc(m.gardienne.nom) : "La gardienne";
+  if (m.tirs.adv) {
+    const rec = record(x => svArret(x), saison.filter(x => x.tirs.adv));
+    f.push(m.buts.adv === 0 ? `Blanchissage pour ${g} : ${m.tirs.adv} arrêts.`
+      : `${g} arrête ${m.tirs.adv - m.buts.adv} des ${m.tirs.adv} tirs (${pct(m.tirs.adv - m.buts.adv, m.tirs.adv)})${rec ? " : meilleur % d’arrêts de la saison" : ""}.`);
+  }
+  if (m.tirs.nous != null && m.tirs.adv != null) {
+    const [hi, lo, eq] = m.tirs.nous >= m.tirs.adv ? [m.tirs.nous, m.tirs.adv, "nous"] : [m.tirs.adv, m.tirs.nous, "adv"];
+    if (hi - lo >= 10 || (lo && hi >= 2 * lo)) f.push(`${nomEq(eq)} domine aux tirs cadrés, ${hi} à ${lo}.`);
+    if (record(x => x.tirs.nous, saison.filter(x => x.tirs.nous != null))) f.push(`${m.tirs.nous} tirs cadrés : sommet de la saison pour BLL ${esc(m.equipe)}.`);
+  }
+  const sz = m.sorties_zone;
+  if (sz.tentatives && record(x => x.sorties_zone.tentatives ? x.sorties_zone.reussies / x.sorties_zone.tentatives : null, saison.filter(x => x.sorties_zone.tentatives)))
+    f.push(`Meilleur taux de sorties de zone de la saison : ${pct(sz.reussies, sz.tentatives)} (${sz.reussies} sur ${sz.tentatives}).`);
+  if (!f.length) return "";
+  return `<section class="panneau faits" style="margin-top:1rem"><h3>Faits saillants</h3>
+    <ul>${f.slice(0, 6).map(t => `<li>${t}</li>`).join("")}</ul></section>`;
+}
+
 function vueMatch(id) {
   const m = etat.matchs.find(x => x.id === id);
   if (!m) return `<a class="retour" href="#/matchs">← Matchs</a><p class="vide">Ce match n’existe pas ou n’a pas encore été publié.</p>`;
@@ -252,6 +321,7 @@ function vueMatch(id) {
     <div class="pts">${m.buts.nous}–${m.buts.adv}</div>
     <div class="eq droite">${esc(m.adversaire)}<small>${m.tirs.adv ?? "–"} tirs cadrés</small></div>
   </div>
+  ${faitsSaillants(m)}
   ${ligneTemps(m)}
 
   <div class="grille g2" style="margin-top:1rem">

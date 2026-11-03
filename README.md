@@ -122,6 +122,9 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
 ## Le site
 
 - **Matchs** : liste des matchs de la saison, du plus vieux au plus récent ; un clic ouvre la fiche du match :
+  - **Faits saillants** : quelques phrases tirées des données (retard effacé, but gagnant, série de buts,
+    3 buts ou plus en 5 minutes, période gagnée par 3 buts ou plus, arrêts de la gardienne, domination aux tirs,
+    records de la saison dès 3 matchs) ; 6 au plus ;
   - **Déroulement du match** : une bande par période (10 minutes), nos buts au-dessus, ceux de l'adversaire en dessous,
     score à la fin de chaque période ; seuls les buts avec période et temps y sont placés ; toucher un point allume
     la ligne du but dans le Sommaire (et l'inverse) ;
