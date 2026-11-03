@@ -130,7 +130,8 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
   - sorties de zone (avec le détail par période s'il est connu), notes, et nom du fichier source.
 - **Gardiennes** : % d'arrêts, buts accordés par match, tableau match par match, buts accordés, moyenne et
   % d'arrêts par période, tendance du % d'arrêts, zones et types de jeu.
-- **Équipe** : fiche V-D-N, moyennes par match, tirs cadrés moyens par période, buts pour et contre par période,
+- **Équipe** : fiche V-D-N, moyennes par match, progression de la saison (graphiques match après match : buts,
+  tirs cadrés, % de sorties de zone réussies), tirs cadrés moyens par période, buts pour et contre par période,
   sorties de zone par période, nos buts par type de jeu et par zone (filet adverse), buts accordés par type de jeu et par zone.
 - Les stats par période ne comptent que les matchs où la période de chaque but est connue ; « – » = donnée non disponible.
 - Bas de page : date de publication du code et date de la dernière exécution de `extract.py`.

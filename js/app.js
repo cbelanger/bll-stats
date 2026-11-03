@@ -94,6 +94,40 @@ function tendance(points) {
   </svg>`;
 }
 
+// Progression match après match (onglet Équipe). series : [{lab, cls ("nous" | "adv"), val: m => nombre | null}].
+// Un match sans valeur coupe la ligne ; survol d'une colonne = valeurs du match.
+function progression(ms, series, unite = "") {
+  if (!series.some(se => ms.filter(m => se.val(m) != null).length >= 2))
+    return `<p class="vide">Pas encore assez de matchs avec cette donnée (il en faut au moins 2).</p>`;
+  // Largeur réelle de l'écran : le texte garde sa taille sur téléphone (redessiné si la fenêtre change)
+  const W = Math.max(320, Math.min(1000, el.clientWidth - 70)), H = 200, gx = 38, dx = 58, hy = 14, by = H - 30;
+  const vals = series.flatMap(s => ms.map(s.val)).filter(v => v != null);
+  const pas = unite === "%" ? 25 : [1, 2, 5, 10, 20].find(p => Math.max(...vals) / p <= 5) || 50;
+  const hi = unite === "%" ? 100 : Math.max(pas, Math.ceil(Math.max(...vals) / pas) * pas);
+  const X = i => gx + 8 + i * (W - gx - 8 - dx) / (ms.length - 1), Y = v => by - v / hi * (by - hy);
+  const fmt = v => v == null ? "–" : `${unite === "%" ? Math.round(v) : v}${unite === "%" ? " %" : ""}`;
+  const chaque = Math.ceil(ms.length / Math.floor((W - gx - dx) / 55)), etiq = [];   // dates espacées d'au moins 55 px
+  let s = `<svg class="progression" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(x => x.lab).join(" et "))}, match après match">`;
+  for (let v = 0; v <= hi; v += pas) s += `<line class="grille-l" x1="${gx}" x2="${W - dx + 8}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axe" x="${gx - 6}" y="${Y(v) + 4}" text-anchor="end">${v}${unite === "%" ? " %" : ""}</text>`;
+  ms.forEach((m, i) => { if (i % chaque === 0 || i === ms.length - 1) s += `<text class="axe" x="${X(i)}" y="${H - 10}" text-anchor="middle">${dateCourte(m.date)}</text>`; });
+  for (const se of series) {
+    // segments continus entre matchs qui ont une valeur
+    const d = ms.map((m, i) => [i, se.val(m)]).reduce((a, [i, v], k, arr) =>
+      v == null ? a : a + `${k && arr[k - 1][1] != null ? "L" : "M"}${X(i).toFixed(1)} ${Y(v).toFixed(1)} `, "");
+    s += `<path class="ligne ${se.cls}" d="${d}"/>`;
+    ms.forEach((m, i) => { const v = se.val(m); if (v != null) s += `<circle class="pt ${se.cls}" cx="${X(i)}" cy="${Y(v)}" r="4.5"/>`; });
+    const dern = ms.length - 1 - [...ms].reverse().findIndex(m => se.val(m) != null);
+    if (dern < ms.length) etiq.push({ x: X(dern) + 9, y: Y(se.val(ms[dern])) + 4, lab: se.lab });
+  }
+  // étiquettes au bout des lignes, écartées si elles se chevauchent
+  etiq.sort((a, b) => a.y - b.y).forEach((e, k) => { if (k && e.y - etiq[k - 1].y < 13) e.y = etiq[k - 1].y + 13; });
+  etiq.forEach(e => { s += `<text class="etiq" x="${e.x}" y="${e.y}">${esc(e.lab)}</text>`; });
+  // zones de survol (plus larges que les points)
+  const lg = (W - gx - dx) / ms.length;
+  ms.forEach((m, i) => { s += `<rect class="survol" x="${X(i) - lg / 2}" y="${hy}" width="${lg}" height="${by - hy}"><title>${dateCourte(m.date)}, ${esc(m.adversaire)} (${m.buts.nous}–${m.buts.adv})\n${series.map(se => `${se.lab} : ${fmt(se.val(m))}`).join("\n")}</title></rect>`; });
+  return s + `</svg>` + (series.length > 1 ? `<div class="legende-l">${series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("")}</div>` : "");
+}
+
 // cle : "buts_accordes" (buts contre) ou "buts_marques" (nos buts, zone = filet adverse)
 function agregerButs(matchs, cle = "buts_accordes") {
   const zones = {}, types = {};
@@ -320,6 +354,7 @@ function vueEquipe() {
   const ligneB = (lab, cote) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${totB(cote, k) ?? "–"}</div>`).join("")}
     <div class="tot">${avecB[cote].length ? PERIODES.reduce((s, [k]) => s + (totB(cote, k) ?? 0), 0) : "–"}</div>`;
   const nbM = n => `${n} match${n > 1 ? "s" : ""}`;
+  const chrono = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
   // Sorties de zone par période : totaux des matchs où le détail par période est connu
   const avecSz = ms.filter(m => m.sorties_zone.par_periode);
   const totSz = (x, k) => { const v = avecSz.map(m => m.sorties_zone.par_periode[x][k]).filter(v => v != null);
@@ -340,6 +375,16 @@ function vueEquipe() {
       <div class="chiffre accent"><b>${pct(szR, szT)}</b><span>sorties de zone réussies</span></div>
     </div>
   </section>
+  ${ms.length > 1 ? `<section class="panneau" style="margin-top:1rem">
+    <h3>Progression de la saison</h3>
+    <p class="sous" style="font-size:.85rem">Match après match, du plus vieux au plus récent. Survoler ou toucher un match pour voir ses valeurs.</p>
+    <h4 class="titre-g">Buts par match</h4>
+    ${progression(chrono, [{ lab: "Pour", cls: "nous", val: m => m.buts.nous }, { lab: "Contre", cls: "adv", val: m => m.buts.adv }])}
+    <h4 class="titre-g">Tirs cadrés par match</h4>
+    ${progression(chrono, [{ lab: "Pour", cls: "nous", val: m => m.tirs.nous }, { lab: "Contre", cls: "adv", val: m => m.tirs.adv }])}
+    ${chrono.filter(m => m.sorties_zone.tentatives).length > 1 ? `<h4 class="titre-g">Sorties de zone réussies</h4>
+    ${progression(chrono, [{ lab: "Réussies", cls: "nous", val: m => m.sorties_zone.tentatives ? 100 * m.sorties_zone.reussies / m.sorties_zone.tentatives : null }], "%")}` : ""}
+  </section>` : ""}
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Tirs cadrés moyens par période</h3>
@@ -449,6 +494,16 @@ async function demarrer() {
     if (location.hash.startsWith("#/match/")) location.hash = "#/matchs"; else afficher();
   }));
   el.addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id); });
+  // Graphiques de progression dessinés à la largeur de l'écran : redessiner si la largeur change (rotation du téléphone)
+  let largeur = el.clientWidth, minuterie;
+  window.addEventListener("resize", () => {
+    clearTimeout(minuterie);
+    minuterie = setTimeout(() => {
+      if (el.clientWidth === largeur || !location.hash.startsWith("#/equipe")) return;
+      largeur = el.clientWidth;
+      const y = window.scrollY; el.innerHTML = vueEquipe(); window.scrollTo(0, y);
+    }, 200);
+  });
   el.addEventListener("keydown", e => { const tr = e.target.closest("tr[data-id]"); if (tr && e.key === "Enter") location.hash = "#/match/" + encodeURIComponent(tr.dataset.id); });
   window.addEventListener("hashchange", afficher);
   majFiltres();

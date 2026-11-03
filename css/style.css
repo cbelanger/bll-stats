@@ -178,6 +178,30 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .tendance .ref { stroke: var(--trait); stroke-dasharray: 4 4; }
 .tendance text { font: 500 11px var(--texte); fill: var(--doux); }
 
+/* Progression de la saison (onglet Équipe) : Pour en bleu, Contre en rouge */
+.titre-g { font: 600 1rem var(--titre); color: var(--doux); margin: 1rem 0 .25rem; }
+.progression { width: 100%; height: auto; display: block; }
+.progression .grille-l { stroke: var(--trait); stroke-width: 1; }
+.progression .axe { font: 500 11px var(--texte); fill: var(--doux); }
+.progression .etiq { font: 600 12px var(--texte); fill: var(--encre); }
+.progression .ligne { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.progression .pt { stroke: var(--surface); stroke-width: 2; }
+.progression .nous { stroke: var(--marine); }
+.progression .pt.nous { fill: var(--marine); }
+.progression .adv { stroke: var(--rouge); }
+.progression .pt.adv { fill: var(--rouge); }
+.progression .pt.nous, .progression .pt.adv { stroke: var(--surface); }
+.progression .survol { fill: transparent; }
+.progression .survol:hover { fill: color-mix(in srgb, var(--marine) 7%, transparent); }
+.legende-l { display: flex; gap: 1.25rem; font-size: .85rem; color: var(--doux); margin-top: .25rem; }
+.legende-l i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: .4rem; }
+.legende-l i.nous { background: var(--marine); }
+.legende-l i.adv { background: var(--rouge); }
+@media (prefers-color-scheme: dark) {
+  .progression .nous { stroke: #8FB0EA; }
+  .progression .pt.nous, .legende-l i.nous { fill: #8FB0EA; background: #8FB0EA; }
+}
+
 .notes { white-space: pre-wrap; }
 .source { margin: 1.25rem 0 0; font-size: .8rem; color: var(--doux); overflow-wrap: anywhere; }
 .pied { text-align: center; color: var(--doux); font-size: .85rem; padding: 0 1rem 2rem; }
