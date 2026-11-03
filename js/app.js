@@ -180,7 +180,7 @@ function deroulement(m) {
   const sc = { nous: 0, adv: 0 };
   const lignes = tous.map(b => {
     sc[b.eq]++;
-    return `<tr class="${b.eq === "nous" ? "but-nous" : "but-adv"}">
+    return `<tr class="${b.eq === "nous" ? "but-nous" : "but-adv"}"${b.no != null ? ` data-but="${b.eq}-${b.no}"` : ""}>
       <td>${b.i >= 0 ? PERIODES[b.i][1] : "?"}</td><td>${esc(b.temps || "–")}</td>
       <td class="txt equipe">${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}</td>
       <td class="txt">${b.type ? `<span class="code-t">${b.type}</span><span class="opt">${TYPES[b.type] || ""}</span>` : "–"}</td>
@@ -193,7 +193,7 @@ function deroulement(m) {
     ${complet ? "" : `<p class="sous" style="font-size:.85rem">${manque > 0 ? `${manque} but${manque > 1 ? "s" : ""} sans détail. ` : ""}Ordre approximatif : période ou temps manquant pour certains buts.</p>`}`;
 }
 
-// Ligne du temps : une bande par période, nos buts au-dessus (bleu), ceux de l'adversaire en dessous (rouge).
+// Déroulement du match : une bande par période, nos buts au-dessus (bleu), ceux de l'adversaire en dessous (rouge).
 // Seuls les buts avec période et temps sont placés ; score à la fin de chaque période si tous le sont.
 const DUREE_P = 600;   // périodes de 10 minutes
 function ligneTemps(m) {
@@ -220,13 +220,13 @@ function ligneTemps(m) {
     });
     const fin = buts.filter(b => b.i <= i);
     const score = complet ? `${fin.filter(b => b.eq === "nous").length}–${fin.filter(b => b.eq === "adv").length}` : "";
-    return `<div class="lt-per"><div class="lt-piste">${bp.map(b => `<span class="lt-but ${b.eq}" style="left:calc(8px + (100% - 16px) * ${b.x.toFixed(3)});--v:${b.v}"
-      title="${lab} ${esc(b.temps)} – ${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}${b.type ? ` (${esc(TYPES[b.type] || b.type)})` : ""}${complet ? `, ${b.score}` : ""}"></span>`).join("")}</div>
+    return `<div class="lt-per"><div class="lt-piste">${bp.map(b => `<button type="button" class="lt-but ${b.eq}" data-but="${b.eq}-${b.no}" style="left:calc(8px + (100% - 16px) * ${b.x.toFixed(3)});--v:${b.v}"
+      title="${lab} ${esc(b.temps)} – ${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}${b.type ? ` (${esc(TYPES[b.type] || b.type)})` : ""}${complet ? `, ${b.score}` : ""}"></button>`).join("")}</div>
       <div class="lt-lab"><span>${lab}</span>${score ? `<b>${score}</b>` : ""}</div></div>`;
   }).join("");
   const manque = m.buts.nous + m.buts.adv - buts.length;
   return `<section class="panneau" style="margin-top:1rem">
-    <h3>Ligne du temps</h3>
+    <h3>Déroulement du match</h3>
     <div class="legende-l" style="margin:0 0 .6rem"><span><i class="pt nous"></i>BLL ${esc(m.equipe)}</span><span><i class="pt adv"></i>${esc(m.adversaire)}</span></div>
     <div class="ligne-temps" style="--voies:${voies}">${bandes}</div>
     ${complet ? `<p class="sous" style="font-size:.85rem;margin-top:.4rem">Score à la fin de chaque période.</p>`
@@ -568,6 +568,13 @@ async function demarrer() {
     const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
     const g = e.target.closest("tr[data-g]");
     if (g) document.getElementById("g-" + g.dataset.g.replace(/[^\w-]/g, "_"))?.scrollIntoView({ behavior: "smooth" });
+    // Déroulement du match : un point allume sa ligne du Sommaire, et l'inverse
+    const but = e.target.closest("[data-but]");
+    if (but) {
+      el.querySelectorAll(".eclaire").forEach(x => x.classList.remove("eclaire"));
+      el.querySelectorAll(`[data-but="${but.dataset.but}"]`).forEach(x => x.classList.add("eclaire"));
+      if (but.tagName === "BUTTON") el.querySelector(`tr[data-but="${but.dataset.but}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   });
   // Graphiques de progression dessinés à la largeur de l'écran : redessiner si la largeur change (rotation du téléphone)
   let largeur = el.clientWidth, minuterie;

@@ -230,15 +230,19 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
   .progression .pt.nous, .legende-l i.nous { fill: #8FB0EA; background: #8FB0EA; }
 }
 
-/* Ligne du temps du match : une bande par période, nos buts au-dessus, ceux de l'adversaire en dessous */
+/* Déroulement du match : une bande par période, nos buts au-dessus, ceux de l'adversaire en dessous */
 .ligne-temps { display: flex; gap: 6px; }
 .lt-per { flex: 1; min-width: 0; }
 .lt-piste { position: relative; height: calc(24px + 32px * var(--voies)); background: var(--glace); border-radius: 6px; }
 .lt-piste::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid var(--trait); }
 .lt-but {
   position: absolute; width: 14px; height: 14px; border-radius: 50%;
-  border: 2px solid var(--surface); transform: translate(-50%, -50%); cursor: default;
+  border: 2px solid var(--surface); transform: translate(-50%, -50%); padding: 0; cursor: pointer;
 }
+/* But choisi : point et ligne du Sommaire allumés en jaune */
+.lt-but.eclaire { box-shadow: 0 0 0 3px #F2B705; z-index: 1; }
+.deroulement tr[data-but] { cursor: pointer; scroll-margin: 170px 0 1rem; }
+.deroulement tr.eclaire td { background: color-mix(in srgb, #F2B705 38%, transparent); }
 .lt-but.nous { background: var(--marine); top: calc(50% - 13px - 16px * var(--v)); }
 .lt-but.adv { background: var(--rouge); top: calc(50% + 13px + 16px * var(--v)); }
 .lt-lab { display: flex; justify-content: space-between; gap: .25rem; padding: .2rem .15rem 0; font-size: .85rem; color: var(--doux); }
