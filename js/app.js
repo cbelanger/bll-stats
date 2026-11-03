@@ -283,7 +283,7 @@ function vueGardiennes() {
     <tbody>${tries.map(([cle, { g, ms }]) => ligneG(`${esc(g.nom || "Non indiquée")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}`, ms, cle)).join("")}</tbody>
     ${tries.length > 1 ? `<tfoot>${ligneG("Équipe", ms)}</tfoot>` : ""}
   </table></div>
-  <p class="legende-g"><b>PJ</b> parties jouées · <b>V/D/N</b> victoires, défaites, nuls · <b>BA</b> buts accordés ·
+  <p class="legende-g"><b>PJ</b> parties jouées · <b>V/D/N</b> victoires, défaites, nulles · <b>BA</b> buts accordés ·
     <b>TC</b> tirs cadrés contre · <b>% arr.</b> pourcentage d’arrêts · <b>MOY</b> moyenne de buts accordés par match.
     TC et % arr. : matchs où les tirs sont notés.</p></section>`;
   const cartes = tries.map(([cle, { g, ms }]) => {
@@ -348,7 +348,7 @@ function vueGardiennes() {
       </div>
     </section>`;
   });
-  return `<h1>Gardiennes ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}. V-D-N = victoires, défaites, nuls.</p>
+  return `<h1>Gardiennes ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}. V-D-N = victoires, défaites, nulles.</p>
     ${tableau}
     <div class="grille" style="margin-top:1rem">${cartes.join("")}</div>`;
 }
