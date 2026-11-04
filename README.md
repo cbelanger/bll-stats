@@ -134,6 +134,11 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
   - **Par période** : buts et tirs cadrés, nous et adversaire ;
   - filet des buts accordés et filet de nos buts (numéros des buts dans chaque zone) ;
   - sorties de zone (avec le détail par période s'il est connu), et notes.
+- **Adversaires** : équipes affrontées dans la saison (PJ, V-D-N, buts) ; un clic ouvre le dossier d'avant-match :
+  « À retenir » (leur type de but et leur zone les plus fréquents, moment de la période et période où ils marquent),
+  nos affrontements, moyennes contre eux comparées à toute la saison, buts par période, moment des buts dans la période
+  (début, milieu, fin), types de jeu et filets (leurs buts et les nôtres). Les noms d'adversaires sont regroupés sans
+  tenir compte des majuscules, des accents ni des espaces.
 - **Gardiennes** : tableau comparatif (PJ, V, D, N, BA, TC, % arr., MOY, ligne Équipe ; un clic mène à la fiche
   de la gardienne), puis pour chacune : % d'arrêts, buts accordés par match, tableau match par match, buts accordés, moyenne et
   % d'arrêts par période, tendance du % d'arrêts, zones et types de jeu.

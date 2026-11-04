@@ -168,6 +168,8 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .periodes .t { font: 600 .95rem var(--titre); color: var(--doux); }
 .periodes .l { text-align: left; font-weight: 600; }
 .periodes .tot { font-weight: 700; }
+.periodes.tiers { grid-template-columns: 4.5rem repeat(3, 1fr); }
+td.fort { font-weight: 700; }
 .periodes .sec { grid-column: 1 / -1; text-align: left; font: 600 .95rem var(--titre); color: var(--doux); padding: .8rem 0 .2rem; }
 
 /* Cartes gardiennes */
@@ -280,6 +282,7 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
   /* étiquette et total à la largeur de leur texte, les périodes se partagent le reste (jamais plus large que l'écran) */
   .periodes { grid-template-columns: auto repeat(5, minmax(0, 1fr)) auto; }
   .periodes div { padding: .4rem .1rem; white-space: nowrap; }
+  .periodes.tiers { grid-template-columns: auto repeat(3, minmax(0, 1fr)); }
   .sommaire-g { padding: 0; }
   .entete-g { margin: 0 -.8rem 1rem; padding: .75rem .8rem; gap: .6rem; }
   .entete-g h2 { font-size: 1.4rem; }

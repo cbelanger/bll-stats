@@ -574,15 +574,165 @@ function vueEquipe() {
   </div>`;
 }
 
+/* ---------- Adversaires : dossier d'avant-match */
+// Même adversaire malgré la casse, les accents ou les espaces (« Rive-Sud » = « rive sud »)
+const cleAdv = nom => String(nom || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+function parAdversaire(ms) {
+  const g = {};
+  ms.forEach(m => (g[cleAdv(m.adversaire)] = g[cleAdv(m.adversaire)] || []).push(m));
+  // Nom affiché : celui du match le plus récent
+  return Object.entries(g).map(([cle, l]) => {
+    l.sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
+    return { cle, nom: l[l.length - 1].adversaire, ms: l };
+  });
+}
+
+// Moyennes par match d'un groupe de matchs (dossier adversaire : contre eux / toute la saison)
+function moyennes(ms) {
+  const avec = f => ms.filter(m => f(m) != null);
+  const tn = avec(m => m.tirs.nous), ta = avec(m => m.tirs.adv), sz = ms.filter(m => m.sorties_zone.tentatives);
+  const s = (l, f) => l.reduce((t, m) => t + f(m), 0);
+  return {
+    bp: moy(s(ms, m => m.buts.nous), ms.length), bc: moy(s(ms, m => m.buts.adv), ms.length),
+    tp: moy(s(tn, m => m.tirs.nous), tn.length, 1), tc: moy(s(ta, m => m.tirs.adv), ta.length, 1),
+    arr: pct(s(ta, m => m.tirs.adv - m.buts.adv), s(ta, m => m.tirs.adv)),
+    sz: pct(s(sz, m => m.sorties_zone.reussies), s(sz, m => m.sorties_zone.tentatives)),
+  };
+}
+
+function vueAdversaires() {
+  const groupes = parAdversaire(filtres()).sort((a, b) => b.ms[b.ms.length - 1].date.localeCompare(a.ms[a.ms.length - 1].date));
+  if (!groupes.length) return `<h1>Adversaires ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
+  return `<h1>Adversaires ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}. Choisir une équipe pour voir son dossier.</p>
+  <div class="panneau defile" style="margin-top:1rem"><table>
+    <thead><tr><th>Adversaire</th><th class="n">PJ</th><th class="n">V-D-N</th><th class="n">Buts</th><th class="n opt">Dernier match</th></tr></thead>
+    <tbody>${groupes.map(({ cle, nom, ms }) => {
+      const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length;
+      return `<tr class="lien" tabindex="0" data-adv="${esc(cle)}">
+        <td class="txt"><b>${esc(nom)}</b></td><td class="n">${ms.length}</td><td class="n">${v}-${d}-${ms.length - v - d}</td>
+        <td class="n">${ms.reduce((s, m) => s + m.buts.nous, 0)}–${ms.reduce((s, m) => s + m.buts.adv, 0)}</td>
+        <td class="n opt">${dateCourte(ms[ms.length - 1].date)}</td></tr>`;
+    }).join("")}</tbody></table></div>`;
+}
+
+function vueAdversaire(cle) {
+  const saison = filtres();
+  const gr = parAdversaire(saison).find(x => x.cle === cle);
+  if (!gr) return `<a class="retour" href="#/adversaires">← Adversaires</a><p class="vide">Aucun match ${etat.equipe} contre cette équipe pour la saison ${etat.saison}.</p>`;
+  const { nom, ms } = gr;
+  const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length;
+  const eux = moyennes(ms), tous = moyennes(saison);
+  const ag = agregerButs(ms), agN = agregerButs(ms, "buts_marques");
+  // Buts par période (matchs où chaque but a sa période) et moment dans la période (tiers de 3:20)
+  const avecB = { nous: ms.filter(m => m.buts_par_periode?.nous), adv: ms.filter(m => m.buts_par_periode?.adv) };
+  const totB = (cote, k) => { const vals = avecB[cote].map(m => m.buts_par_periode[cote][k]).filter(x => x != null);
+    return vals.length ? vals.reduce((s, x) => s + x, 0) : null; };
+  const ligneB = (lab, cote) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${totB(cote, k) ?? "–"}</div>`).join("")}
+    <div class="tot">${avecB[cote].length ? PERIODES.reduce((s, [k]) => s + (totB(cote, k) ?? 0), 0) : "–"}</div>`;
+  const TIERS = ["Début", "Milieu", "Fin"];
+  const tiers = cleB => { const t = [0, 0, 0];
+    ms.forEach(m => (m[cleB] || []).forEach(b => { const s = sec(b.temps); if (s != null) t[Math.min(2, Math.floor((DUREE_P - Math.min(s, DUREE_P)) / (DUREE_P / 3)))]++; }));
+    return t; };
+  const tA = tiers("buts_accordes"), tN = tiers("buts_marques");
+  // À retenir : leurs habitudes, dès qu'il y a assez de buts pour que ce soit parlant
+  const retenir = [];
+  const top = o => Object.entries(o).sort((a, b) => b[1] - a[1])[0];
+  if (ag.n >= 3) {
+    const [ty, nt] = top(ag.types) || [];
+    if (nt >= 2) retenir.push(`Leur type de but le plus fréquent : <b>${esc(TYPES[ty] || ty)}</b> (${nt} sur ${ag.n}).`);
+    const [z, nz] = top(ag.zones) || [];
+    if (nz >= 2) retenir.push(`Zone du filet la plus touchée : <b>${z}</b> (${nz} sur ${ag.n}).`);
+    const totTiers = tA.reduce((s, x) => s + x, 0), maxT = Math.max(...tA);
+    if (totTiers >= 3 && maxT / totTiers >= .5) retenir.push(`Ils marquent surtout en <b>${TIERS[tA.indexOf(maxT)].toLowerCase()} de période</b> (${maxT} sur ${totTiers}).`);
+  }
+  if (avecB.adv.length) {
+    const p = PERIODES.map(([k, l]) => [l, totB("adv", k) ?? 0]).sort((a, b) => b[1] - a[1]);
+    if (p[0][1] >= 2 && p[0][1] > p[1][1]) retenir.push(`Leur période la plus productive : <b>${p[0][0]}</b> (${p[0][1]} buts).`);
+  }
+  if (agN.n >= 2) {
+    const [ty, nt] = top(agN.types) || [];
+    if (nt >= 2) retenir.push(`Nos buts contre eux viennent surtout de : <b>${esc(TYPES[ty] || ty)}</b> (${nt} sur ${agN.n}).`);
+  }
+  // Buts marqués mais sans type ni zone : le dire plutôt qu'afficher des panneaux vides
+  const manque = [ag.n && !detail(ag) && "leurs buts", agN.n && !detail(agN) && "nos buts"].filter(Boolean);
+  const ligneC = (lab, a, b) => `<tr><td class="txt">${lab}</td><td class="n fort">${a}</td><td class="n">${b}</td></tr>`;
+  return `<a class="retour" href="#/adversaires">← Adversaires</a>
+  <h1>${esc(nom)}</h1>
+  <p class="sous">Dossier adversaire, ${esc(etat.equipe)}, saison ${etat.saison} : ${ms.length} match${ms.length > 1 ? "s" : ""}, fiche ${v}-${d}-${ms.length - v - d}</p>
+  ${retenir.length ? `<section class="panneau faits" style="margin-top:1rem"><h3>À retenir</h3><ul>${retenir.map(t => `<li>${t}</li>`).join("")}</ul></section>` : ""}
+  <div class="grille g2" style="margin-top:1rem">
+    <section class="panneau">
+      <h3>Nos affrontements</h3>
+      <div class="defile"><table>
+        <thead><tr><th>Date</th><th>Rés.</th><th class="n">Score</th><th class="n">Tirs</th><th class="opt">Gardienne</th></tr></thead>
+        <tbody>${ms.map(m => `<tr class="lien" tabindex="0" data-id="${esc(m.id)}">
+          <td>${dateCourte(m.date)}</td><td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
+          <td class="n">${m.buts.nous}–${m.buts.adv}</td><td class="n">${m.tirs.nous == null && m.tirs.adv == null ? "–" : `${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}`}</td>
+          <td class="opt">${esc(nomGardienne(m.gardienne))}</td></tr>`).join("")}</tbody>
+      </table></div>
+    </section>
+    <section class="panneau">
+      <h3>Contre eux et toute la saison</h3>
+      <div class="defile"><table>
+        <thead><tr><th>Moyenne par match</th><th class="n">Contre eux</th><th class="n">Saison</th></tr></thead>
+        <tbody>${ligneC("Buts pour", eux.bp, tous.bp)}${ligneC("Buts contre", eux.bc, tous.bc)}
+          ${ligneC("Tirs cadrés pour", eux.tp, tous.tp)}${ligneC("Tirs cadrés contre", eux.tc, tous.tc)}
+          ${ligneC("% d’arrêts", eux.arr, tous.arr)}${ligneC("Sorties de zone réussies", eux.sz, tous.sz)}</tbody>
+      </table></div>
+    </section>
+  </div>
+  <div class="grille g2" style="margin-top:1rem">
+    <section class="panneau">
+      <h3>Buts par période</h3>
+      <div class="periodes">
+        <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
+        ${ligneB("Pour", "nous")}${ligneB("Contre", "adv")}
+      </div>
+      <p class="sous" style="font-size:.85rem">Matchs où la période de chaque but est connue.</p>
+    </section>
+    <section class="panneau">
+      <h3>Moment des buts dans la période</h3>
+      <div class="periodes tiers">
+        <div></div>${TIERS.map(t => `<div class="t">${t}</div>`).join("")}
+        <div class="l">Pour</div>${tN.map(x => `<div>${x}</div>`).join("")}
+        <div class="l">Contre</div>${tA.map(x => `<div>${x}</div>`).join("")}
+      </div>
+      <p class="sous" style="font-size:.85rem">Début : 10:00 à 6:40 au chrono ; milieu : 6:40 à 3:20 ; fin : 3:20 à 0:00. Buts dont le temps est noté.</p>
+    </section>
+  </div>
+  ${detail(ag) ? `<div class="grille g2" style="margin-top:1rem">
+    <section class="panneau">
+      <h3>Leurs buts par type de jeu</h3>${barresTypes(ag.types, ag.n)}
+    </section>
+    <section class="panneau">
+      <h3>Où entrent leurs buts</h3>${Object.keys(ag.zones).length ? filet(ag.zones, "chaleur") : `<p class="vide">Aucune zone notée.</p>`}
+    </section>
+  </div>` : ""}
+  ${detail(agN) ? `<div class="grille g2" style="margin-top:1rem">
+    <section class="panneau">
+      <h3>Nos buts par type de jeu</h3>${barresTypes(agN.types, agN.n, true)}
+    </section>
+    <section class="panneau">
+      <h3>Où entrent nos buts</h3>${Object.keys(agN.zones).length ? filet(agN.zones, "chaleur") : `<p class="vide">Aucune zone notée.</p>`}
+    </section>
+  </div>` : ""}
+  ${manque.length ? `<p class="sous" style="font-size:.85rem;margin-top:1rem">Types de jeu et zones du filet :
+    non notés pour ${manque.length > 1 ? "les buts" : manque[0]} de ces matchs.</p>` : ""}`;
+}
+// Au moins un but avec type ou zone
+const detail = ag => Object.keys(ag.types).length + Object.keys(ag.zones).length > 0;
+
 /* ---------- Navigation */
 function afficher() {
   const [, vue = "matchs", id] = location.hash.split("/");
   document.querySelectorAll(".onglets a").forEach(a => {
-    if (a.dataset.vue === (vue === "match" ? "matchs" : vue)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    if (a.dataset.vue === ({ match: "matchs", adversaire: "adversaires" }[vue] || vue)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
   el.innerHTML = vue === "match" ? vueMatch(decodeURIComponent(id || ""))
     : vue === "gardiennes" ? vueGardiennes()
     : vue === "equipe" ? vueEquipe()
+    : vue === "adversaires" ? vueAdversaires()
+    : vue === "adversaire" ? vueAdversaire(decodeURIComponent(id || ""))
     : vueMatchs();
   el.focus({ preventScroll: true });
   window.scrollTo(0, 0);
@@ -632,10 +782,13 @@ async function demarrer() {
   sel.addEventListener("change", () => { etat.saison = sel.value; majFiltres(); afficher(); });
   document.querySelectorAll(".bascule button").forEach(b => b.addEventListener("click", () => {
     etat.equipe = b.dataset.equipe; majFiltres();
-    if (location.hash.startsWith("#/match/")) location.hash = "#/matchs"; else afficher();
+    if (location.hash.startsWith("#/match/")) location.hash = "#/matchs";
+    else if (location.hash.startsWith("#/adversaire/")) location.hash = "#/adversaires";
+    else afficher();
   }));
   el.addEventListener("click", e => {
     const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
+    const adv = e.target.closest("tr[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
     const g = e.target.closest("tr[data-g]");
     if (g) document.getElementById("g-" + g.dataset.g.replace(/[^\w-]/g, "_"))?.scrollIntoView({ behavior: "smooth" });
     // Déroulement du match : un point allume sa ligne du Sommaire, et l'inverse
@@ -656,7 +809,7 @@ async function demarrer() {
       const y = window.scrollY; el.innerHTML = vueEquipe(); window.scrollTo(0, y);
     }, 200);
   });
-  el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], tr[data-g]")) e.target.click(); });
+  el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], tr[data-g], tr[data-adv]")) e.target.click(); });
   window.addEventListener("hashchange", afficher);
   majFiltres();
   afficher();
