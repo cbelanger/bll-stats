@@ -255,6 +255,7 @@ td.fort { font-weight: 700; }
   border: 2px solid var(--surface); transform: translate(-50%, -50%); padding: 0; cursor: pointer;
 }
 /* But choisi : point et ligne du Sommaire allumés en jaune */
+.filet rect.eclaire { fill: #F2B705; fill-opacity: .6; }
 .lt-but.eclaire { box-shadow: 0 0 0 3px #F2B705; z-index: 1; }
 .deroulement tr[data-but] { cursor: pointer; scroll-margin: 170px 0 1rem; }
 .deroulement tr.eclaire td { background: color-mix(in srgb, #F2B705 38%, transparent); }

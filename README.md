@@ -131,14 +131,14 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
     records de la saison dès 3 matchs) ; 6 au plus ;
   - **Déroulement du match** : une bande par période (10 minutes), nos buts au-dessus, ceux de l'adversaire en dessous,
     score à la fin de chaque période ; seuls les buts avec période et temps y sont placés ; toucher un point allume
-    la ligne du but dans le Sommaire (et l'inverse) ;
+    la ligne du but dans le Sommaire (et l'inverse) et la zone du filet où il est entré ;
   - **Sommaire** : buts des deux équipes dans l'ordre du match (nos buts en bleu, ceux de l'adversaire en rouge),
     avec le score après chaque but quand la période et le temps de tous les buts sont connus (le chrono descend :
     dans une période, 7:55 vient avant 6:29) ;
   - **Par période** : buts et tirs cadrés, nous et adversaire ;
   - filet des buts accordés et filet de nos buts (numéros des buts dans chaque zone) ;
   - **D'où partent les buts** : demi-patinoire avec les buts des deux équipes (numéros ; toucher un point allume sa
-    ligne du Sommaire), si au moins un but a sa position. La même carte (tous les matchs) est dans Équipe,
+    ligne du Sommaire et sa zone du filet), si au moins un but a sa position. La même carte (tous les matchs) est dans Équipe,
     Adversaires et la fiche de chaque gardienne ;
   - sorties de zone (avec le détail par période s'il est connu), et notes.
 - **Adversaires** : équipes affrontées dans la saison (PJ, V-D-N, buts) ; un clic ouvre le dossier d'avant-match :

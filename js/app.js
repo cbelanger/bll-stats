@@ -53,7 +53,9 @@ function filet(valeurs, mode, nous = false) {
     } else {
       txt = (valeurs[z] || []).join(", ");
     }
-    s += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fond}" fill-opacity=".85"/>`;
+    // data-buts : buts de la zone, pour l'allumer quand on touche un but ailleurs dans la fiche
+    const ids = mode === "chaleur" ? "" : (valeurs[z] || []).map(n => `${nous ? "nous" : "adv"}-${n}`).join(" ");
+    s += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fond}" fill-opacity=".85"${ids ? ` data-buts="${ids}"` : ""}/>`;
     s += `<text class="code" x="${x + 10}" y="${y + 20}"${codeCoul}>${z}</text>`;
     if (txt !== "") s += `<text class="val${nous && mode !== "chaleur" ? " nous" : ""}" x="${x + cw / 2}" y="${y + ch / 2 + 6}" fill="${coul}"${String(txt).length > 6 ? ' style="font-size:20px"' : ""}>${txt}</text>`;
   }));
@@ -376,7 +378,7 @@ function vueMatch(id) {
     <h3>D’où partent les buts</h3>
     <div class="legende-l" style="margin:0 0 .6rem"><span><i class="pt nous"></i>BLL ${esc(m.equipe)} (dans leur zone)</span><span><i class="pt adv"></i>${esc(m.adversaire)} (dans notre zone)</span></div>
     ${patinoire([...ptsLieux([m], "buts_marques", true), ...ptsLieux([m], "buts_accordes", true)])}
-    <p class="sous" style="font-size:.85rem">Filet en haut, vu de la tireuse ; numéros des buts. Toucher un point allume sa ligne dans le Sommaire.</p>
+    <p class="sous" style="font-size:.85rem">Filet en haut, vu de la tireuse ; numéros des buts. Toucher un point allume sa ligne dans le Sommaire et sa zone dans le filet.</p>
   </section>` : ""}
 
   <div class="grille g2" style="margin-top:1rem">
@@ -824,12 +826,15 @@ async function demarrer() {
     const adv = e.target.closest("tr[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
     const g = e.target.closest("tr[data-g]");
     if (g) document.getElementById("g-" + g.dataset.g.replace(/[^\w-]/g, "_"))?.scrollIntoView({ behavior: "smooth" });
-    // Déroulement du match : un point allume sa ligne du Sommaire, et l'inverse
+    // Fiche de match : toucher un but (déroulement, Sommaire, patinoire) allume ce but partout
+    // et la zone du filet où il est entré ; on fait défiler jusqu'au filet (sinon jusqu'à la ligne du Sommaire)
     const but = e.target.closest("[data-but]");
     if (but) {
+      const id = but.dataset.but;
       el.querySelectorAll(".eclaire").forEach(x => x.classList.remove("eclaire"));
-      el.querySelectorAll(`[data-but="${but.dataset.but}"]`).forEach(x => x.classList.add("eclaire"));
-      if (!but.closest("tr")) el.querySelector(`tr[data-but="${but.dataset.but}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      el.querySelectorAll(`[data-but="${id}"], [data-buts~="${id}"]`).forEach(x => x.classList.add("eclaire"));
+      const zone = el.querySelector(`[data-buts~="${id}"]`);
+      if (!but.closest("tr")) (zone?.closest("svg") || el.querySelector(`tr[data-but="${id}"]`))?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   });
   // Graphiques de progression dessinés à la largeur de l'écran : redessiner si la largeur change (rotation du téléphone)

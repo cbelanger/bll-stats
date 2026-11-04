@@ -155,7 +155,7 @@ function majFeuilleBut() {
   document.querySelectorAll("[data-bt]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bt === brouillon.type));
   document.querySelectorAll("[data-bz]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bz === brouillon.zone));
   const p = lireLieu(brouillon.lieu);
-  $("#fb-pat").innerHTML = patinoire(p ? [{ ...p, cls: courantCote, lab: courantCote === "nous" ? "B" : courant + 1 }] : [],
+  $("#fb-pat").innerHTML = patinoire(p ? [{ ...p, cls: courantCote, lab: courant + 1 }] : [],
     "Demi-patinoire : toucher l’endroit d’où part le but", 26);
   $("#lieu-effacer").hidden = !p;
   $("#fb-pat-aide").textContent = p ? "Touche ailleurs pour déplacer le point."
