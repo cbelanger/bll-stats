@@ -109,6 +109,18 @@ def slug(s):
     return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
 
 
+def lire_lieu(champs, cle, nom, avertissements):
+    # D'où part le but (saisie téléphone seulement) : « x,y » en % de la demi-patinoire (js/patinoire.js)
+    t = texte(champs, cle)
+    if not t:
+        return None
+    m = re.fullmatch(r"\s*(\d{1,3})\s*,\s*(\d{1,3})\s*", t)
+    if not m or int(m.group(1)) > 100 or int(m.group(2)) > 100:
+        avertissements.append(f"{nom} : position sur la patinoire illisible « {t} » (ignorée)")
+        return None
+    return [int(m.group(1)), int(m.group(2))]
+
+
 def nom_fichier(m):
     # Même règle que nomFichier() dans js/saisie.js
     no = f"_{slug(m['no_match'])}" if m["no_match"] and slug(m["no_match"]) else ""
@@ -193,7 +205,8 @@ def valider(champs):
         tps = texte(champs, f"but_{n}_temps")
         typ = re.split(r"\s+[–-]\s+", texte(champs, f"but_{n}_type"))[0].strip()
         zon = texte(champs, f"but_{n}_zone")
-        if not any([per, tps, typ, zon]):
+        lieu = lire_lieu(champs, f"but_{n}_lieu", f"but {n}", avertissements)
+        if not any([per, tps, typ, zon, lieu]):
             continue
         if typ and typ not in CODES_TYPE:
             avertissements.append(f"but {n} : type inconnu « {typ} »")
@@ -202,23 +215,25 @@ def valider(champs):
         if not typ or not zon:
             avertissements.append(f"but {n} : type ou zone manquant")
         detail.append({"no": n, "periode": per or None, "temps": tps or None,
-                       "type": typ or None, "zone": zon or None})
+                       "type": typ or None, "zone": zon or None, "lieu": lieu})
 
     # Nos buts détaillés (section 3 du PDF, saisie téléphone) : période, temps, type, zone du filet adverse
     marques = []
-    nums = [int(m.group(1)) for k in champs if (m := re.fullmatch(r"but_nous_(\d+)_(?:periode|temps|type|zone)", k))]
+    nums = [int(m.group(1)) for k in champs if (m := re.fullmatch(r"but_nous_(\d+)_(?:periode|temps|type|zone|lieu)", k))]
     for n in range(1, max(nums, default=0) + 1):
         per = texte(champs, f"but_nous_{n}_periode")
         tps = texte(champs, f"but_nous_{n}_temps")
         typ = re.split(r"\s+[–-]\s+", texte(champs, f"but_nous_{n}_type"))[0].strip()
         zon = texte(champs, f"but_nous_{n}_zone")
-        if not any([per, tps, typ, zon]):
+        lieu = lire_lieu(champs, f"but_nous_{n}_lieu", f"but BLL {n}", avertissements)
+        if not any([per, tps, typ, zon, lieu]):
             continue
         if typ and typ not in CODES_TYPE:
             avertissements.append(f"but BLL {n} : type inconnu « {typ} »")
         if zon and zon not in ZONES:
             avertissements.append(f"but BLL {n} : zone inconnue « {zon} »")
-        marques.append({"no": n, "periode": per or None, "temps": tps or None, "type": typ or None, "zone": zon or None})
+        marques.append({"no": n, "periode": per or None, "temps": tps or None, "type": typ or None, "zone": zon or None,
+                        "lieu": lieu})
     if buts_nous is not None and marques and len(marques) != buts_nous:
         avertissements.append(f"{buts_nous} but(s) marqué(s) en section 1, mais {len(marques)} but(s) BLL détaillé(s) en section 3")
 

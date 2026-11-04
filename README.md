@@ -43,7 +43,10 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
 1. Avant le match : toucher le nom du match en haut pour remplir les infos (équipe, adversaire, no de match, gardienne).
 2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone (tous notés par période). « + But » (BLL) et « + But accordé »
    comptent le but (et un tir cadré) tout de suite et ouvrent sa fiche : temps au chrono (845 donne 8:45), type de jeu
-   et zone (filet vu de face ; pour nos buts, le filet adverse). « Plus tard » ferme la fiche ; toucher la ligne du but dans « Buts du match »
+   et zone (filet vu de face ; pour nos buts, le filet adverse), puis, facultatif, **d'où part le but** : toucher l'endroit
+   sur la demi-patinoire (filet en haut, vue de la tireuse ; toucher ailleurs déplace le point, « Effacer » le retire).
+   Cette position n'existe que dans la saisie téléphone (pas dans le PDF Sommaire). « Plus tard » ferme la fiche sans garder
+   ce qui a été choisi ; toucher la ligne du but dans « Buts du match »
    la rouvre. « Annuler » défait la dernière action. Tout reste dans le téléphone, même sans réseau ni en rechargeant la page.
 3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
@@ -133,6 +136,9 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
     dans une période, 7:55 vient avant 6:29) ;
   - **Par période** : buts et tirs cadrés, nous et adversaire ;
   - filet des buts accordés et filet de nos buts (numéros des buts dans chaque zone) ;
+  - **D'où partent les buts** : demi-patinoire avec les buts des deux équipes (numéros ; toucher un point allume sa
+    ligne du Sommaire), si au moins un but a sa position. La même carte (tous les matchs) est dans Équipe,
+    Adversaires et la fiche de chaque gardienne ;
   - sorties de zone (avec le détail par période s'il est connu), et notes.
 - **Adversaires** : équipes affrontées dans la saison (PJ, V-D-N, buts) ; un clic ouvre le dossier d'avant-match :
   « À retenir » (leur type de but et leur zone les plus fréquents, moment de la période et période où ils marquent),

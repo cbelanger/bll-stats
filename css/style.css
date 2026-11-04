@@ -232,6 +232,13 @@ td.fort { font-weight: 700; }
   .progression .pt.nous, .legende-l i.nous { fill: #8FB0EA; background: #8FB0EA; }
 }
 
+/* D'où partent les buts : demi-patinoire (js/patinoire.js) */
+.patinoire { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto .4rem; }
+.carte-m .patinoire { max-width: 520px; }
+.carte-g { max-width: 460px; }
+.patinoire .pt-pat[data-but] { cursor: pointer; }
+.patinoire .pt-pat.eclaire circle { stroke: #F2B705; stroke-width: 9; }
+
 /* Faits saillants (fiche de match) */
 .faits ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem; }
 .faits li { padding-left: 1rem; position: relative; }

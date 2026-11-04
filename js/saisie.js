@@ -154,9 +154,22 @@ function majFeuilleBut() {
   document.querySelectorAll("[data-bp]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bp === brouillon.periode));
   document.querySelectorAll("[data-bt]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bt === brouillon.type));
   document.querySelectorAll("[data-bz]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bz === brouillon.zone));
+  const p = lireLieu(brouillon.lieu);
+  $("#fb-pat").innerHTML = patinoire(p ? [{ ...p, cls: courantCote, lab: courantCote === "nous" ? "B" : courant + 1 }] : [],
+    "Demi-patinoire : toucher l’endroit d’où part le but", 44);
+  $("#lieu-effacer").hidden = !p;
+  $("#fb-pat-aide").textContent = p ? "Touche ailleurs pour déplacer le point."
+    : `Touche l’endroit du tir (${courantCote === "nous" ? "zone adverse" : "notre zone"}, filet en haut). Facultatif.`;
+}
+// Toucher la patinoire : position en % de la demi-patinoire (la marge du dessin est retirée)
+function placerLieu(e) {
+  const r = $("#fb-pat svg").getBoundingClientRect();
+  const u = (v, debut, taille, plein) => Math.round(Math.min(100, Math.max(0, ((v - debut) / taille * (plein + 12) - 6) / plein * 100)));
+  brouillon.lieu = `${u(e.clientX, r.left, r.width, PAT_W)},${u(e.clientY, r.top, r.height, PAT_H)}`;
+  majFeuilleBut();
 }
 function ouvrirBut(cote, i) {
-  courant = i; courantCote = cote; brouillon = { temps: "", type: "", zone: "", ...buts(cote)[i] };
+  courant = i; courantCote = cote; brouillon = { temps: "", type: "", zone: "", lieu: "", ...buts(cote)[i] };
   $("#fb-titre").textContent = cote === "nous" ? `But BLL no ${i + 1}` : `But accordé no ${i + 1}`;
   $("#temps").value = brouillon.temps;
   $("#err-temps").hidden = true;
@@ -229,19 +242,21 @@ function champs() {
   }
   // Un but sans aucun détail (période inconnue, rien d'autre) ne donne pas de ligne : il compte dans buts_adv
   S.butsAdv.forEach((b, i) => {
-    if (!b.periode && !b.temps && !b.type && !b.zone) return;
+    if (!b.periode && !b.temps && !b.type && !b.zone && !b.lieu) return;
     const n = i + 1;
     c[`but_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
     c[`but_${n}_temps`] = b.temps; c[`but_${n}_type`] = b.type; c[`but_${n}_zone`] = b.zone;
+    if (b.lieu) c[`but_${n}_lieu`] = b.lieu;
   });
   // Buts BLL : nombre par période, et une ligne par but détaillé (période, temps, type, zone du filet adverse)
   const bp = compteP(S.butsNous);
   for (const [k] of PER) if (bp[k]) c[`buts_nous_${k}`] = bp[k];
   S.butsNous.forEach((b, i) => {
-    if (!b.periode && !b.temps && !b.type && !b.zone) return;
+    if (!b.periode && !b.temps && !b.type && !b.zone && !b.lieu) return;
     const n = i + 1;
     c[`but_nous_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
     c[`but_nous_${n}_temps`] = b.temps || ""; c[`but_nous_${n}_type`] = b.type || ""; c[`but_nous_${n}_zone`] = b.zone || "";
+    if (b.lieu) c[`but_nous_${n}_lieu`] = b.lieu;
   });
   return c;
 }
@@ -268,16 +283,16 @@ function depuisChamps(c, fichier, origine) {
   const maxN = Math.max(0, ...Object.keys(c).map(k => (k.match(/^but_nous_(\d+)_/) || [])[1] || 0).map(Number));
   for (let i = 1; i <= maxN; i++) {
     const b = { periode: per[t(`but_nous_${i}_periode`)] || null, temps: t(`but_nous_${i}_temps`),
-                type: t(`but_nous_${i}_type`).split(/\s+[–-]\s+/)[0], zone: t(`but_nous_${i}_zone`) };
-    if (t(`but_nous_${i}_periode`) || b.temps || b.type || b.zone) s.butsNous.push(b);
+                type: t(`but_nous_${i}_type`).split(/\s+[–-]\s+/)[0], zone: t(`but_nous_${i}_zone`), lieu: t(`but_nous_${i}_lieu`) };
+    if (t(`but_nous_${i}_periode`) || b.temps || b.type || b.zone || b.lieu) s.butsNous.push(b);
   }
   if (!maxN) for (const [k] of PER) for (let i = 0; i < n(`buts_nous_${k}`); i++) s.butsNous.push({ periode: k, temps: "", type: "", zone: "" });
   while (s.butsNous.length < n("buts_nous")) s.butsNous.push({ periode: null, temps: "", type: "", zone: "" });
   const max = Math.max(15, ...Object.keys(c).map(k => (k.match(/^but_(\d+)_periode$/) || [])[1] || 0).map(Number));
   for (let i = 1; i <= max; i++) {
     const b = { periode: per[t(`but_${i}_periode`)] || null, temps: t(`but_${i}_temps`),
-                type: t(`but_${i}_type`).split(/\s+[–-]\s+/)[0], zone: t(`but_${i}_zone`) };
-    if (t(`but_${i}_periode`) || b.temps || b.type || b.zone) s.butsAdv.push(b);
+                type: t(`but_${i}_type`).split(/\s+[–-]\s+/)[0], zone: t(`but_${i}_zone`), lieu: t(`but_${i}_lieu`) };
+    if (t(`but_${i}_periode`) || b.temps || b.type || b.zone || b.lieu) s.butsAdv.push(b);
   }
   // Buts accordés sans ligne de détail : lignes vides à compléter, pour garder le bon score
   while (s.butsAdv.length < n("buts_adv")) s.butsAdv.push({ periode: null, temps: "", type: "", zone: "" });
@@ -465,6 +480,7 @@ document.addEventListener("click", e => {
   if (bp) { brouillon.periode = bp.dataset.bp; majFeuilleBut(); return; }
   if (bt) { brouillon.type = brouillon.type === bt.dataset.bt ? "" : bt.dataset.bt; majFeuilleBut(); return; }
   if (bz) { brouillon.zone = brouillon.zone === bz.dataset.bz ? "" : bz.dataset.bz; majFeuilleBut(); return; }
+  if (e.target.closest("#fb-pat svg")) { placerLieu(e); return; }
 
   const fo = e.target.closest("[data-fichier]");
   if (fo) { ouvrirMatch(fo.dataset.fichier); return; }
@@ -534,6 +550,7 @@ document.addEventListener("click", e => {
       break;
     }
     case "but-edit": ouvrirBut(b.dataset.c, Number(b.dataset.i)); break;
+    case "lieu-effacer": brouillon.lieu = ""; majFeuilleBut(); break;
     case "but-ok": {
       const t = normTemps($("#temps").value);
       if (t === null) { $("#err-temps").hidden = false; break; }

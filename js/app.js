@@ -142,6 +142,24 @@ function agregerButs(matchs, cle = "buts_accordes") {
   return { zones, types, n };
 }
 
+// D'où partent les buts (saisie téléphone) : points sur la demi-patinoire, filet en haut, vue de la tireuse.
+// cle : "buts_accordes" (rouge) ou "buts_marques" (bleu) ; un seul match : numéros des buts, liés au Sommaire.
+function ptsLieux(ms, cle, unMatch = false) {
+  const cls = cle === "buts_marques" ? "nous" : "adv";
+  return ms.flatMap(m => (m[cle] || []).filter(b => b.lieu).map(b => ({
+    x: b.lieu[0], y: b.lieu[1], cls,
+    lab: unMatch ? b.no : null, but: unMatch ? `${cls}-${b.no}` : null,
+    titre: esc(`${unMatch ? "" : `${dateCourte(m.date)}, ${m.adversaire} : `}${cls === "nous" ? "but BLL" : "but accordé"} ${b.no}${b.periode ? `, P${b.periode}` : ""}${b.temps ? ` ${b.temps}` : ""}${b.type ? ` (${TYPES[b.type] || b.type})` : ""}`),
+  })));
+}
+function carteButs(ms, cle, vide) {
+  const pts = ptsLieux(ms, cle);
+  const n = ms.reduce((s, m) => s + (m[cle] || []).length, 0);
+  return pts.length ? `${patinoire(pts)}<p class="sous" style="font-size:.85rem">${pts.length} but${pts.length > 1 ? "s" : ""} placé${pts.length > 1 ? "s" : ""} sur ${n}. Filet en haut, vu de la tireuse.</p>`
+    : `<p class="vide">${vide}</p>`;
+}
+const aLieux = (ms, cle) => ms.some(m => (m[cle] || []).some(b => b.lieu));
+
 /* ---------- Vues */
 function vueMatchs() {
   // Du plus vieux au plus récent
@@ -354,6 +372,12 @@ function vueMatch(id) {
         : `<p class="vide">${m.buts.nous ? "Zone non notée pour nos buts." : "Aucun but marqué."}</p>`}
     </section>
   </div>
+  ${aLieux([m], "buts_marques") || aLieux([m], "buts_accordes") ? `<section class="panneau carte-m" style="margin-top:1rem">
+    <h3>D’où partent les buts</h3>
+    <div class="legende-l" style="margin:0 0 .6rem"><span><i class="pt nous"></i>BLL ${esc(m.equipe)} (dans leur zone)</span><span><i class="pt adv"></i>${esc(m.adversaire)} (dans notre zone)</span></div>
+    ${patinoire([...ptsLieux([m], "buts_marques", true), ...ptsLieux([m], "buts_accordes", true)])}
+    <p class="sous" style="font-size:.85rem">Filet en haut, vu de la tireuse ; numéros des buts. Toucher un point allume sa ligne dans le Sommaire.</p>
+  </section>` : ""}
 
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
@@ -464,6 +488,7 @@ function vueGardiennes() {
         <div><h3>Où entrent les buts</h3>${filet(ag.zones, "chaleur")}</div>
         <div><h3>Types de jeu</h3>${barresTypes(ag.types, ag.n)}</div>
       </div>
+      ${aLieux(ms, "buts_accordes") ? `<div class="carte-g"><h3 style="margin-top:1.25rem">D’où partent les buts</h3>${carteButs(ms, "buts_accordes", "")}</div>` : ""}
     </section>`;
   });
   return `<h1>Gardiennes ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}. V-D-N = victoires, défaites, nulles.</p>
@@ -571,7 +596,11 @@ function vueEquipe() {
     <section class="panneau">
       <h3>Où entrent les buts accordés</h3>${filet(ag.zones, "chaleur")}
     </section>
-  </div>`;
+  </div>
+  ${aLieux(ms, "buts_marques") || aLieux(ms, "buts_accordes") ? `<div class="grille g2" style="margin-top:1rem">
+    <section class="panneau"><h3>D’où partent nos buts</h3>${carteButs(ms, "buts_marques", "Aucun de nos buts n’a de position notée.")}</section>
+    <section class="panneau"><h3>D’où partent les buts accordés</h3>${carteButs(ms, "buts_accordes", "Aucun but accordé n’a de position notée.")}</section>
+  </div>` : ""}`;
 }
 
 /* ---------- Adversaires : dossier d'avant-match */
@@ -716,6 +745,10 @@ function vueAdversaire(cle) {
       <h3>Où entrent nos buts</h3>${Object.keys(agN.zones).length ? filet(agN.zones, "chaleur") : `<p class="vide">Aucune zone notée.</p>`}
     </section>
   </div>` : ""}
+  ${aLieux(ms, "buts_marques") || aLieux(ms, "buts_accordes") ? `<div class="grille g2" style="margin-top:1rem">
+    <section class="panneau"><h3>D’où partent leurs buts</h3>${carteButs(ms, "buts_accordes", "Aucun de leurs buts n’a de position notée.")}</section>
+    <section class="panneau"><h3>D’où partent nos buts</h3>${carteButs(ms, "buts_marques", agN.n ? "Aucun de nos buts n’a de position notée." : "Aucun but marqué contre eux.")}</section>
+  </div>` : ""}
   ${manque.length ? `<p class="sous" style="font-size:.85rem;margin-top:1rem">Types de jeu et zones du filet :
     non notés pour ${manque.length > 1 ? "les buts" : manque[0]} de ces matchs.</p>` : ""}`;
 }
@@ -796,7 +829,7 @@ async function demarrer() {
     if (but) {
       el.querySelectorAll(".eclaire").forEach(x => x.classList.remove("eclaire"));
       el.querySelectorAll(`[data-but="${but.dataset.but}"]`).forEach(x => x.classList.add("eclaire"));
-      if (but.tagName === "BUTTON") el.querySelector(`tr[data-but="${but.dataset.but}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (!but.closest("tr")) el.querySelector(`tr[data-but="${but.dataset.but}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   });
   // Graphiques de progression dessinés à la largeur de l'écran : redessiner si la largeur change (rotation du téléphone)
