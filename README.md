@@ -51,7 +51,8 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
 3. Après le match : « Terminer » → vérifications → « Télécharger le fichier » → « Ouvrir la page de dépôt GitHub »
    → choisir le fichier dans Téléchargements → « Commit changes ». GitHub Actions publie le site.
    « Télécharger aussi le PDF Sommaire » produit en plus la fiche Sommaire remplie avec les données du match
-   (pour archiver ou partager) : ne déposer que le fichier `.json` sur GitHub. Au-delà de 15 buts accordés
+   (pour archiver ou partager), **non modifiable** : les valeurs font partie de la page, il n'y a plus de champs.
+   Ne déposer que le fichier `.json` sur GitHub (ce PDF ne peut pas être importé). Au-delà de 15 buts accordés
    ou 7 buts BLL, les buts de plus sont recopiés dans les notes du PDF.
 4. Pour le match suivant : bandeau vert « Nouveau match », ou menu ☰ → « Nouveau match » à tout moment.
    Un match pas encore exporté est mis de côté sur le téléphone : menu ☰ → « Récupérer » le remet en place.

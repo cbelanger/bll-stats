@@ -429,7 +429,11 @@ async function telechargerPdf() {
       }
       if (f instanceof PDFLib.PDFTextField) f.setText(val);
     }
+    // Aplatir : les valeurs deviennent du texte de la page, plus aucun champ modifiable.
+    // L'ordre de calcul (/CO, totaux d'Acrobat) visait des champs qui n'existent plus : on le retire.
     form.updateFieldAppearances();
+    form.flatten();
+    for (const k of ["CO", "NeedAppearances"]) form.acroForm.dict.delete(PDFLib.PDFName.of(k));
     const url = URL.createObjectURL(new Blob([await doc.save()], { type: "application/pdf" }));
     const a = document.createElement("a");
     a.href = url; a.download = nomFichier().replace(/\.json$/, ".pdf");
