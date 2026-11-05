@@ -16,6 +16,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const pct = (n, d) => (d ? (100 * n / d).toFixed(1).replace(".", ",") + " %" : "–");
 // Sans « % » : rangées « % » des tableaux par période (l'étiquette le dit ; sinon trop large sur téléphone)
 const pctN = (n, d) => pct(n, d).replace(" %", "");
+// « % » masqué sur téléphone seulement (colonnes « % … » de la liste des matchs)
+const pctC = (n, d) => pct(n, d).replace(" %", '<span class="pc">&nbsp;%</span>');
 const moy = (n, d, dec = 2) => (d ? (n / d).toFixed(dec).replace(".", ",") : "–");
 const dateFr = iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
 const dateHeure = d => d.toLocaleString("fr-CA", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -168,16 +170,17 @@ function vueMatchs() {
   const ms = filtres().sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
   if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
   return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}</p>
-  <div class="panneau defile" style="margin-top:1rem"><table>
-    <thead><tr><th class="opt">No</th><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n opt">Tirs</th><th class="opt">Gardienne</th><th class="n">% arrêts</th></tr></thead>
+  <div class="panneau defile" style="margin-top:1rem"><table class="liste-matchs">
+    <thead><tr><th class="opt">No</th><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n opt">Tirs</th><th class="opt">Gardienne</th><th class="n" title="Sorties de zone réussies">% sorties</th><th class="n">% arrêts</th></tr></thead>
     <tbody>${ms.map(m => `
       <tr class="lien" tabindex="0" data-id="${esc(m.id)}">
         <td class="opt">${esc(m.no_match || "–")}</td><td>${dateCourte(m.date)}</td><td class="txt">${esc(m.adversaire)}</td>
         <td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
         <td class="n">${m.buts.nous}–${m.buts.adv}</td>
-        <td class="n opt">${m.tirs.nous ?? "–"}–${m.tirs.adv ?? "–"}</td>
+        <td class="n opt">${m.tirs.nous == null && m.tirs.adv == null ? "–" : `${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}`}</td>
         <td class="opt">${esc(nomGardienne(m.gardienne))}</td>
-        <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
+        <td class="n">${pctC(m.sorties_zone.reussies, m.sorties_zone.tentatives)}</td>
+        <td class="n">${svArret(m) == null ? "–" : pctC(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
       </tr>`).join("")}</tbody></table></div>`;
 }
 

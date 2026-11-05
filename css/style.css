@@ -283,7 +283,10 @@ td.fort { font-weight: 700; }
   th, td { padding: .45rem .35rem; }
   th { white-space: normal; }
   td.txt { white-space: normal; }
-  .opt { display: none; }
+  .opt, .pc { display: none; }   /* .pc : signe « % » des valeurs (déjà dans l'en-tête) */
+  .liste-matchs th, .liste-matchs td { padding-inline: .22rem; }
+  .liste-matchs th:first-child, .liste-matchs td:first-child { padding-left: 0; }
+  .liste-matchs th:last-child, .liste-matchs td:last-child { padding-right: 0; }
   .score { gap: .5rem; padding: 1rem; }
   .score .eq { font-size: 1.15rem; }
   .score .pts { font-size: 2.2rem; }
