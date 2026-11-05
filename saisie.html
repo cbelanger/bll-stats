@@ -161,7 +161,7 @@
   <dialog class="feuille" id="f-infos" aria-labelledby="fi-titre">
     <div class="corps">
       <h3 id="fi-titre">Infos du match</h3>
-      <div class="champ">
+      <div class="champ pas-parents">
         <span class="lab">Équipe</span>
         <div class="puces" id="fi-eq">
           <button type="button" class="puce" data-eq="U16AA">U16AA</button>
@@ -224,11 +224,11 @@
       <h3 id="fm-titre">Match</h3>
       <div class="menu-l">
         <button type="button" class="btn principal" data-act="nouveau">Nouveau match</button>
-        <button type="button" class="btn" data-act="ouvrir">Ouvrir un match du site…</button>
+        <button type="button" class="btn pas-parents" data-act="ouvrir">Ouvrir un match du site…</button>
         <button type="button" class="btn" data-act="infos">Infos du match</button>
         <button type="button" class="btn" data-act="recuperer" id="b-recuperer" hidden>Récupérer le match précédent</button>
       </div>
-      <p class="aide">« Nouveau match » et « Ouvrir » mettent de côté le match en cours s’il n’est pas exporté ;
+      <p class="aide">« Nouveau match »<span class="pas-parents"> et « Ouvrir »</span> mettent de côté le match en cours s’il n’est pas exporté ;
         « Récupérer le match précédent » le remet en place.</p>
       <div class="pied-f">
         <button type="button" class="btn" data-act="fermer">Fermer</button>
@@ -276,12 +276,14 @@
         <li><button type="button" class="btn principal" data-act="telecharger" id="b-telecharger">Télécharger le fichier</button>
           <span class="fichier" id="nom-fichier"></span>
           <button type="button" class="btn" data-act="telecharger-pdf" id="b-pdf">Télécharger aussi le PDF Sommaire</button>
-          <span class="aide">PDF rempli avec les données du match, pour archiver ou partager. Déposer seulement le fichier .json sur GitHub.</span></li>
-        <li><a class="btn" id="lien-depot" href="https://github.com/cbelanger/bll-stats/upload/main/data/matchs" target="_blank" rel="noopener">Ouvrir la page de dépôt GitHub</a>
+          <span class="aide">PDF rempli avec les données du match, pour archiver ou partager.<span class="pas-parents"> Déposer seulement le fichier .json sur GitHub.</span></span></li>
+        <li class="que-parents"><span class="aide">Envoie le fichier <b>.json</b> à Christian Bélanger par courriel ou texto (pièce jointe, dans Téléchargements).
+          C’est ce fichier qui sert aux statistiques ; le PDF sert seulement à consulter.</span></li>
+        <li class="pas-parents"><a class="btn" id="lien-depot" href="https://github.com/cbelanger/bll-stats/upload/main/data/matchs" target="_blank" rel="noopener">Ouvrir la page de dépôt GitHub</a>
           <span class="aide">Touche « choose your files », prends le fichier dans Téléchargements, puis « Commit changes ». Le site se met à jour en 1 à 2 minutes.</span></li>
       </ol>
       <div class="pied-f">
-        <button type="button" class="btn" data-act="copier">Copier le contenu</button>
+        <button type="button" class="btn pas-parents" data-act="copier">Copier le contenu</button>
         <button type="button" class="btn" data-act="fermer">Fermer</button>
       </div>
     </div>

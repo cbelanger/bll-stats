@@ -36,11 +36,24 @@ const slug = s =>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replac
 function lireStockage(cle) { try { return JSON.parse(localStorage.getItem(cle) || "null"); } catch (e) { return null; } }
 function ecrireStockage(cle, v) { try { localStorage.setItem(cle, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
 
+// Mode parents (lien saisie.html?parents=U16AA) : équipe fixe, ni dépôt GitHub ni matchs du site ;
+// le fichier est envoyé à Christian. Gardé dans le téléphone (l'application installée s'ouvre sans
+// le paramètre) ; saisie.html?parents=non le retire.
+const CLE_PARENTS = "bll-saisie-parents";
+const PARENTS = (() => {
+  const q = new URLSearchParams(location.search).get("parents");
+  if (q === "non") { try { localStorage.removeItem(CLE_PARENTS); } catch (e) { /* rien */ } return null; }
+  if (q === "U16AA" || q === "U19AA") { ecrireStockage(CLE_PARENTS, q); return q; }
+  const v = lireStockage(CLE_PARENTS);
+  return v === "U16AA" || v === "U19AA" ? v : null;
+})();
+if (PARENTS) document.body.classList.add("parents");
+
 function nouveau() {
-  const p = lireStockage(CLE_PREFS) || {};
+  const p = lireStockage(CLE_PREFS) || {}, equipe = PARENTS || p.equipe || "U19AA";
   return {
-    equipe: p.equipe || "U19AA", adversaire: "", date: aujourdhui(), no_match: "",
-    heure_debut: "", heure_fin: "", responsable: p.responsable || "", gardienne: p.gardienne || "",
+    equipe, adversaire: "", date: aujourdhui(), no_match: "",
+    heure_debut: "", heure_fin: "", responsable: p.responsable || "", gardienne: p.equipe === equipe && p.gardienne || "",
     periode: "p1", tirs: { nous: vide(), adv: vide() }, butsNous: [], butsAdv: [], sz: { r: vide(), x: vide() },
     notes: "", exporte: false,
     fichier: null, origine: "saisie", ouvert: false,   // ouvert = rechargé depuis le site, pas encore modifié
@@ -57,6 +70,7 @@ const tirsInconnus = c => !!(S.tirsInconnus && S.tirsInconnus[c]);
 const aDesDonnees = () => somme(S.tirs.nous) + somme(S.tirs.adv) + S.butsNous.length + S.butsAdv.length + somme(S.sz.r) + somme(S.sz.x) > 0;
 
 let S = migrer(lireStockage(CLE)) || nouveau();
+if (PARENTS) S.equipe = PARENTS;
 let hist = [], courant = null, courantCote = "adv", brouillon = null;   // but ouvert dans la feuille
 const buts = c => c === "nous" ? S.butsNous : S.butsAdv;
 
@@ -195,10 +209,16 @@ function ouvrirInfos() {
   choixGardienne = i >= 0 ? i : S.gardienne ? "autre" : null;
   $("#fi-gnom").value = i < 0 && S.gardienne ? (m ? m[1] : S.gardienne) : "";
   $("#fi-gno").value = i < 0 && m ? m[2] : "";
-  $("#fi-gards").innerHTML = GARDIENNES.map((g, k) => `<button type="button" class="puce" data-gd="${k}">${esc(texteGardienne(g))}</button>`).join("")
+  boutonsGardiennes(S.equipe);
+  if (!$("#f-infos").open) $("#f-infos").showModal();
+}
+// Seulement les gardiennes de l'équipe choisie (une gardienne sans équipe dans la liste est proposée partout)
+function boutonsGardiennes(eq) {
+  const deEq = g => (g.equipe || eq) === eq;
+  if (typeof choixGardienne === "number" && !deEq(GARDIENNES[choixGardienne])) choixGardienne = null;
+  $("#fi-gards").innerHTML = GARDIENNES.map((g, k) => deEq(g) ? `<button type="button" class="puce" data-gd="${k}">${esc(texteGardienne(g))}</button>` : "").join("")
     + `<button type="button" class="puce" data-gd="autre">Autre</button>`;
   majGardienne();
-  if (!$("#f-infos").open) $("#f-infos").showModal();
 }
 
 function majGardienne() {
@@ -358,6 +378,7 @@ function verifications() {
   if (!tirsInconnus("nous") && S.butsNous.length > somme(S.tirs.nous)) v.push(["er", "Plus de buts BLL que de tirs BLL."]);
   if (!S.no_match.trim()) v.push(["av", "Numéro de match manquant."]);
   if (!S.gardienne.trim()) v.push(["av", "Gardienne non indiquée."]);
+  if (PARENTS && !S.responsable.trim()) v.push(["av", "Ton nom n’est pas indiqué (touche le nom du match en haut → Responsable des stats)."]);
   const sp = sansPeriode(S.butsNous) + sansPeriode(S.butsAdv);
   if (sp) v.push(["av", `${sp} but${sp > 1 ? "s" : ""} sans période (choisir la période, puis « + »).`]);
   const inc = S.butsAdv.filter(b => !b.type || !b.zone).length;
@@ -498,7 +519,7 @@ document.addEventListener("click", e => {
   }
 
   const eq = e.target.closest("[data-eq]");
-  if (eq) { document.querySelectorAll("[data-eq]").forEach(b => b.setAttribute("aria-pressed", b === eq)); return; }
+  if (eq) { document.querySelectorAll("[data-eq]").forEach(b => b.setAttribute("aria-pressed", b === eq)); boutonsGardiennes(eq.dataset.eq); return; }
 
   const b = e.target.closest("[data-act]"); if (!b) return;
   const P = S.periode, lp = nomP(P);

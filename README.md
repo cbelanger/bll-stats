@@ -59,6 +59,18 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
 
 Les fichiers vont dans `data/matchs/` et ont les mêmes champs que le PDF Sommaire.
 
+### Saisie par des parents
+
+Lien à donner aux parents : <https://cbelanger.github.io/bll-stats/saisie.html?parents=U16AA> (ou `U19AA`).
+Même page, mais l'équipe est fixée, les gardiennes proposées sont celles de l'équipe, et il n'y a ni lien vers GitHub,
+ni « Ouvrir un match du site », ni « Copier le contenu ». Après « Terminer », la page leur demande de télécharger le
+fichier `.json` et de l'envoyer à Christian (courriel ou texto) ; un avertissement rappelle d'inscrire leur nom
+(Responsable des stats). Christian vérifie le fichier reçu, puis le dépose dans `data/matchs/` comme d'habitude.
+
+Le mode reste dans le téléphone (l'application installée s'ouvre en mode parents). Pour revenir à la saisie complète
+sur un téléphone où le lien parents a été ouvert : <https://cbelanger.github.io/bll-stats/saisie.html?parents=non>.
+Ce mode ne protège rien : il simplifie seulement la page (sans identifiants, personne ne peut déposer sur GitHub).
+
 Pour un match venu d'un PDF, changer la période d'un but ou le supprimer ne change pas les tirs (comptés à part sur papier).
 Après une mise à jour de la saisie, fermer et rouvrir la page (ou l'application) deux fois pour charger la nouvelle version.
 
@@ -157,11 +169,13 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
 
 ## Ajouter une gardienne
 
-1. Ajouter une ligne dans `data/gardiennes.json` : `{ "nom": "Prénom Nom", "numero": 31 }`.
+1. Ajouter une ligne dans `data/gardiennes.json` : `{ "nom": "Prénom Nom", "numero": 31, "equipe": "U16AA" }`.
 2. Régénérer la fiche : `python tools/fiches/generer_sommaire.py` (pour la liste du PDF), puis commit + push.
 
-La page de saisie affiche la liste à la prochaine ouverture avec réseau. `extract.py` s'en sert pour corriger
+La page de saisie affiche la liste à la prochaine ouverture avec réseau, seulement les gardiennes de l'équipe du match.
+`extract.py` s'en sert (gardiennes de l'équipe du match seulement) pour corriger
 les coquilles (numéro connu → nom officiel), compléter un numéro oublié et avertir pour une gardienne inconnue.
+La liste du PDF Sommaire (une fiche pour les deux équipes) contient toutes les gardiennes.
 
 ## Calculs
 

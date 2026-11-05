@@ -82,11 +82,12 @@ def gardiennes_officielles():
         return []
 
 
-def normaliser_gardienne(nom, no, avertissements):
-    # Rapproche de data/gardiennes.json pour éviter les doublons (coquille, numéro oublié)
+def normaliser_gardienne(nom, no, equipe, avertissements):
+    # Rapproche de data/gardiennes.json pour éviter les doublons (coquille, numéro oublié) ;
+    # seulement les gardiennes de l'équipe du match (les numéros se répètent d'une équipe à l'autre)
     if not nom and no is None:
         return nom, no
-    liste = gardiennes_officielles()
+    liste = [g for g in gardiennes_officielles() if g.get("equipe", equipe) == equipe]
     par_no = next((g for g in liste if g["numero"] == no), None)
     if par_no:
         if slug(nom) != slug(par_no["nom"]):
@@ -96,9 +97,9 @@ def normaliser_gardienne(nom, no, avertissements):
     if par_nom and no is None:
         return par_nom["nom"], par_nom["numero"]
     if no is None:
-        avertissements.append(f"gardienne « {nom} » sans numéro et absente de data/gardiennes.json")
+        avertissements.append(f"gardienne « {nom} » sans numéro et absente de data/gardiennes.json ({equipe})")
     else:
-        avertissements.append(f"gardienne « {nom} #{no} » absente de data/gardiennes.json : l'y ajouter")
+        avertissements.append(f"gardienne « {nom} #{no} » absente de data/gardiennes.json ({equipe}) : l'y ajouter")
     return nom, no
 
 
@@ -290,7 +291,7 @@ def valider(champs):
     if sz_t is not None and sz_r is not None and sz_r > sz_t:
         erreurs.append("plus de sorties de zone réussies que de tentatives")
 
-    g_nom, g_no = normaliser_gardienne(*gardienne_de(texte(champs, "gardienne")), avertissements)
+    g_nom, g_no = normaliser_gardienne(*gardienne_de(texte(champs, "gardienne")), equipe, avertissements)
     if not g_nom:
         avertissements.append("gardienne non indiquée")
 

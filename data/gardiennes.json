@@ -1,7 +1,9 @@
 {
-  "_note": "Liste officielle des gardiennes. Utilisée par saisie.html, tools/extract.py et tools/fiches/generer_sommaire.py.",
+  "_note": "Liste officielle des gardiennes, par équipe. Utilisée par saisie.html, tools/extract.py et tools/fiches/generer_sommaire.py.",
   "gardiennes": [
-    { "nom": "Frédérique Bélanger", "numero": 30 },
-    { "nom": "Stella Ouellet", "numero": 28 }
+    { "nom": "Laurence Guy", "numero": 1, "equipe": "U16AA" },
+    { "nom": "Noémie Sénécal", "numero": 2, "equipe": "U16AA" },
+    { "nom": "Frédérique Bélanger", "numero": 30, "equipe": "U19AA" },
+    { "nom": "Stella Ouellet", "numero": 28, "equipe": "U19AA" }
   ]
 }

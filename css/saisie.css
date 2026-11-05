@@ -226,3 +226,7 @@ textarea { min-height: 9rem; resize: vertical; }
   padding: .55rem .9rem; border-radius: 8px; font-size: .92rem; box-shadow: 0 4px 14px var(--voile);
 }
 @media (prefers-reduced-motion: reduce) { button:active { transform: none; } }
+
+/* Mode parents (saisie.html?parents=U16AA) : ni GitHub ni matchs du site, équipe fixe */
+.parents .pas-parents { display: none !important; }
+body:not(.parents) .que-parents { display: none !important; }
