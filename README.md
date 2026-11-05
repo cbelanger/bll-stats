@@ -59,17 +59,18 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
 
 Les fichiers vont dans `data/matchs/` et ont les mêmes champs que le PDF Sommaire.
 
-### Saisie par des parents
+### Deux adresses : parents et gestion
 
-Lien à donner aux parents : <https://cbelanger.github.io/bll-stats/saisie.html?parents=U16AA> (ou `U19AA`).
-Même page, mais l'équipe est fixée, les gardiennes proposées sont celles de l'équipe, et il n'y a ni lien vers GitHub,
-ni « Ouvrir un match du site », ni « Copier le contenu ». Après « Terminer », la page leur demande de télécharger le
-fichier `.json` et de l'envoyer à Christian (courriel ou texto) ; un avertissement rappelle d'inscrire leur nom
-(Responsable des stats). Christian vérifie le fichier reçu, puis le dépose dans `data/matchs/` comme d'habitude.
+- **Parents** (U16AA ou U19AA) : <https://cbelanger.github.io/bll-stats/saisie.html>. Ni lien vers GitHub,
+  ni « Ouvrir un match du site », ni « Copier le contenu ». Après « Terminer », la page demande de télécharger le
+  fichier `.json` et de l'envoyer à Christian (courriel ou texto) ; un avertissement rappelle d'inscrire son nom
+  (Responsable des stats). Christian vérifie le fichier reçu, puis le dépose dans `data/matchs/` comme d'habitude.
+- **Gestion** (Christian) : <https://cbelanger.github.io/bll-stats/saisie.html?gestion=1>, avec le dépôt GitHub,
+  « Ouvrir un match du site » et « Copier le contenu ». Installée depuis cette adresse (menu → Ajouter au téléphone),
+  c'est une application distincte, « BLL Gestion » (`saisie-gestion.webmanifest`), qui s'ouvre toujours en gestion.
+  Les deux applications partagent le même match en cours sur le téléphone.
 
-Le mode reste dans le téléphone (l'application installée s'ouvre en mode parents). Pour revenir à la saisie complète
-sur un téléphone où le lien parents a été ouvert : <https://cbelanger.github.io/bll-stats/saisie.html?parents=non>.
-Ce mode ne protège rien : il simplifie seulement la page (sans identifiants, personne ne peut déposer sur GitHub).
+Ce partage ne protège rien : il simplifie seulement la page des parents (sans identifiants, personne ne peut déposer sur GitHub).
 
 Pour un match venu d'un PDF, changer la période d'un but ou le supprimer ne change pas les tirs (comptés à part sur papier).
 Après une mise à jour de la saisie, fermer et rouvrir la page (ou l'application) deux fois pour charger la nouvelle version.

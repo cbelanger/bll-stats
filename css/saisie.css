@@ -227,6 +227,6 @@ textarea { min-height: 9rem; resize: vertical; }
 }
 @media (prefers-reduced-motion: reduce) { button:active { transform: none; } }
 
-/* Mode parents (saisie.html?parents=U16AA) : ni GitHub ni matchs du site, équipe fixe */
-.parents .pas-parents { display: none !important; }
-body:not(.parents) .que-parents { display: none !important; }
+/* Saisie de Christian (saisie.html?gestion=1) : GitHub et matchs du site ; sinon consigne d'envoi pour les parents */
+body:not(.gestion) .gestion-seul { display: none !important; }
+.gestion .parents-seul { display: none !important; }
