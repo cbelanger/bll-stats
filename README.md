@@ -151,8 +151,9 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
   - **Par période** : buts et tirs cadrés, nous et adversaire ;
   - filet des buts accordés et filet de nos buts (numéros des buts dans chaque zone) ;
   - **D'où partent les buts** : demi-patinoire avec les buts des deux équipes (numéros ; toucher un point allume sa
-    ligne du Sommaire et sa zone du filet), si au moins un but a sa position. La même carte (tous les matchs) est dans Équipe,
-    Adversaires et la fiche de chaque gardienne ;
+    ligne du Sommaire et sa zone du filet), si au moins un but a sa position. La même carte (tous les matchs, petits points
+    sans numéro et zones de chaleur : plus c'est foncé, plus il en part de buts) est dans Équipe, Adversaires et la fiche
+    de chaque gardienne ;
   - sorties de zone (avec le détail par période s'il est connu), et notes.
 - **Adversaires** : équipes affrontées dans la saison (PJ, V-D-N, buts) ; un clic ouvre le dossier d'avant-match :
   « À retenir » (leur type de but et leur zone les plus fréquents, moment de la période et période où ils marquent),

@@ -159,7 +159,8 @@ function ptsLieux(ms, cle, unMatch = false) {
 function carteButs(ms, cle, vide) {
   const pts = ptsLieux(ms, cle);
   const n = ms.reduce((s, m) => s + (m[cle] || []).length, 0);
-  return pts.length ? `${patinoire(pts)}<p class="sous" style="font-size:.85rem">${pts.length} but${pts.length > 1 ? "s" : ""} placé${pts.length > 1 ? "s" : ""} sur ${n}. Filet en haut, vu de la tireuse.</p>`
+  // Plusieurs matchs : petits points sans numéro et zones de chaleur (plus foncé = plus de buts)
+  return pts.length ? `${patinoire(pts, undefined, 11, true)}<p class="sous" style="font-size:.85rem">${pts.length} but${pts.length > 1 ? "s" : ""} placé${pts.length > 1 ? "s" : ""} sur ${n}. Filet en haut, vu de la tireuse ; plus la zone est foncée, plus il en part de buts.</p>`
     : `<p class="vide">${vide}</p>`;
 }
 const aLieux = (ms, cle) => ms.some(m => (m[cle] || []).some(b => b.lieu));
@@ -380,7 +381,7 @@ function vueMatch(id) {
   ${aLieux([m], "buts_marques") || aLieux([m], "buts_accordes") ? `<section class="panneau carte-m" style="margin-top:1rem">
     <h3>D’où partent les buts</h3>
     <div class="legende-l" style="margin:0 0 .6rem"><span><i class="pt nous"></i>BLL ${esc(m.equipe)} (dans leur zone)</span><span><i class="pt adv"></i>${esc(m.adversaire)} (dans notre zone)</span></div>
-    ${patinoire([...ptsLieux([m], "buts_marques", true), ...ptsLieux([m], "buts_accordes", true)])}
+    ${patinoire([...ptsLieux([m], "buts_marques", true), ...ptsLieux([m], "buts_accordes", true)], undefined, 21)}
     <p class="sous" style="font-size:.85rem">Filet en haut, vu de la tireuse ; numéros des buts. Toucher un point allume sa ligne dans le Sommaire et sa zone dans le filet.</p>
   </section>` : ""}
 
