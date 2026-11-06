@@ -123,14 +123,17 @@ def lire_lieu(champs, cle, nom, avertissements):
 
 
 def lire_sit(champs, cle, nom, avertissements):
-    # Situation au moment du but, du point de vue du BLL : EG (égalité), AN (avantage), DN (désavantage numérique)
+    # Situation au moment du but, du point de vue du BLL : EG (égalité), AN (avantage), DN (désavantage numérique),
+    # 5v3 / 3v5 (double avantage / désavantage ; « 5 c. 3 », « 5-3 », « 5vs3 » acceptés)
     t = texte(champs, cle)
     if not t:
         return None
     s = slug(t).upper()
     s = "EG" if s.startswith("EG") else s
-    if s not in ("EG", "AN", "DN"):
-        avertissements.append(f"{nom} : situation inconnue « {t} » (ignorée ; EG, AN ou DN)")
+    if m := re.fullmatch(r"([35])\D*([35])", s):
+        s = f"{m.group(1)}v{m.group(2)}"
+    if s not in ("EG", "AN", "DN", "5v3", "3v5"):
+        avertissements.append(f"{nom} : situation inconnue « {t} » (ignorée ; EG, AN, 5v3, DN ou 3v5)")
         return None
     return s
 

@@ -165,8 +165,11 @@ function carteButs(ms, cle, vide) {
 }
 const aLieux = (ms, cle) => ms.some(m => (m[cle] || []).some(b => b.lieu));
 
-// Situation au moment du but, du point de vue du BLL (EG égalité, AN avantage, DN désavantage numérique)
-const SITS = [["EG", "À égalité"], ["AN", "BLL en avantage numérique"], ["DN", "BLL en désavantage numérique"]];
+// Situation au moment du but, du point de vue du BLL (EG égalité, AN avantage, DN désavantage numérique,
+// 5v3 / 3v5 double avantage / désavantage)
+const SITS = [["EG", "À égalité"], ["AN", "BLL en avantage numérique"], ["5v3", "BLL à 5 contre 3"],
+  ["DN", "BLL en désavantage numérique"], ["3v5", "BLL à 3 contre 5"]];
+const nomSit = k => (SITS.find(s => s[0] === k) || [k, k])[1];
 const aSits = ms => ms.some(m => [...m.buts_accordes, ...(m.buts_marques || [])].some(b => b.sit));
 function situations(ms) {
   const compte = (cle, s) => ms.reduce((t, m) => t + (m[cle] || []).filter(b => b.sit === s).length, 0);
@@ -220,7 +223,7 @@ function deroulement(m) {
     sc[b.eq]++;
     return `<tr class="${b.eq === "nous" ? "but-nous" : "but-adv"}"${b.no != null ? ` data-but="${b.eq}-${b.no}"` : ""}>
       <td>${b.i >= 0 ? PERIODES[b.i][1] : "?"}</td><td>${esc(b.temps || "–")}</td>
-      <td class="txt equipe">${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}${b.sit && b.sit !== "EG" ? ` <span class="sit" title="${b.sit === "AN" ? "BLL en avantage numérique" : "BLL en désavantage numérique"}">${b.sit}</span>` : ""}</td>
+      <td class="txt equipe">${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}${b.sit && b.sit !== "EG" ? ` <span class="sit" title="${nomSit(b.sit)}">${b.sit}</span>` : ""}</td>
       <td class="txt">${b.type ? `<span class="code-t">${b.type}</span><span class="opt">${TYPES[b.type] || ""}</span>` : "–"}</td>
       <td>${esc(b.zone || "")}</td>${complet ? `<td class="n score-c">${sc.nous}–${sc.adv}</td>` : ""}</tr>`;
   }).join("");
@@ -228,7 +231,7 @@ function deroulement(m) {
   return `<div class="defile"><table class="deroulement">
     <thead><tr><th>Pér.</th><th>Temps</th><th>But</th><th>Type de jeu</th><th>Zone</th>${complet ? `<th class="n">Score</th>` : ""}</tr></thead>
     <tbody>${lignes}</tbody></table></div>
-    ${tous.some(b => b.sit === "AN" || b.sit === "DN") ? `<p class="sous" style="font-size:.85rem">AN : BLL en avantage numérique ; DN : BLL en désavantage numérique.</p>` : ""}
+    ${tous.some(b => b.sit && b.sit !== "EG") ? `<p class="sous" style="font-size:.85rem">${SITS.filter(([k]) => k !== "EG" && tous.some(b => b.sit === k)).map(([k, l]) => `${k} : ${l}`).join(" ; ")}.</p>` : ""}
     ${complet ? "" : `<p class="sous" style="font-size:.85rem">${manque > 0 ? `${manque} but${manque > 1 ? "s" : ""} sans détail. ` : ""}Ordre approximatif : période ou temps manquant pour certains buts.</p>`}`;
 }
 

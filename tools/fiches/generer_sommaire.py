@@ -17,7 +17,7 @@ c=canvas.Canvas(str(SORTIE / "BLL - Statistiques - Sommaire - Match.pdf"),pagesi
 c.setTitle("BLL Élite – Statistiques – Sommaire – Match"); c.setAuthor("BLL Élite")
 f=c.acroForm
 FS=dict(borderColor=LINE, fillColor=white, textColor=black, borderWidth=0.8, fontName="Helvetica", fontSize=10)
-SITS=[" ","AN","DN"]   # situation du BLL au moment du but (sections 2 et 3) ; vide = à égalité
+SITS=[" ","AN","5v3","DN","3v5"]   # situation du BLL au moment du but (sections 2 et 3) ; vide = à égalité
 
 from reportlab.lib.colors import transparent
 def tf(name,x,y,w,h,multi=False,fs=10,tip=None):
@@ -128,7 +128,7 @@ for i,(lab,key) in enumerate([("Pér.","periode"),("Temps","temps"),("Type","typ
         if key=="periode": dd(f"but_nous_{n}_periode",x,ry+0.5,w,[" ","1","2","3","4","Prol."],fs=9,tip=f"Notre but {n} – période")
         elif key=="temps": tf(f"but_nous_{n}_temps",x,ry+0.5,w,16,fs=9,tip=f"Notre but {n} – temps (mm:ss)")
         elif key=="type": dd(f"but_nous_{n}_type",x,ry+0.5,w,[" ","P","T","L","R","E","D","FC","A"],fs=9,tip=f"Notre but {n} – type de jeu (codes de la section 2)")
-        elif key=="sit": dd(f"but_nous_{n}_sit",x,ry+0.5,w,SITS,fs=9,tip=f"Notre but {n} – situation (vide = égalité, AN avantage, DN désavantage numérique)")
+        elif key=="sit": dd(f"but_nous_{n}_sit",x,ry+0.5,w,SITS,fs=9,tip=f"Notre but {n} – situation (vide = égalité, AN avantage, 5v3, DN désavantage, 3v5)")
         else: dd(f"but_nous_{n}_zone",x,ry+0.5,w,[" ","HG","HC","HD","CG","C","CD","BG","BC","BD"],fs=9,tip=f"Notre but {n} – zone du filet adverse (vue de face)")
 c.setStrokeColor(LINE); c.setLineWidth(0.6); c.rect(tx,by-99,bw,99)
 for j in range(NB): c.line(tx+lwB+j*bcw,by-99,tx+lwB+j*bcw,by)
@@ -187,7 +187,7 @@ for r in range(3):
                     textColor=RED,fontName="Helvetica",fontSize=0,fieldFlags="readOnly")
 # Tableau
 cols=[("But",26),("Pér.",38),("Temps",46),("Type de jeu",iw-26-38-46-46-42),("Zone",46),("Sit.",42)]
-ty=gy-12; N=15; LEG=134; rh=(ty-16-(M+8)-LEG-10)/N
+ty=gy-12; N=15; LEG=145; rh=(ty-16-(M+8)-LEG-10)/N
 c.setFillColor(LIGHT); c.rect(rx,ty-16,iw,16,stroke=0,fill=1)
 xs=[rx]; 
 for _,w in cols: xs.append(xs[-1]+w)
@@ -203,7 +203,7 @@ for n in range(1,N+1):
     tf(f"but_{n}_temps",xs[2]+3,ry+(rh-16)/2,cols[2][1]-6,16,fs=9.5,tip=f"But {n} – temps (mm:ss)")
     dd(f"but_{n}_type",xs[3]+3,ry+(rh-16)/2,cols[3][1]-6,types,fs=8.5,tip=f"But {n} – type de jeu")
     dd(f"but_{n}_zone",xs[4]+3,ry+(rh-16)/2,cols[4][1]-6,[" ","HG","HC","HD","CG","C","CD","BG","BC","BD"],tip=f"But {n} – zone")
-    dd(f"but_{n}_sit",xs[5]+3,ry+(rh-16)/2,cols[5][1]-6,SITS,tip=f"But {n} – situation du BLL (vide = égalité, AN avantage, DN désavantage numérique)")
+    dd(f"but_{n}_sit",xs[5]+3,ry+(rh-16)/2,cols[5][1]-6,SITS,tip=f"But {n} – situation du BLL (vide = égalité, AN avantage, 5v3, DN désavantage, 3v5)")
     c.setStrokeColor(LINE); c.setLineWidth(0.4); c.line(rx,ry,rx+iw,ry)
 tbot=ty-16-N*rh
 c.setLineWidth(0.6); c.rect(rx,tbot,iw,ty-tbot)
@@ -214,9 +214,10 @@ for i,(k,v) in enumerate(LEGENDE):
     yy=lb+LEG-27-i*10
     txt(k,rx+8,yy,8.6,True,col=RED); txt(v,rx+26,yy,8)
 # Situation : toujours du point de vue du BLL (un but accordé pendant notre punition = DN)
-txt("Situation (Sit.) – pour le BLL",rx+6,lb+19,8.8,True)
-for xx,(k,v) in zip([rx+8,rx+70,rx+168],[("vide","égalité"),("AN","avantage num."),("DN","désavantage num.")]):
-    txt(k,xx,lb+7,8.6,True,col=RED); txt(v,xx+c.stringWidth(k,"Helvetica-Bold",8.6)+4,lb+7,7.6)
+txt("Situation (Sit.) – pour le BLL",rx+6,lb+30,8.8,True)
+for xx,yy,(k,v) in [(rx+8,lb+18,("vide","égalité")),(rx+70,lb+18,("AN","avantage num.")),(rx+158,lb+18,("5v3","double avantage")),
+                    (rx+70,lb+7,("DN","désavantage num.")),(rx+158,lb+7,("3v5","double désavantage"))]:
+    txt(k,xx,yy,8.6,True,col=RED); txt(v,xx+c.stringWidth(k,"Helvetica-Bold",8.6)+4,yy,7.6)
 c.save()
 
 # ---------- Post-traitement : calculs Acrobat (totaux des tirs cadrés)

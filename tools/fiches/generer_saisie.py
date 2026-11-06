@@ -105,16 +105,19 @@ while ly>M+6: c.line(M+8,ly,M+LW-8,ly); ly-=17
 # 4. Buts accordés
 h4=top-M; section("4","BUTS ACCORDÉS",RX,top,RW,h4)
 legend=[("P","Pick/écran"),("T","Triangle"),("L","Tir de loin"),("R","Rebond"),("E","Échappée"),("D","Déviation"),("FC","Fille de coin"),("A","Autre")]
-c.setFillColor(LIGHT); c.roundRect(RX+8,top-61,RW-16,37,4,0,1)
+c.setFillColor(LIGHT); c.roundRect(RX+8,top-72,RW-16,48,4,0,1)
 lx=RX+14
 for i,(k,v) in enumerate(legend):
     xx=lx+(i%4)*82; yy=top-34-(i//4)*11
     txt(k,xx,yy,8.5,True,RED); txt(v,xx+(14 if len(k)>1 else 9),yy,7.6)
 # Situation du BLL au moment du but (un but accordé pendant notre punition = DN)
 txt("Sit. (BLL) :",lx,top-56,7.6,True)
-for i,(k,v) in enumerate([("vide","égalité"),("AN","avantage num."),("DN","désavantage num.")]):
-    xx=lx+46+i*82; txt(k,xx,top-56,8.5,True,RED); txt(v,xx+c.stringWidth(k,"Helvetica-Bold",8.5)+3,top-56,7.6)
-tx=RX+8; tw=RW-16; ty=top-69
+for i,(k,v) in enumerate([("vide","égalité"),("AN","avantage num."),("5v3","double avantage"),
+                          (None,None),("DN","désavantage num."),("3v5","double désavantage")]):
+    if not k: continue
+    xx=lx+46+[0,78,164][i%3]; yy=top-56-(i//3)*11
+    txt(k,xx,yy,8.5,True,RED); txt(v,xx+c.stringWidth(k,"Helvetica-Bold",8.5)+3,yy,7.6)
+tx=RX+8; tw=RW-16; ty=top-80
 cols=[("But",28),("Pér.",40),("Temps",56),("Type",44),("Sit.",36),("Zone : X (filet vu de face)",tw-28-40-56-44-36)]
 xs=[tx]
 for _,w in cols: xs.append(xs[-1]+w)

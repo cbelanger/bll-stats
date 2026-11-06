@@ -11,7 +11,8 @@ const TYPES = [["P", "Pick / écran"], ["T", "Triangle"], ["L", "Tir de loin"], 
 const ZONES = ["HG", "HC", "HD", "CG", "C", "CD", "BG", "BC", "BD"];
 // Situation au moment du but, toujours du point de vue du BLL (un but accordé pendant notre punition = DN).
 // Rien de choisi = égalité : exporté « EG » pour chaque but détaillé.
-const SITS = [["AN", "BLL en AN"], ["DN", "BLL en DN"]];
+// 5v3 / 3v5 : double avantage / désavantage numérique (à 3, on ne défend qu'à 2 dans la zone de ringuette)
+const SITS = [["AN", "BLL en AN"], ["5v3", "BLL 5 c. 3"], ["DN", "BLL en DN"], ["3v5", "BLL 3 c. 5"]];
 const FORMAT = "bll-match-1";
 const CLE = "bll-saisie-match", CLE_PREFS = "bll-saisie-prefs", CLE_PRECEDENT = "bll-saisie-precedent";
 
