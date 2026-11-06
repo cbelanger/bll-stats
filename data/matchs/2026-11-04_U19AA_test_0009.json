@@ -1,6 +1,6 @@
 {
   "format": "bll-match-1",
-  "exporte_le": "2026-11-04T17:43:28.618Z",
+  "exporte_le": "2026-11-06T03:25:05.919Z",
   "source": "saisie",
   "champs": {
     "equipe_U16AA": "",
@@ -41,22 +41,26 @@
     "but_1_temps": "4:44",
     "but_1_type": "E",
     "but_1_zone": "BC",
+    "but_1_sit": "DN",
     "but_1_lieu": "49,28",
     "but_2_periode": "4",
     "but_2_temps": "4:56",
     "but_2_type": "L",
     "but_2_zone": "HD",
-    "but_2_lieu": "57,40",
+    "but_2_sit": "DN",
+    "but_2_lieu": "60,27",
     "but_3_periode": "4",
     "but_3_temps": "2:22",
-    "but_3_type": "",
+    "but_3_type": "T",
     "but_3_zone": "HG",
+    "but_3_sit": "EG",
     "but_3_lieu": "50,30",
     "buts_nous_p2": 1,
     "but_nous_1_periode": "2",
     "but_nous_1_temps": "9:54",
     "but_nous_1_type": "T",
     "but_nous_1_zone": "HC",
+    "but_nous_1_sit": "AN",
     "but_nous_1_lieu": "60,28"
   }
 }
