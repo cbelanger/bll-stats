@@ -179,6 +179,17 @@ dialog.feuille::backdrop { background: var(--voile); }
 .types .puce b { font-size: 1.25rem; color: var(--rouge); }
 .types .puce span { font: 500 .72rem/1.1 var(--texte); }
 .types .puce[aria-pressed="true"] b { color: var(--sur); }
+/* Fiche du but : périodes et situation sur une seule ligne chacune (téléphone de 360 px) */
+.puces.rangee { display: grid; grid-template-columns: repeat(5, 1fr); }
+.puces.rangee .puce { padding: 0; }
+.sits .puce { min-height: 50px; }
+.sits .puce b { font-size: 1.1rem; color: var(--marine); white-space: nowrap; }
+/* Enregistrer toujours à portée du pouce, sans défiler sous la patinoire */
+#f-but .corps { padding-bottom: 0; }
+#f-but .pied-f { position: sticky; bottom: 0; background: var(--surface);
+  margin-inline: -16px; padding: .6rem 16px calc(.6rem + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--trait);
+  display: grid; grid-template-columns: auto 1fr 1.3fr; flex-wrap: nowrap; }
+#f-but .pied-f .btn { padding-inline: .6rem; min-width: 0; }
 .filet {
   display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; max-width: 330px; aspect-ratio: 3 / 2;
   border: 7px solid var(--rouge); border-bottom: 0; border-radius: 4px 4px 0 0;

@@ -12,7 +12,7 @@ const ZONES = ["HG", "HC", "HD", "CG", "C", "CD", "BG", "BC", "BD"];
 // Situation au moment du but, toujours du point de vue du BLL (un but accordé pendant notre punition = DN).
 // Rien de choisi = égalité : exporté « EG » pour chaque but détaillé.
 // 5v3 / 3v5 : double avantage / désavantage numérique (à 3, on ne défend qu'à 2 dans la zone de ringuette)
-const SITS = [["AN", "BLL en AN"], ["5v3", "BLL 5 c. 3"], ["DN", "BLL en DN"], ["3v5", "BLL 3 c. 5"]];
+const SITS = [["AN", "AN", "avantage"], ["5v3", "5 c. 3", "double"], ["DN", "DN", "désavantage"], ["3v5", "3 c. 5", "double"]];
 const FORMAT = "bll-match-1";
 const CLE = "bll-saisie-match", CLE_PREFS = "bll-saisie-prefs", CLE_PRECEDENT = "bll-saisie-precedent";
 
@@ -157,7 +157,7 @@ function afficher() {
 function construireFeuilleBut() {
   $("#fb-per").innerHTML = PER.map(([k, l]) => `<button type="button" class="puce" data-bp="${k}">${l}</button>`).join("");
   $("#fb-types").innerHTML = TYPES.map(([k, l]) => `<button type="button" class="puce" data-bt="${k}"><b>${k}</b><span>${l}</span></button>`).join("");
-  $("#fb-sits").innerHTML = SITS.map(([k, l]) => `<button type="button" class="puce" data-bs="${k}">${l}</button>`).join("");
+  $("#fb-sits").innerHTML = SITS.map(([k, code, l]) => `<button type="button" class="puce" data-bs="${k}"><b>${code}</b><span>${l}</span></button>`).join("");
   $("#fb-zones").innerHTML = ZONES.map(z => `<button type="button" data-bz="${z}">${z}</button>`).join("");
 }
 function majFeuilleBut() {
