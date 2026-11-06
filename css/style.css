@@ -161,6 +161,9 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
   .deroulement tr.but-adv .equipe { color: #F27A87; }
 }
 .code-t { font: 700 .95rem var(--titre); color: var(--rouge); display: inline-block; min-width: 1.6rem; }
+/* Situation du but (AN / DN) dans le Sommaire du match */
+.sit { font: 700 .72rem var(--titre); letter-spacing: .03em; padding: .05rem .3rem; border-radius: 4px;
+  border: 1px solid currentColor; color: var(--doux); vertical-align: 1px; }
 
 /* Tirs par période */
 .periodes { display: grid; grid-template-columns: 4.5rem repeat(5, 1fr) 4rem; gap: 0; }

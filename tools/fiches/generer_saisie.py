@@ -77,16 +77,16 @@ gy=top2-24
 for lab,col in [("RÉUSSIES",NAVY),("RATÉES",RED)]:
     txt(lab,M+8,gy-sch-3,8.2,True,col); gy=grid(M+54,gy,50,25,scw,sch,fs=6.3)-5
 # 3. Nos buts : une colonne par but (période, temps, type, zone) ; les buts accordés vont à la section 4
-NB=10; top3=top2-h2-8; bcw=(LW-16-46)/NB; bh=14.5; zh=24; h3=18+8+13+3*bh+zh+6
-section("3","NOS BUTS",M,top3,LW,h3,"(un but par colonne ; type : codes de la section 4 ; zone : X dans le filet adverse)")
+NB=10; top3=top2-h2-8; bcw=(LW-16-46)/NB; bh=12.5; zh=22; h3=18+8+13+4*bh+zh+6
+section("3","NOS BUTS",M,top3,LW,h3,"(un but par colonne ; type et sit. : codes de la section 4 ; zone : X dans le filet adverse)")
 gx=M+8; gy=top3-24; gw=LW-16
 c.setFillColor(LIGHT); c.rect(gx,gy-13,gw,13,0,1)
 txt("But",gx+5,gy-9.5,8,True)
 for j in range(NB): ctxt(str(j+1),gx+46+j*bcw+bcw/2,gy-9.5,8,True)
-for i,lab in enumerate(["Pér.","Temps","Type"]):
-    ry=gy-13-(i+1)*bh; txt(lab,gx+5,ry+4.5,8.5,True)
+for i,lab in enumerate(["Pér.","Temps","Type","Sit."]):
+    ry=gy-13-(i+1)*bh; txt(lab,gx+5,ry+3.5,8.5,True)
     c.setStrokeColor(LINE); c.setLineWidth(0.5); c.line(gx,ry,gx+gw,ry)
-zy=gy-13-3*bh-zh; txt("Zone",gx+5,zy+zh/2-3,8.5,True)
+zy=gy-13-4*bh-zh; txt("Zone",gx+5,zy+zh/2-3,8.5,True)
 for j in range(NB):
     # mini filet (vue de face) : faire un X dans la zone où l'anneau est entré
     nw,nh=bcw-8,zh-6; nx=gx+46+j*bcw+4; ny=zy+3
@@ -94,7 +94,7 @@ for j in range(NB):
     for k in (1,2): c.line(nx+k*nw/3,ny,nx+k*nw/3,ny+nh); c.line(nx,ny+k*nh/3,nx+nw,ny+k*nh/3)
     c.setDash(); c.setStrokeColor(RED); c.setLineWidth(1.4)
     c.line(nx,ny,nx,ny+nh); c.line(nx,ny+nh,nx+nw,ny+nh); c.line(nx+nw,ny+nh,nx+nw,ny)
-c.setStrokeColor(LINE); c.setLineWidth(0.7); c.rect(gx,zy,gw,13+3*bh+zh)
+c.setStrokeColor(LINE); c.setLineWidth(0.7); c.rect(gx,zy,gw,13+4*bh+zh)
 for j in range(NB): c.line(gx+46+j*bcw,zy,gx+46+j*bcw,gy)
 # 5. Notes
 top5=top3-h3-8; h5=top5-M
@@ -105,13 +105,17 @@ while ly>M+6: c.line(M+8,ly,M+LW-8,ly); ly-=17
 # 4. Buts accordés
 h4=top-M; section("4","BUTS ACCORDÉS",RX,top,RW,h4)
 legend=[("P","Pick/écran"),("T","Triangle"),("L","Tir de loin"),("R","Rebond"),("E","Échappée"),("D","Déviation"),("FC","Fille de coin"),("A","Autre")]
-c.setFillColor(LIGHT); c.roundRect(RX+8,top-50,RW-16,26,4,0,1)
+c.setFillColor(LIGHT); c.roundRect(RX+8,top-61,RW-16,37,4,0,1)
 lx=RX+14
 for i,(k,v) in enumerate(legend):
     xx=lx+(i%4)*82; yy=top-34-(i//4)*11
     txt(k,xx,yy,8.5,True,RED); txt(v,xx+(14 if len(k)>1 else 9),yy,7.6)
-tx=RX+8; tw=RW-16; ty=top-58
-cols=[("But",28),("Pér.",40),("Temps",56),("Type",44),("Zone : X (filet vu de face)",tw-28-40-56-44)]
+# Situation du BLL au moment du but (un but accordé pendant notre punition = DN)
+txt("Sit. (BLL) :",lx,top-56,7.6,True)
+for i,(k,v) in enumerate([("EG","égalité"),("AN","avantage num."),("DN","désavantage num.")]):
+    xx=lx+46+i*82; txt(k,xx,top-56,8.5,True,RED); txt(v,xx+15,top-56,7.6)
+tx=RX+8; tw=RW-16; ty=top-69
+cols=[("But",28),("Pér.",40),("Temps",56),("Type",44),("Sit.",36),("Zone : X (filet vu de face)",tw-28-40-56-44-36)]
 xs=[tx]
 for _,w in cols: xs.append(xs[-1]+w)
 c.setFillColor(LIGHT); c.rect(tx,ty-14,tw,14,0,1)
@@ -123,7 +127,7 @@ for n in range(N):
     c.setStrokeColor(LINE); c.setLineWidth(0.5); c.line(tx,ry,tx+tw,ry)
     ctxt(str(n+1),xs[0]+14,ry+rh/2-3.5,10,True)
     # mini filet
-    nw,nh=74,rh-8; nx=xs[4]+(cols[4][1]-nw)/2; ny=ry+4
+    nw,nh=74,rh-8; nx=xs[5]+(cols[5][1]-nw)/2; ny=ry+4
     c.setStrokeColor(GREY); c.setLineWidth(0.4); c.setDash(1.5,1.5)
     for k in (1,2): c.line(nx+k*nw/3,ny,nx+k*nw/3,ny+nh); c.line(nx,ny+k*nh/3,nx+nw,ny+k*nh/3)
     c.setDash(); c.setStrokeColor(RED); c.setLineWidth(1.8)

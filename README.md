@@ -42,7 +42,8 @@ menu → **Ajouter au téléphone** / **Installer l'application**. Les icônes s
 
 1. Avant le match : toucher le nom du match en haut pour remplir les infos (équipe, adversaire, no de match, gardienne).
 2. Pendant le match : choisir la période, puis compter tirs, buts et sorties de zone (tous notés par période). « + But » (BLL) et « + But accordé »
-   comptent le but (et un tir cadré) tout de suite et ouvrent sa fiche : temps au chrono (845 donne 8:45), type de jeu
+   comptent le but (et un tir cadré) tout de suite et ouvrent sa fiche : période, **situation** (Égalité, BLL en AN,
+   BLL en DN : toujours du point de vue du BLL ; un but accordé pendant notre punition = BLL en DN), temps au chrono (845 donne 8:45), type de jeu
    et zone (filet vu de face ; pour nos buts, le filet adverse), puis, facultatif, **d'où part le but** : toucher l'endroit
    sur la demi-patinoire (filet en haut, vue de la tireuse ; toucher ailleurs déplace le point, « Effacer » le retire).
    Cette position n'existe que dans la saisie téléphone (pas dans le PDF Sommaire). « Plus tard » ferme la fiche sans garder
@@ -165,7 +166,10 @@ Le dépôt est public : tout ce qui est dans `pdf/` et `data/` (y compris les no
   % d'arrêts par période, tendance du % d'arrêts, zones et types de jeu.
 - **Équipe** : fiche V-D-N, moyennes par match, progression de la saison (graphiques match après match : buts,
   tirs cadrés, % de sorties de zone réussies), tirs cadrés moyens par période, buts pour et contre par période,
-  sorties de zone par période, nos buts par type de jeu et par zone (filet adverse), buts accordés par type de jeu et par zone.
+  sorties de zone par période, **buts selon la situation** (à égalité, BLL en avantage ou en désavantage numérique, pour et
+  contre ; aussi dans chaque dossier d'adversaire), nos buts par type de jeu et par zone (filet adverse), buts accordés par type de jeu et par zone.
+  Dans le Sommaire d'un match, un badge AN ou DN suit l'équipe qui a marqué. Le PDF Sommaire et la feuille « Saisie »
+  ont une colonne « Sit. » (EG, AN, DN).
 - Les stats par période ne comptent que les matchs où la période de chaque but est connue ; « – » = donnée non disponible.
 - Bas de page : date de publication du code et date de la dernière exécution de `extract.py`.
 

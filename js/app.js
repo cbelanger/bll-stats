@@ -165,6 +165,20 @@ function carteButs(ms, cle, vide) {
 }
 const aLieux = (ms, cle) => ms.some(m => (m[cle] || []).some(b => b.lieu));
 
+// Situation au moment du but, du point de vue du BLL (EG égalité, AN avantage, DN désavantage numérique)
+const SITS = [["EG", "À égalité"], ["AN", "BLL en avantage numérique"], ["DN", "BLL en désavantage numérique"]];
+const aSits = ms => ms.some(m => [...m.buts_accordes, ...(m.buts_marques || [])].some(b => b.sit));
+function situations(ms) {
+  const compte = (cle, s) => ms.reduce((t, m) => t + (m[cle] || []).filter(b => b.sit === s).length, 0);
+  const lignes = SITS.map(([k, l]) => ({ l, pour: compte("buts_marques", k), contre: compte("buts_accordes", k) }));
+  const pour = lignes.reduce((s, x) => s + x.pour, 0), contre = lignes.reduce((s, x) => s + x.contre, 0);
+  const bp = ms.reduce((s, m) => s + m.buts.nous, 0), bc = ms.reduce((s, m) => s + m.buts.adv, 0);
+  return `<table><thead><tr><th>Situation</th><th class="n">Pour</th><th class="n">Contre</th></tr></thead>
+    <tbody>${lignes.map(x => `<tr><td class="txt">${x.l}</td><td class="n">${x.pour}</td><td class="n">${x.contre}</td></tr>`).join("")}</tbody></table>
+    <p class="sous" style="font-size:.85rem">Situation notée pour ${pour} de nos ${bp} buts et ${contre} des ${bc} buts accordés.
+      « Contre » en désavantage numérique : buts accordés pendant une punition au BLL.</p>`;
+}
+
 /* ---------- Vues */
 function vueMatchs() {
   // Du plus vieux au plus récent
@@ -206,7 +220,7 @@ function deroulement(m) {
     sc[b.eq]++;
     return `<tr class="${b.eq === "nous" ? "but-nous" : "but-adv"}"${b.no != null ? ` data-but="${b.eq}-${b.no}"` : ""}>
       <td>${b.i >= 0 ? PERIODES[b.i][1] : "?"}</td><td>${esc(b.temps || "–")}</td>
-      <td class="txt equipe">${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}</td>
+      <td class="txt equipe">${b.eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire)}${b.sit && b.sit !== "EG" ? ` <span class="sit" title="${b.sit === "AN" ? "BLL en avantage numérique" : "BLL en désavantage numérique"}">${b.sit}</span>` : ""}</td>
       <td class="txt">${b.type ? `<span class="code-t">${b.type}</span><span class="opt">${TYPES[b.type] || ""}</span>` : "–"}</td>
       <td>${esc(b.zone || "")}</td>${complet ? `<td class="n score-c">${sc.nous}–${sc.adv}</td>` : ""}</tr>`;
   }).join("");
@@ -214,6 +228,7 @@ function deroulement(m) {
   return `<div class="defile"><table class="deroulement">
     <thead><tr><th>Pér.</th><th>Temps</th><th>But</th><th>Type de jeu</th><th>Zone</th>${complet ? `<th class="n">Score</th>` : ""}</tr></thead>
     <tbody>${lignes}</tbody></table></div>
+    ${tous.some(b => b.sit === "AN" || b.sit === "DN") ? `<p class="sous" style="font-size:.85rem">AN : BLL en avantage numérique ; DN : BLL en désavantage numérique.</p>` : ""}
     ${complet ? "" : `<p class="sous" style="font-size:.85rem">${manque > 0 ? `${manque} but${manque > 1 ? "s" : ""} sans détail. ` : ""}Ordre approximatif : période ou temps manquant pour certains buts.</p>`}`;
 }
 
@@ -577,6 +592,7 @@ function vueEquipe() {
         ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne Pour, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.</p>
     </section>
   </div>
+  ${aSits(ms) ? `<section class="panneau" style="margin-top:1rem"><h3>Buts selon la situation</h3>${situations(ms)}</section>` : ""}
   ${avecSz.length ? `<section class="panneau" style="margin-top:1rem">
     <h3>Sorties de zone par période</h3>
     <div class="periodes">
@@ -735,6 +751,7 @@ function vueAdversaire(cle) {
       <p class="sous" style="font-size:.85rem">Début : 10:00 à 6:40 au chrono ; milieu : 6:40 à 3:20 ; fin : 3:20 à 0:00. Buts dont le temps est noté.</p>
     </section>
   </div>
+  ${aSits(ms) ? `<section class="panneau" style="margin-top:1rem"><h3>Buts selon la situation</h3>${situations(ms)}</section>` : ""}
   ${detail(ag) ? `<div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Leurs buts par type de jeu</h3>${barresTypes(ag.types, ag.n)}
