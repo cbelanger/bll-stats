@@ -437,7 +437,8 @@ async function telechargerPdf() {
     for (const [nom, v] of Object.entries(c)) {
       const f = form.getFieldMaybe(nom);
       if (!f) continue;
-      const val = v == null ? "" : String(v);
+      // Situation : à égalité = case vide dans le PDF (légende « vide = égalité »)
+      const val = v == null || (nom.endsWith("_sit") && v === "EG") ? "" : String(v);
       if (f instanceof PDFLib.PDFCheckBox) { val ? f.check() : f.uncheck(); continue; }
       if (f instanceof PDFLib.PDFDropdown) {
         if (!val) continue;
