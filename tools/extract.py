@@ -146,6 +146,10 @@ def nom_fichier(m):
 
 def lire_pdf(pdf):
     brut = {k: v.get("/V") for k, v in (PdfReader(pdf).get_fields() or {}).items()}
+    # Scan, photo, PDF « imprimé » ou PDF aplati de la saisie : aucun champ à lire
+    if "equipe_U16AA" not in brut and "adversaire" not in brut:
+        return None, ["PDF sans champs remplissables (scan, image, PDF imprimé ou PDF Sommaire de la saisie) : "
+                      "déposer le Sommaire remplissable rempli dans Acrobat, ou le .json de la saisie dans data/matchs/"], [], {}
     # Valeurs en texte, sans les champs vides ni les zones calculées du filet (zone_HG…)
     champs = {k: texte(brut, k) for k in brut if texte(brut, k) and not k.startswith("zone_")}
     # Sommaire avec la colonne « Sit. » : case vide = à égalité (un ancien Sommaire, sans ces champs, reste sans situation)

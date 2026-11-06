@@ -18,7 +18,7 @@ Une seule personne (l'admin) publie les données ; le site est en lecture seule.
 |---|---|
 | Ajouter un match saisi sur téléphone | Saisie → « Terminer » → « Télécharger le fichier » → déposer le `.json` dans `data/matchs/` |
 | Ajouter un match reçu d'un parent | Vérifier le `.json` reçu (courriel, texto), puis le déposer dans `data/matchs/` |
-| Ajouter un match en PDF | Déposer le Sommaire rempli dans `pdf/` : GitHub Actions le convertit et le range dans `pdf/archives/` |
+| Ajouter un match en PDF | Déposer dans `pdf/` le Sommaire **remplissable** rempli dans Acrobat (PDF avec champs, pas un scan ni une image) : GitHub Actions le convertit et le range dans `pdf/archives/` |
 | Corriger un match | Saisie admin → menu ☰ → « Ouvrir un match du site… » → corriger → « Terminer » → déposer (même nom, remplace l'ancien) |
 | Compléter un but (temps, type, zone, situation…) | L'ouvrir dans la saisie → toucher la ligne du but dans « Buts du match » |
 | Placer par période les buts d'un vieux match | L'ouvrir dans la saisie : « sans période n » s'affiche ; choisir la période, puis « + » (but BLL ou accordé) place un de ces buts sans changer le score et ouvre sa fiche ; « − » le remet sans période |
@@ -115,6 +115,13 @@ alors dans `data/matchs/` : le plus récemment exporté est gardé (avertissemen
 renommer le nouveau sans « (1) ». Pour l'éviter : supprimer l'ancien fichier de Téléchargements avant de télécharger.
 
 ## Ajouter un match en PDF
+
+> **Le PDF déposé doit avoir ses champs remplis** : c'est le Sommaire remplissable
+> (`fiches/BLL - Statistiques - Sommaire - Match.pdf`), rempli dans Acrobat Reader puis enregistré avec
+> **Fichier → Enregistrer**. `extract.py` lit les **champs**, pas ce qui est dessiné sur la page. Ne fonctionnent donc pas :
+> un scan ou une photo de la feuille, un PDF « imprimé » (Imprimer → Microsoft Print to PDF, Enregistrer en PDF),
+> un PDF aplati, ni le PDF Sommaire téléchargé depuis la saisie (pour celui-ci, déposer le `.json`).
+> Un tel PDF est refusé (« PDF sans champs remplissables ») et reste dans `pdf/`.
 
 1. Pendant le match : noter les données sur la feuille papier `fiches/BLL - Statistiques - Saisie - Match.pdf` (paysage) :
    section 1 tirs cadrés et section 2 sorties de zone (grilles à barrer ; un trait épais marque la fin de chaque période),
@@ -234,7 +241,7 @@ La saisie a son propre cache hors ligne (`sw-saisie.js`) : incrémenter `CACHE` 
 
 ### Messages de `extract.py`
 
-- **erreur** (match ignoré) : aucune ou deux équipes cochées, date invalide, adversaire ou score manquant,
+- **erreur** (match ignoré) : PDF sans champs remplissables (scan, image, PDF imprimé ou aplati), aucune ou deux équipes cochées, date invalide, adversaire ou score manquant,
   plus de buts accordés que de tirs cadrés adverses, plus de sorties de zone réussies que de tentatives,
   fichier JSON illisible ou de format inconnu.
 - **attention** (match publié quand même) : numéro de match ou gardienne manquant, gardienne absente de
