@@ -21,7 +21,7 @@ Une seule personne (l'admin) publie les données ; le site est en lecture seule.
 | Ajouter un match en PDF | Déposer dans `pdf/` le Sommaire **remplissable** rempli dans Acrobat (PDF avec champs, pas un scan ni une image) : GitHub Actions le convertit et le range dans `pdf/archives/` |
 | Corriger un match | Saisie admin → menu ☰ → « Ouvrir un match du site… » → corriger → « Terminer » → déposer (même nom, remplace l'ancien) |
 | Compléter un but (temps, type, zone, situation…) | L'ouvrir dans la saisie → toucher la ligne du but dans « Buts du match » |
-| Placer par période les buts d'un vieux match | L'ouvrir dans la saisie : « sans période n » s'affiche ; choisir la période, puis « + » (but BLL ou accordé) place un de ces buts sans changer le score et ouvre sa fiche ; « − » le remet sans période |
+| Placer par période les buts d'un vieux match | L'ouvrir dans la saisie : « sans période n » s'affiche ; choisir la période, puis « + » (but BLL ou accordé) place un de ces buts sans changer le score et ouvre sa fiche |
 | Retraiter un PDF | Le recopier de `pdf/archives/` vers `pdf/` : il remplace le fichier du même match |
 | Supprimer un match (ex. le match test) | Supprimer son fichier dans `data/matchs/` (sur GitHub : ouvrir le fichier → ··· → Delete file) |
 | Ajouter une gardienne | Voir [Ajouter une gardienne](#ajouter-une-gardienne) |
@@ -63,7 +63,8 @@ ou « Autre » avec nom et numéro) et responsable des stats.
 ### Pendant le match
 
 1. Choisir la **période** en haut (P1 à P4, Prol.). Tout est noté par période.
-2. **Tirs cadrés** : « + Tir » pour nous et pour l'adversaire ; « − » retire un tir de la période.
+2. **Tirs cadrés** : « + Tir » pour nous et pour l'adversaire (son nom s'affiche dès qu'il est inscrit dans les infos) ;
+   « − » retire un tir de la période.
 3. **Sorties de zone** : « ✓ Réussie » ou « ✗ Ratée ».
 4. **Buts** : « + But » (BLL) et « + But accordé » comptent le but **et un tir cadré** tout de suite, puis ouvrent la fiche du but :
    - **période** (celle en cours, déjà choisie) ;
@@ -78,7 +79,8 @@ ou « Autre » avec nom et numéro) et responsable des stats.
    Les boutons **Supprimer / Plus tard / Enregistrer** restent visibles au bas de la fiche. « Plus tard » ferme la fiche
    sans garder les choix ; le but reste compté. Toucher la ligne d'un but dans « Buts du match » rouvre sa fiche
    (lignes BLL en bleu ; AN, 5v3, DN ou 3v5 s'affiche à côté de la zone).
-5. **Annuler** (en bas) défait la dernière action ; **Notes** pour un commentaire.
+5. **Retirer un but** : toucher sa ligne dans « Buts du match » → Supprimer (le tir compté avec lui est retiré aussi).
+   **Annuler** (en bas) défait la dernière action ; **Notes** pour un commentaire.
 
 Tout reste dans le téléphone (localStorage), même sans réseau, en rechargeant la page ou en fermant l'application.
 L'écran reste allumé pendant la saisie si le navigateur le permet.

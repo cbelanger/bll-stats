@@ -54,7 +54,7 @@
           </div>
         </div>
         <div class="cote adv">
-          <div class="haut"><span class="etiq">Adv.</span><span class="total" id="tot-adv">0</span></div>
+          <div class="haut"><span class="etiq" id="etiq-adv">Adv.</span><span class="total" id="tot-adv">0</span></div>
           <div class="detail" id="det-adv"></div>
           <div class="actions">
             <button type="button" class="moins" data-act="tir-moins" data-c="adv" aria-label="Retirer un tir adverse">−</button>
@@ -92,8 +92,7 @@
         <div class="cote nous">
           <div class="haut"><span class="etiq">Nous</span><span class="total" id="bn">0</span></div>
           <div class="detail" id="det-bn"></div>
-          <div class="actions">
-            <button type="button" class="moins" data-act="but-nous-moins" aria-label="Retirer un but BLL de la période">−</button>
+          <div class="actions seul">
             <button type="button" class="plus" data-act="but-nous">+ But</button>
           </div>
         </div>
@@ -110,6 +109,7 @@
     <section class="carte" aria-labelledby="h-ba">
       <h2 id="h-ba">Buts du match <span id="gard"></span></h2>
       <ol class="liste" id="liste"></ol>
+      <p class="aide" id="aide-liste" hidden>Toucher un but pour le compléter ou le supprimer.</p>
       <p class="note" id="note-liste" hidden></p>
     </section>
   </main>

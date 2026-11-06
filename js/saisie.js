@@ -23,7 +23,7 @@ const vide = () => ({ p1: 0, p2: 0, p3: 0, p4: 0, prol: 0 });
 // Période inconnue (buts BLL d'un match venu d'un PDF) : comptée dans le total seulement
 const compteP = arr => { const o = vide(); arr.forEach(b => { if (b.periode in o) o[b.periode]++; }); return o; };
 // Buts sans période (match rouvert) : « + » dans une période en place un au lieu d'en ajouter un.
-// place = but placé ainsi : score et tirs inchangés ; « − » le remet sans période.
+// place = but placé ainsi : score et tirs inchangés. Retirer un but : sa fiche (« Buts du match ») → Supprimer.
 const sansPeriode = arr => arr.filter(b => !b.periode).length;
 // Le but a-t-il ajouté un tir dans sa période ? Oui en saisie en direct ; non pour un but placé
 // ou un match venu d'un PDF (tirs comptés à part sur papier) : changer sa période ne touche pas aux tirs.
@@ -109,6 +109,7 @@ function detail(o) {
 function afficher() {
   $("#t-equipe").textContent = S.equipe;
   $("#t-adv").textContent = S.adversaire || "adversaire ?";
+  $("#etiq-adv").textContent = S.adversaire || "Adv.";   // tirs cadrés : nom de l'adversaire dès qu'il est connu
   $("#score").textContent = `${S.butsNous.length}–${S.butsAdv.length}`;
   document.querySelectorAll("#periodes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === S.periode));
   $("#per-cour").textContent = nomP(S.periode);
@@ -141,7 +142,8 @@ function afficher() {
       <span>${b.zone || m}${b.sit && b.sit !== "EG" ? ` ${b.sit}` : ""}</span><span class="fl" aria-hidden="true">›</span>
     </button></li>`).join("")
     : `<li class="vide">Aucun but. Touche « + But » ou « + But accordé » au moment du but.</li>`;
-  const incomplets = S.butsAdv.filter(b => !b.temps || !b.type || !b.zone).length + S.butsNous.filter(b => !b.temps || !b.type || !b.zone).length;
+  $("#aide-liste").hidden = !tous.length;
+  const incomplets =S.butsAdv.filter(b => !b.temps || !b.type || !b.zone).length + S.butsNous.filter(b => !b.temps || !b.type || !b.zone).length;
   $("#note-liste").textContent = incomplets ? `${incomplets} but${incomplets > 1 ? "s" : ""} à compléter (?) : touche la ligne quand le jeu est arrêté.` : "";
   $("#note-liste").hidden = !incomplets;
 
@@ -548,17 +550,6 @@ document.addEventListener("click", e => {
       // Comme un but accordé : compte tout de suite, temps et type maintenant ou plus tard
       action(`But BLL ${lp}`, () => { S.butsNous.push({ periode: P, temps: "", type: "", zone: "" }); S.tirs.nous[P]++; }, true);
       ouvrirBut("nous", S.butsNous.length - 1);
-      break;
-    }
-    case "but-nous-moins": {
-      const i = S.butsNous.map(x => x.periode).lastIndexOf(P);
-      if (i < 0) { toast(`Aucun but BLL en ${lp} à retirer.`); break; }
-      if (!tirLie(S.butsNous[i])) {
-        action(`But BLL remis sans période`, () => { S.butsNous[i] = { periode: null }; });
-        toast("But remis sans période (score inchangé)");
-        break;
-      }
-      action(`Retrait but BLL ${lp}`, () => { S.butsNous.splice(i, 1); S.tirs.nous[P] = Math.max(0, S.tirs.nous[P] - 1); });
       break;
     }
     case "but-adv": {

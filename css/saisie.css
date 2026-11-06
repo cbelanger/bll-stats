@@ -85,11 +85,13 @@ main {
   margin: 0 0 .45rem; font: 700 1rem/1.1 var(--titre); letter-spacing: .07em; text-transform: uppercase; color: var(--doux);
 }
 .carte h2 span { font-weight: 600; letter-spacing: .02em; text-transform: none; }
-.deux { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
-.cote { min-width: 0; display: grid; gap: .3rem; }
+.deux { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .6rem; }
+.cote { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: .3rem; }
 .haut { display: flex; align-items: baseline; justify-content: space-between; gap: .4rem; }
 .etiq { font: 700 1rem/1 var(--titre); letter-spacing: .06em; text-transform: uppercase; color: var(--marine); }
 .adv .etiq { color: var(--rouge); }
+/* Nom de l'adversaire à la place de « Adv. » : coupé avec « … » s'il est trop long */
+#etiq-adv { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .total { font: 700 2.3rem/1 var(--titre); font-variant-numeric: tabular-nums; }
 .detail { font-size: .8rem; color: var(--doux); font-variant-numeric: tabular-nums; min-height: 1.15em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .detail b { color: var(--encre); font-weight: 600; }
