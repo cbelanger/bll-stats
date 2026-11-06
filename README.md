@@ -1,13 +1,13 @@
 # BLL Élite – Statistiques de match
 
 Site statique (GitHub Pages) qui affiche les statistiques des équipes U16AA et U19AA du BLL Élite (ringuette).
-Une seule personne (Christian) publie les données ; le site est en lecture seule.
+Une seule personne (l'admin) publie les données ; le site est en lecture seule.
 
 | Adresse | Pour qui |
 |---|---|
 | <https://cbelanger.github.io/bll-stats/> | Le site (coachs, direction) |
 | <https://cbelanger.github.io/bll-stats/saisie.html> | Saisie d'un match sur téléphone (parents, marqueurs) |
-| <https://cbelanger.github.io/bll-stats/saisie.html?gestion=1> | Saisie de Christian, avec dépôt GitHub (application « BLL Gestion ») |
+| <https://cbelanger.github.io/bll-stats/saisie.html?gestion=1> | Saisie admin, avec dépôt GitHub (application « BLL Gestion ») |
 
 **Un match = un fichier** dans `data/matchs/`, nommé `AAAA-MM-JJ_EQUIPE_adversaire_no.json`
 (ex. `2026-10-31_U19AA_ontario-rush_2016.json`). C'est la seule source des données.
@@ -19,7 +19,7 @@ Une seule personne (Christian) publie les données ; le site est en lecture seul
 | Ajouter un match saisi sur téléphone | Saisie → « Terminer » → « Télécharger le fichier » → déposer le `.json` dans `data/matchs/` |
 | Ajouter un match reçu d'un parent | Vérifier le `.json` reçu (courriel, texto), puis le déposer dans `data/matchs/` |
 | Ajouter un match en PDF | Déposer le Sommaire rempli dans `pdf/` : GitHub Actions le convertit et le range dans `pdf/archives/` |
-| Corriger un match | Saisie gestion → menu ☰ → « Ouvrir un match du site… » → corriger → « Terminer » → déposer (même nom, remplace l'ancien) |
+| Corriger un match | Saisie admin → menu ☰ → « Ouvrir un match du site… » → corriger → « Terminer » → déposer (même nom, remplace l'ancien) |
 | Compléter un but (temps, type, zone, situation…) | L'ouvrir dans la saisie → toucher la ligne du but dans « Buts du match » |
 | Placer par période les buts d'un vieux match | L'ouvrir dans la saisie : « sans période n » s'affiche ; choisir la période, puis « + » (but BLL ou accordé) place un de ces buts sans changer le score et ouvre sa fiche ; « − » le remet sans période |
 | Retraiter un PDF | Le recopier de `pdf/archives/` vers `pdf/` : il remplace le fichier du même match |
@@ -37,14 +37,14 @@ Feuille papier ──► Sommaire PDF ──► pdf/ ───┘        (GitHub
 
 ## Saisir un match sur téléphone
 
-### Deux adresses : parents et gestion
+### Deux adresses : parents et admin
 
 - **Parents** : <https://cbelanger.github.io/bll-stats/saisie.html>. Ni lien vers GitHub, ni « Ouvrir un match du site »,
   ni « Copier le contenu ». Après « Terminer », la page demande de télécharger le fichier `.json` et de l'envoyer
-  à Christian (courriel ou texto, en pièce jointe) ; un avertissement rappelle d'inscrire son nom (Responsable des stats).
-- **Gestion** (Christian) : <https://cbelanger.github.io/bll-stats/saisie.html?gestion=1>, avec le lien de dépôt GitHub,
+  à l'admin (courriel ou texto, en pièce jointe) ; un avertissement rappelle d'inscrire son nom (Responsable des stats).
+- **Admin** : <https://cbelanger.github.io/bll-stats/saisie.html?gestion=1>, avec le lien de dépôt GitHub,
   « Ouvrir un match du site » et « Copier le contenu ». Installée depuis cette adresse, c'est une application distincte,
-  « BLL Gestion » (`saisie-gestion.webmanifest`), qui s'ouvre toujours en gestion.
+  « BLL Gestion » (`saisie-gestion.webmanifest`), qui s'ouvre toujours en mode admin.
 
 Les deux adresses partagent le même match en cours sur un même téléphone. Ce partage ne protège rien : il simplifie
 seulement la page des parents (sans identifiants, personne ne peut déposer sur GitHub). Le site lui-même ne renvoie
@@ -89,8 +89,8 @@ L'écran reste allumé pendant la saisie si le navigateur le permet.
    manquant, plus de buts que de tirs…) ; **jaune** = à vérifier, on peut continuer (no de match, gardienne, buts
    accordés sans type ou zone, nom du responsable…).
 2. « **Télécharger le fichier** » : le `.json` va dans Téléchargements.
-   - Parents : l'envoyer à Christian.
-   - Gestion : « Ouvrir la page de dépôt GitHub » → choisir le fichier dans Téléchargements → « Commit changes ».
+   - Parents : l'envoyer à l'admin.
+   - Admin : « Ouvrir la page de dépôt GitHub » → choisir le fichier dans Téléchargements → « Commit changes ».
      GitHub Actions publie le site en 1 à 2 minutes.
 3. Facultatif : « **Télécharger aussi le PDF Sommaire** » : la fiche Sommaire remplie avec les données du match, pour
    archiver ou partager. Elle est **aplatie** (aucun champ modifiable) et **ne peut pas être importée** : seul le `.json`
@@ -99,7 +99,7 @@ L'écran reste allumé pendant la saisie si le navigateur le permet.
 4. Match suivant : bandeau vert « Nouveau match », ou menu ☰ → « Nouveau match ». Un match pas encore exporté est mis
    de côté (un seul) : menu ☰ → « Récupérer le match précédent » le remet en place.
 
-### Corriger un match publié (gestion)
+### Corriger un match publié (admin)
 
 Menu ☰ → « Ouvrir un match du site… » recharge n'importe quel fichier de `data/matchs/` ; « Terminer » le réexporte
 **sous le même nom** : déposé dans `data/matchs/`, il remplace l'ancien.
@@ -269,7 +269,7 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `js/patinoire.js` | Dessin de la demi-patinoire (site et saisie) |
 | `saisie.html`, `css/saisie.css`, `js/saisie.js` | Page de saisie sur téléphone |
 | `sw-saisie.js` | Cache hors ligne de la saisie (incrémenter `CACHE` à chaque modification) |
-| `saisie.webmanifest`, `saisie-gestion.webmanifest`, `assets/icones/` | Installation de la saisie comme application (parents, gestion) |
+| `saisie.webmanifest`, `saisie-gestion.webmanifest`, `assets/icones/` | Installation de la saisie comme application (parents, admin) |
 | `js/vendor/pdf-lib.min.js` | [pdf-lib](https://pdf-lib.js.org/) 1.17.1 (licence MIT, `js/vendor/pdf-lib-LICENSE.md`) : remplit le PDF Sommaire dans la saisie |
 | `data/matchs/` | **Un fichier JSON par match (source des données)** |
 | `data/gardiennes.json` | Liste officielle des gardiennes (nom, numéro, équipe) — éditée à la main |
