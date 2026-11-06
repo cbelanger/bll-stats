@@ -9,8 +9,9 @@ const PER = [["p1", "P1"], ["p2", "P2"], ["p3", "P3"], ["p4", "P4"], ["prol", "P
 const TYPES = [["P", "Pick / écran"], ["T", "Triangle"], ["L", "Tir de loin"], ["R", "Rebond"],
                ["E", "Échappée"], ["D", "Déviation"], ["FC", "Fille de coin"], ["A", "Autre"]];
 const ZONES = ["HG", "HC", "HD", "CG", "C", "CD", "BG", "BC", "BD"];
-// Situation au moment du but, toujours du point de vue du BLL (un but accordé pendant notre punition = DN)
-const SITS = [["EG", "Égalité"], ["AN", "BLL en AN"], ["DN", "BLL en DN"]];
+// Situation au moment du but, toujours du point de vue du BLL (un but accordé pendant notre punition = DN).
+// Rien de choisi = égalité : exporté « EG » pour chaque but détaillé.
+const SITS = [["AN", "BLL en AN"], ["DN", "BLL en DN"]];
 const FORMAT = "bll-match-1";
 const CLE = "bll-saisie-match", CLE_PREFS = "bll-saisie-prefs", CLE_PRECEDENT = "bll-saisie-precedent";
 
@@ -261,7 +262,7 @@ function champs() {
     const n = i + 1;
     c[`but_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
     c[`but_${n}_temps`] = b.temps; c[`but_${n}_type`] = b.type; c[`but_${n}_zone`] = b.zone;
-    if (b.sit) c[`but_${n}_sit`] = b.sit;
+    c[`but_${n}_sit`] = b.sit || "EG";
     if (b.lieu) c[`but_${n}_lieu`] = b.lieu;
   });
   // Buts BLL : nombre par période, et une ligne par but détaillé (période, temps, type, zone du filet adverse)
@@ -272,7 +273,7 @@ function champs() {
     const n = i + 1;
     c[`but_nous_${n}_periode`] = !b.periode ? "" : b.periode === "prol" ? "Prol." : b.periode.slice(1);
     c[`but_nous_${n}_temps`] = b.temps || ""; c[`but_nous_${n}_type`] = b.type || ""; c[`but_nous_${n}_zone`] = b.zone || "";
-    if (b.sit) c[`but_nous_${n}_sit`] = b.sit;
+    c[`but_nous_${n}_sit`] = b.sit || "EG";
     if (b.lieu) c[`but_nous_${n}_lieu`] = b.lieu;
   });
   return c;
@@ -379,10 +380,7 @@ function verifications() {
   const sp = sansPeriode(S.butsNous) + sansPeriode(S.butsAdv);
   if (sp) v.push(["av", `${sp} but${sp > 1 ? "s" : ""} sans période (choisir la période, puis « + »).`]);
   const inc = S.butsAdv.filter(b => !b.type || !b.zone).length;
-  if (inc) v.push(["av", `${inc} but${inc > 1 ? "s" : ""} accordé${inc > 1 ? "s" : ""} sans type ou zone.`]);
-  const sansSit = S.butsNous.concat(S.butsAdv).filter(b => !b.sit).length;
-  if (sansSit) v.push(["av", `${sansSit} but${sansSit > 1 ? "s" : ""} sans situation (égalité, AN ou DN).`]);
-  if (!v.length) v.push(["ok", "Tout est complet."]);
+  if (inc) v.push(["av", `${inc} but${inc > 1 ? "s" : ""} accordé${inc > 1 ? "s" : ""} sans type ou zone.`]);  if (!v.length) v.push(["ok", "Tout est complet."]);
   return v;
 }
 function ouvrirTerminer() {

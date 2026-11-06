@@ -112,8 +112,8 @@ for i,(k,v) in enumerate(legend):
     txt(k,xx,yy,8.5,True,RED); txt(v,xx+(14 if len(k)>1 else 9),yy,7.6)
 # Situation du BLL au moment du but (un but accordé pendant notre punition = DN)
 txt("Sit. (BLL) :",lx,top-56,7.6,True)
-for i,(k,v) in enumerate([("EG","égalité"),("AN","avantage num."),("DN","désavantage num.")]):
-    xx=lx+46+i*82; txt(k,xx,top-56,8.5,True,RED); txt(v,xx+15,top-56,7.6)
+for i,(k,v) in enumerate([("vide","égalité"),("AN","avantage num."),("DN","désavantage num.")]):
+    xx=lx+46+i*82; txt(k,xx,top-56,8.5,True,RED); txt(v,xx+c.stringWidth(k,"Helvetica-Bold",8.5)+3,top-56,7.6)
 tx=RX+8; tw=RW-16; ty=top-69
 cols=[("But",28),("Pér.",40),("Temps",56),("Type",44),("Sit.",36),("Zone : X (filet vu de face)",tw-28-40-56-44-36)]
 xs=[tx]

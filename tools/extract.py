@@ -145,6 +145,11 @@ def lire_pdf(pdf):
     brut = {k: v.get("/V") for k, v in (PdfReader(pdf).get_fields() or {}).items()}
     # Valeurs en texte, sans les champs vides ni les zones calculées du filet (zone_HG…)
     champs = {k: texte(brut, k) for k in brut if texte(brut, k) and not k.startswith("zone_")}
+    # Sommaire avec la colonne « Sit. » : case vide = à égalité (un ancien Sommaire, sans ces champs, reste sans situation)
+    if any(re.fullmatch(r"but_(?:nous_)?\d+_sit", k) for k in brut):
+        for k in list(champs):
+            if m := re.fullmatch(r"(but_(?:nous_)?\d+)_(?:periode|temps|type|zone)", k):
+                champs.setdefault(f"{m.group(1)}_sit", "EG")
     m, erreurs, avertissements = valider(champs)
     return m, erreurs, avertissements, champs
 
