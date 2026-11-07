@@ -54,6 +54,10 @@ jamais vers la saisie ni vers GitHub.
 **Installer l'application**. La page fonctionne ensuite **sans réseau** (aréna) si elle a été ouverte une fois avec du réseau.
 Après une mise à jour de la saisie, l'ouvrir avec du réseau, puis la fermer et la rouvrir pour charger la nouvelle version.
 
+**Page d'aide** : <https://cbelanger.github.io/bll-stats/aide.html>, aussi dans la saisie par menu ☰ → « Aide : comment faire
+la saisie ». Elle s'adresse aux parents (avant, pendant et après le match, fiche d'un but, codes, problèmes fréquents),
+fonctionne sans réseau et ramène à la saisie dans le même mode. À tenir à jour quand la saisie change.
+
 ### Avant le match
 
 Toucher le nom du match en haut pour remplir les infos : équipe (U16AA ou U19AA), adversaire, date, no de match
@@ -277,6 +281,7 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `index.html`, `css/style.css`, `js/app.js` | Le site (JavaScript sans dépendance, aucune étape de build) |
 | `js/patinoire.js` | Dessin de la demi-patinoire (site et saisie) |
 | `saisie.html`, `css/saisie.css`, `js/saisie.js` | Page de saisie sur téléphone |
+| `aide.html` | Page d'aide de la saisie (styles dans `css/saisie.css`) |
 | `sw-saisie.js` | Cache hors ligne de la saisie (incrémenter `CACHE` à chaque modification) |
 | `saisie.webmanifest`, `saisie-gestion.webmanifest`, `assets/icones/` | Installation de la saisie comme application (parents, admin) |
 | `js/vendor/pdf-lib.min.js` | [pdf-lib](https://pdf-lib.js.org/) 1.17.1 (licence MIT, `js/vendor/pdf-lib-LICENSE.md`) : remplit le PDF Sommaire dans la saisie |

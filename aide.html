@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#16336B">
+  <title>BLL Élite – Aide de la saisie</title>
+  <link rel="icon" href="assets/icones/saisie-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/saisie.css">
+</head>
+<body class="page-aide">
+  <header class="tete">
+    <div class="tete-in ligne1">
+      <a class="retour" id="retour" href="saisie.html">‹ Saisie</a>
+      <h1>Aide</h1>
+    </div>
+  </header>
+
+  <main>
+    <nav class="carte sommaire-aide" aria-label="Sections">
+      <a href="#avant">Avant le match</a>
+      <a href="#pendant">Pendant le match</a>
+      <a href="#but">Fiche d’un but</a>
+      <a href="#codes">Codes</a>
+      <a href="#fin">À la fin</a>
+      <a href="#faq">Problèmes</a>
+    </nav>
+
+    <section class="carte" id="avant">
+      <h2>Avant d’arriver à l’aréna</h2>
+      <p>Ouvre la saisie <b>une fois avec du réseau</b> (à la maison). Ensuite, elle fonctionne même sans réseau dans l’aréna.</p>
+      <p>Pour l’avoir comme une application : menu du navigateur (⋮) → <b>Ajouter à l’écran d’accueil</b>.</p>
+
+      <h2>Avant le match</h2>
+      <p>Touche le nom du match en haut de l’écran <span class="t c">U19AA contre adversaire ? ✎</span> et remplis :</p>
+      <ul>
+        <li>l’<b>équipe</b> (U16AA ou U19AA) et l’<b>adversaire</b> ;</li>
+        <li>la <b>date</b> et le <b>no de match</b> (le lien <b>LERQ</b> ouvre l’horaire officiel) ;</li>
+        <li>la <b>gardienne</b> (« Autre » si elle n’est pas dans la liste) ;</li>
+        <li><b>ton nom</b> (Responsable des stats).</li>
+      </ul>
+      <p>Puis <span class="t">Enregistrer</span>. Tu peux corriger ces infos à tout moment en touchant de nouveau le nom du match.</p>
+    </section>
+
+    <section class="carte" id="pendant">
+      <h2>Pendant le match</h2>
+      <ol class="etapes-aide">
+        <li><b>Choisis la période</b> en haut : <span class="t r">P1</span> <span class="t c">P2</span> … <span class="t c">Prol.</span>
+          Tout ce que tu comptes va dans la période choisie : pense à la changer au début de chaque période.</li>
+        <li><b>Tirs cadrés</b> : <span class="t">+ Tir</span> pour nous, <span class="t r">+ Tir</span> pour l’adversaire.
+          Un tir cadré, c’est un tir qui aurait pu entrer sans la gardienne (ou qui entre). Un tir à côté ou bloqué par une joueuse ne compte pas.</li>
+        <li><b>Sorties de zone</b> : <span class="t v">✓ Réussie</span> quand l’équipe sort l’anneau de sa zone en contrôle
+          ou par une passe complétée ; sinon <span class="t n">✗ Ratée</span>.</li>
+        <li><b>Buts</b> : <span class="t">+ But</span> pour nous, <span class="t r">+ But accordé</span> pour l’adversaire.
+          Le but compte <b>aussi un tir cadré</b> : n’ajoute pas de tir en plus. La fiche du but s’ouvre (voir plus bas).</li>
+      </ol>
+      <p>Une erreur ? <span class="t c">−</span> retire un tir ou une sortie de la période choisie, et <span class="t c">↶ Annuler</span>
+        (en bas) défait la dernière action, quelle qu’elle soit.</p>
+      <p><span class="t c">Notes</span> sert à écrire un commentaire (ex. « but 2 : passe derrière le filet »).</p>
+      <p>Tout est enregistré dans le téléphone au fur et à mesure : rien n’est perdu si l’écran s’éteint ou si la page se ferme.</p>
+    </section>
+
+    <section class="carte" id="but">
+      <h2>La fiche d’un but</h2>
+      <p>Elle s’ouvre après <span class="t">+ But</span> ou <span class="t r">+ But accordé</span>. Remplis ce que tu peux ;
+        si le jeu repart trop vite, touche <span class="t c">Plus tard</span> : le but reste compté.</p>
+      <dl class="champs-aide">
+        <dt>Période</dt><dd>Déjà choisie (celle en cours).</dd>
+        <dt>Situation du BLL</dt><dd>Seulement s’il y a une punition : <span class="t c">AN</span>, <span class="t c">5 c. 3</span>,
+          <span class="t c">DN</span> ou <span class="t c">3 c. 5</span> (voir les codes). <b>Rien de choisi = à égalité.</b></dd>
+        <dt>Temps au chrono</dt><dd>Tape seulement les chiffres : <b>845</b> donne <b>8:45</b>. Le chrono descend (10:00 → 0:00).</dd>
+        <dt>Type de jeu</dt><dd>Comment le but a été marqué (voir les codes).</dd>
+        <dt>Zone</dt><dd>Où l’anneau est entré dans le filet, <b>vu de face</b>. Pour nos buts : le filet de l’adversaire.</dd>
+        <dt>D’où part le but</dt><dd>Facultatif : touche l’endroit sur la patinoire (filet en haut). Toucher ailleurs déplace le point.</dd>
+      </dl>
+      <p>Termine par <span class="t">Enregistrer</span>.</p>
+      <p><b>Compléter ou retirer un but plus tard</b> : touche sa ligne dans « Buts du match » (en bas de l’écran) ;
+        sa fiche se rouvre. <span class="t c rouge">Supprimer</span> retire le but et le tir compté avec lui.</p>
+    </section>
+
+    <section class="carte" id="codes">
+      <h2>Les codes</h2>
+      <h3>Situation du BLL (toujours de notre point de vue)</h3>
+      <table class="codes">
+        <tr><th>rien</th><td>À égalité (le cas le plus fréquent)</td></tr>
+        <tr><th>AN</th><td>Avantage numérique : l’adversaire a une punition</td></tr>
+        <tr><th>5 c. 3</th><td>Double avantage : l’adversaire a deux punitions</td></tr>
+        <tr><th>DN</th><td>Désavantage numérique : nous avons une punition</td></tr>
+        <tr><th>3 c. 5</th><td>Double désavantage : nous avons deux punitions</td></tr>
+      </table>
+      <p class="astuce">Un but de l’adversaire pendant <b>notre</b> punition, c’est <b>DN</b> (pas AN).</p>
+
+      <h3>Types de jeu</h3>
+      <table class="codes">
+        <tr><th>P</th><td>Pick / tir après un écran ou un blocage</td></tr>
+        <tr><th>T</th><td>Entrée dans le triangle</td></tr>
+        <tr><th>L</th><td>Tir de loin</td></tr>
+        <tr><th>R</th><td>Rebond</td></tr>
+        <tr><th>E</th><td>Échappée : joueuse seule devant la gardienne</td></tr>
+        <tr><th>D</th><td>Déviation</td></tr>
+        <tr><th>FC</th><td>Fille de coin</td></tr>
+        <tr><th>A</th><td>Autre (expliquer dans les Notes)</td></tr>
+      </table>
+
+      <h3>Zones du filet (vu de face)</h3>
+      <div class="filet filet-aide" aria-label="Zones du filet vu de face">
+        <span>HG</span><span>HC</span><span>HD</span><span>CG</span><span>C</span><span>CD</span><span>BG</span><span>BC</span><span>BD</span>
+      </div>
+      <p>H = haut, C = centre, B = bas ; G = gauche, D = droite (vu de face, comme la personne qui regarde le filet).</p>
+    </section>
+
+    <section class="carte" id="fin">
+      <h2>À la fin du match</h2>
+      <ol class="etapes-aide">
+        <li>Touche <span class="t">Terminer</span> (en bas à droite). Une vérification s’affiche :
+          <ul>
+            <li><span class="ex-av">jaune</span> : à vérifier, mais tu peux continuer ;</li>
+            <li><span class="ex-er">rouge</span> : à corriger d’abord (ex. adversaire manquant).</li>
+          </ul></li>
+        <li>Touche <span class="t">Télécharger le fichier</span>. Un fichier qui finit par <b>.json</b> va dans les Téléchargements du téléphone.</li>
+        <li class="parents-seul"><b>Envoie ce fichier .json</b> à Christian Bélanger par courriel ou par texto, en pièce jointe.
+          C’est lui qui sert à mettre le site à jour.</li>
+      </ol>
+      <p><span class="t c">Télécharger aussi le PDF Sommaire</span> est facultatif : c’est une fiche à consulter ou à garder, <b>pas besoin de l’envoyer</b>.</p>
+      <p>Pour le match suivant : <span class="t">Nouveau match</span> (bandeau vert, ou menu ☰).</p>
+    </section>
+
+    <section class="carte" id="faq">
+      <h2>Problèmes fréquents</h2>
+      <dl class="champs-aide">
+        <dt>J’ai compté dans la mauvaise période</dt>
+        <dd>Choisis la bonne période, ajoute avec <span class="t c">+</span>, puis retourne dans la mauvaise et retire avec <span class="t c">−</span>.
+          Pour un but : ouvre sa fiche et change la période.</dd>
+        <dt>La page s’est fermée / le téléphone s’est éteint</dt>
+        <dd>Rouvre la saisie : le match est toujours là.</dd>
+        <dt>J’ai touché « Nouveau match » par erreur</dt>
+        <dd>Menu ☰ → <b>Récupérer le match précédent</b>.</dd>
+        <dt>Le bouton « Télécharger le fichier » est gris</dt>
+        <dd>Il reste une erreur en rouge dans la vérification : corrige-la (souvent l’adversaire manquant : touche le nom du match en haut).</dd>
+        <dt>Le fichier s’appelle « … (1).json »</dt>
+        <dd>Un fichier du même nom était déjà dans Téléchargements. Envoie le plus récent ; pour l’éviter, supprime l’ancien avant de télécharger.</dd>
+        <dt>Pas de réseau dans l’aréna</dt>
+        <dd>Aucun problème si la saisie a été ouverte une fois avec du réseau. Le fichier peut être envoyé plus tard, à la maison.</dd>
+        <dt>Je ne sais pas (type, zone…)</dt>
+        <dd>Laisse vide : un détail manquant vaut mieux qu’un détail faux.</dd>
+      </dl>
+    </section>
+
+    <p class="retour-bas"><a class="t" id="retour-bas" href="saisie.html">‹ Retour à la saisie</a></p>
+  </main>
+
+  <script>
+    // Garde le mode de la saisie (?gestion=1) au retour ; la page d'aide est la même pour tous
+    for (const id of ["retour", "retour-bas"]) document.getElementById(id).href = "saisie.html" + location.search;
+    if (/[?&]gestion=1(&|$)/.test(location.search)) document.body.classList.add("gestion");
+  </script>
+</body>
+</html>

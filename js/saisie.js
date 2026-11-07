@@ -44,6 +44,7 @@ function ecrireStockage(cle, v) { try { localStorage.setItem(cle, JSON.stringify
 // matchs du site, copie du contenu. Sans le paramètre (parents), le fichier est envoyé à Christian.
 const GESTION = new URLSearchParams(location.search).get("gestion") === "1";
 if (GESTION) document.body.classList.add("gestion");
+document.getElementById("lien-aide").href = "aide.html" + location.search;   // l'aide ramène au même mode
 
 function nouveau() {
   const p = lireStockage(CLE_PREFS) || {}, equipe = p.equipe || "U19AA";
