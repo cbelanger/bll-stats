@@ -3,3 +3,5 @@
 
 # PDF : binaires (jamais de conversion des fins de ligne)
 *.pdf binary
+*.mp4 binary
+*.jpg binary

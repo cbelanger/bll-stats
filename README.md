@@ -58,6 +58,10 @@ Après une mise à jour de la saisie, l'ouvrir avec du réseau, puis la fermer e
 et par l'onglet « Aide » du site. Elle s'adresse aux parents (avant, pendant et après le match, fiche d'un but, codes,
 problèmes fréquents) et fonctionne sans réseau. Son lien de retour ramène là d'où on vient : la saisie (dans le même
 mode) ou le site (`aide.html?depuis=site`, sans lien vers la saisie). À tenir à jour quand la saisie change.
+En haut de l'aide, une **vidéo** d'environ 1 min 40 (`assets/aide/saisie-demo.mp4`, sans son, avec sous-titres) montre
+un match fictif « Équipe A » ; les vrais noms des gardiennes y sont remplacés par « Gardienne 1 », « Gardienne 2 ».
+Elle est fabriquée automatiquement à partir de la vraie saisie : **après un changement de la saisie, la refaire** avec
+`python tools/video/faire_video.py` (les étapes et sous-titres sont dans `tools/video/demo.html`).
 
 ### Avant le match
 
@@ -270,6 +274,7 @@ Toutes les commandes se lancent depuis la racine du dépôt.
 | `python tools/fiches/generer_saisie.py` | Régénère la feuille papier vierge `fiches/BLL - Statistiques - Saisie - Match.pdf` (paysage) |
 | `python tools/generer_icones.py` | Régénère les icônes de l'application de saisie (`assets/icones/`) |
 | `python tools/generer_glace.py` | Régénère le fond du site (glace marquée par les patins, `assets/glace*.svg`) |
+| `python tools/video/faire_video.py` | Refait la vidéo de l'aide (`assets/aide/saisie-demo.mp4`) en rejouant la saisie dans Edge ; demande `pip install imageio-ffmpeg` (pas dans requirements.txt) ; `--images DOSSIER` garde une image par étape pour vérifier |
 | `python -m http.server 8000` | Sert le site localement sur <http://localhost:8000> (ou Live Server dans VS Code) |
 
 Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne peut pas lire `data/matchs.json`.
@@ -283,6 +288,8 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `js/patinoire.js` | Dessin de la demi-patinoire (site et saisie) |
 | `saisie.html`, `css/saisie.css`, `js/saisie.js` | Page de saisie sur téléphone |
 | `aide.html` | Page d'aide de la saisie (styles dans `css/saisie.css`) |
+| `assets/aide/` | Vidéo de l'aide (`saisie-demo.mp4`) et son image d'affiche (`saisie-demo.jpg`) |
+| `tools/video/` | Fabrication de la vidéo : `demo.html` (étapes, sous-titres) et `faire_video.py` |
 | `sw-saisie.js` | Cache hors ligne de la saisie (incrémenter `CACHE` à chaque modification) |
 | `saisie.webmanifest`, `saisie-gestion.webmanifest`, `assets/icones/` | Installation de la saisie comme application (parents, admin) |
 | `js/vendor/pdf-lib.min.js` | [pdf-lib](https://pdf-lib.js.org/) 1.17.1 (licence MIT, `js/vendor/pdf-lib-LICENSE.md`) : remplit le PDF Sommaire dans la saisie |
