@@ -641,7 +641,7 @@ function parAdversaire(ms) {
   });
 }
 
-// Moyennes par match d'un groupe de matchs (dossier adversaire : contre eux / toute la saison)
+// Moyennes par match d'un groupe de matchs (dossier adversaire : contre elles / toute la saison)
 function moyennes(ms) {
   const avec = f => ms.filter(m => f(m) != null);
   const tn = avec(m => m.tirs.nous), ta = avec(m => m.tirs.adv), sz = ms.filter(m => m.sorties_zone.tentatives);
@@ -675,7 +675,7 @@ function vueAdversaire(cle) {
   if (!gr) return `<a class="retour" href="#/adversaires">← Adversaires</a><p class="vide">Aucun match ${etat.equipe} contre cette équipe pour la saison ${etat.saison}.</p>`;
   const { nom, ms } = gr;
   const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length;
-  const eux = moyennes(ms), tous = moyennes(saison);
+  const elles = moyennes(ms), tous = moyennes(saison);
   const ag = agregerButs(ms), agN = agregerButs(ms, "buts_marques");
   // Buts par période (matchs où chaque but a sa période) et moment dans la période (tiers de 3:20)
   const avecB = { nous: ms.filter(m => m.buts_par_periode?.nous), adv: ms.filter(m => m.buts_par_periode?.adv) };
@@ -697,7 +697,7 @@ function vueAdversaire(cle) {
     const [z, nz] = top(ag.zones) || [];
     if (nz >= 2) retenir.push(`Zone du filet la plus touchée : <b>${z}</b> (${nz} sur ${ag.n}).`);
     const totTiers = tA.reduce((s, x) => s + x, 0), maxT = Math.max(...tA);
-    if (totTiers >= 3 && maxT / totTiers >= .5) retenir.push(`Ils marquent surtout en <b>${TIERS[tA.indexOf(maxT)].toLowerCase()} de période</b> (${maxT} sur ${totTiers}).`);
+    if (totTiers >= 3 && maxT / totTiers >= .5) retenir.push(`Elles marquent surtout en <b>${TIERS[tA.indexOf(maxT)].toLowerCase()} de période</b> (${maxT} sur ${totTiers}).`);
   }
   if (avecB.adv.length) {
     const p = PERIODES.map(([k, l]) => [l, totB("adv", k) ?? 0]).sort((a, b) => b[1] - a[1]);
@@ -705,7 +705,7 @@ function vueAdversaire(cle) {
   }
   if (agN.n >= 2) {
     const [ty, nt] = top(agN.types) || [];
-    if (nt >= 2) retenir.push(`Nos buts contre eux viennent surtout de : <b>${esc(TYPES[ty] || ty)}</b> (${nt} sur ${agN.n}).`);
+    if (nt >= 2) retenir.push(`Nos buts contre elles viennent surtout de : <b>${esc(TYPES[ty] || ty)}</b> (${nt} sur ${agN.n}).`);
   }
   // Buts marqués mais sans type ni zone : le dire plutôt qu'afficher des panneaux vides
   const manque = [ag.n && !detail(ag) && "leurs buts", agN.n && !detail(agN) && "nos buts"].filter(Boolean);
@@ -726,12 +726,12 @@ function vueAdversaire(cle) {
       </table></div>
     </section>
     <section class="panneau">
-      <h3>Contre eux et toute la saison</h3>
+      <h3>Contre elles et toute la saison</h3>
       <div class="defile"><table>
-        <thead><tr><th>Moyenne par match</th><th class="n">Contre eux</th><th class="n">Saison</th></tr></thead>
-        <tbody>${ligneC("Buts pour", eux.bp, tous.bp)}${ligneC("Buts contre", eux.bc, tous.bc)}
-          ${ligneC("Tirs cadrés pour", eux.tp, tous.tp)}${ligneC("Tirs cadrés contre", eux.tc, tous.tc)}
-          ${ligneC("% d’arrêts", eux.arr, tous.arr)}${ligneC("Sorties de zone réussies", eux.sz, tous.sz)}</tbody>
+        <thead><tr><th>Moyenne par match</th><th class="n">Contre elles</th><th class="n">Saison</th></tr></thead>
+        <tbody>${ligneC("Buts pour", elles.bp, tous.bp)}${ligneC("Buts contre", elles.bc, tous.bc)}
+          ${ligneC("Tirs cadrés pour", elles.tp, tous.tp)}${ligneC("Tirs cadrés contre", elles.tc, tous.tc)}
+          ${ligneC("% d’arrêts", elles.arr, tous.arr)}${ligneC("Sorties de zone réussies", elles.sz, tous.sz)}</tbody>
       </table></div>
     </section>
   </div>
@@ -773,7 +773,7 @@ function vueAdversaire(cle) {
   </div>` : ""}
   ${aLieux(ms, "buts_marques") || aLieux(ms, "buts_accordes") ? `<div class="grille g2" style="margin-top:1rem">
     <section class="panneau"><h3>D’où partent leurs buts</h3>${carteButs(ms, "buts_accordes", "Aucun de leurs buts n’a de position notée.")}</section>
-    <section class="panneau"><h3>D’où partent nos buts</h3>${carteButs(ms, "buts_marques", agN.n ? "Aucun de nos buts n’a de position notée." : "Aucun but marqué contre eux.")}</section>
+    <section class="panneau"><h3>D’où partent nos buts</h3>${carteButs(ms, "buts_marques", agN.n ? "Aucun de nos buts n’a de position notée." : "Aucun but marqué contre elles.")}</section>
   </div>` : ""}
   ${manque.length ? `<p class="sous" style="font-size:.85rem;margin-top:1rem">Types de jeu et zones du filet :
     non notés pour ${manque.length > 1 ? "les buts" : manque[0]} de ces matchs.</p>` : ""}`;

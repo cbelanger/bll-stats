@@ -182,8 +182,8 @@ En haut : saison et équipe (U16AA, U19AA). Quatre onglets ; tout se consulte au
   sorties de zone par période, **buts selon la situation** (à égalité, AN, 5 contre 3, DN, 3 contre 5 ; pour et contre),
   nos buts et les buts accordés par type de jeu, par zone du filet et par endroit d'où ils partent.
 - **Adversaires** : équipes affrontées dans la saison (PJ, V-D-N, buts) ; un clic ouvre le dossier d'avant-match :
-  « À retenir » (leur type de but et leur zone les plus fréquents, moment et période où ils marquent),
-  nos affrontements, moyennes contre eux comparées à toute la saison, buts par période, moment des buts dans la
+  « À retenir » (leur type de but et leur zone les plus fréquents, moment et période où elles marquent),
+  nos affrontements, moyennes contre elles comparées à toute la saison, buts par période, moment des buts dans la
   période (début, milieu, fin), buts selon la situation, types de jeu, filets et patinoires (leurs buts et les nôtres).
   Les noms d'adversaires sont regroupés sans tenir compte des majuscules, des accents ni des espaces.
 
