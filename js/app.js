@@ -887,4 +887,22 @@ async function demarrer() {
   afficher();
 }
 
+// Bouton clair / sombre du bandeau. Le choix est gardé dans le navigateur ; sans choix, on suit l'appareil
+// (le petit script du <head> d'index.html applique le thème avant l'affichage).
+function themeBouton() {
+  const b = $("#theme"), sombre = () => document.documentElement.classList.contains("sombre");
+  const maj = () => { b.setAttribute("aria-label", sombre() ? "Mode clair" : "Mode sombre"); b.title = b.getAttribute("aria-label"); };
+  b.addEventListener("click", () => {
+    document.documentElement.classList.toggle("sombre", !sombre());
+    try { localStorage.setItem("bll-theme", sombre() ? "sombre" : "clair"); } catch (e) { /* rien */ }
+    maj();
+  });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+    let choix = null; try { choix = localStorage.getItem("bll-theme"); } catch (er) { /* rien */ }
+    if (!choix) { document.documentElement.classList.toggle("sombre", e.matches); maj(); }
+  });
+  maj();
+}
+
+themeBouton();
 demarrer();

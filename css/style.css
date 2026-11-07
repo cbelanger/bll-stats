@@ -16,8 +16,7 @@
   --texte: "Barlow", "Segoe UI", system-ui, sans-serif;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
+:root.sombre {
     --glace: #0E1A33;
     --surface: #15244A;
     --trait: #2A3D68;
@@ -26,7 +25,6 @@
     --chaleur-0: #1B2C55;
     color-scheme: dark;
   }
-}
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -37,7 +35,7 @@ body {
   color: var(--encre);
   font: 400 16px/1.5 var(--texte);
 }
-@media (prefers-color-scheme: dark) { body { background: #0E1A33 url("../assets/glace-sombre.svg"); } }
+.sombre body { background: #0E1A33 url("../assets/glace-sombre.svg"); }
 a { color: inherit; }
 :focus-visible { outline: 3px solid var(--rouge); outline-offset: 2px; }
 main:focus, main:focus-visible { outline: none; }
@@ -71,6 +69,16 @@ main:focus, main:focus-visible { outline: none; }
   background: transparent; color: #C9D6EE; cursor: pointer;
 }
 .bascule button[aria-pressed="true"] { background: var(--rouge); color: #fff; }
+/* Bouton clair / sombre : la lune en mode clair (passer au sombre), le soleil en mode sombre */
+.theme {
+  display: grid; place-items: center; width: 36px; height: 34px; padding: 0; border: 1px solid #3A5590; border-radius: 4px;
+  background: transparent; color: #C9D6EE; cursor: pointer;
+}
+.theme:hover { color: #fff; border-color: #C9D6EE; }
+.theme svg { width: 20px; height: 20px; fill: currentColor; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.theme .lune { stroke: none; }
+.theme .soleil, .sombre .theme .lune { display: none; }
+.sombre .theme .soleil { display: block; }
 
 /* ---------- Contenu */
 main { max-width: 1120px; margin: 0 auto; padding: 1.5rem clamp(1rem, 3vw, 2rem) 3rem; outline: none; }
@@ -134,7 +142,7 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .filet .code { font: 600 13px var(--titre); fill: var(--doux); }
 .filet .val { font: 700 30px var(--titre); text-anchor: middle; dominant-baseline: central; }
 .filet .val.nous { fill: var(--marine); }
-@media (prefers-color-scheme: dark) { .filet .val.nous { fill: #A9C1F0; } }
+.sombre .filet .val.nous { fill: #A9C1F0; }
 .legende-chaleur { display: flex; align-items: center; gap: .35rem; justify-content: center; font-size: .8rem; color: var(--doux); margin-top: .5rem; }
 .legende-chaleur i { width: 18px; height: 10px; border-radius: 2px; display: inline-block; }
 
@@ -143,7 +151,7 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .barre-l { display: grid; grid-template-columns: 12rem 1fr 2.2rem; align-items: center; gap: .6rem; font-size: .92rem; }
 .barre-l .piste { height: 12px; background: var(--chaleur-0); border-radius: 2px; overflow: hidden; }
 .barre-l .rempli { height: 100%; background: var(--marine); }
-@media (prefers-color-scheme: dark) { .barre-l .rempli { background: #6E93D6; } }
+.sombre .barre-l .rempli { background: #6E93D6; }
 .barre-l .rempli.r { background: var(--rouge); }
 .barre-l b { text-align: right; font-variant-numeric: tabular-nums; }
 /* Sommaire du match : nos buts en bleu, ceux de l'adversaire en rouge (fond teinté + barre à gauche) */
@@ -154,12 +162,10 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .deroulement tr.but-nous .equipe { font-weight: 700; color: var(--marine); }
 .deroulement tr.but-adv .equipe { color: var(--rouge); }
 .deroulement .score-c { font-weight: 700; }
-@media (prefers-color-scheme: dark) {
-  .deroulement tr.but-nous { background: color-mix(in srgb, #6E93D6 22%, transparent); }
-  .deroulement tr.but-nous td:first-child { box-shadow: inset 4px 0 #6E93D6; }
-  .deroulement tr.but-nous .equipe { color: #A9C1F0; }
-  .deroulement tr.but-adv .equipe { color: #F27A87; }
-}
+.sombre .deroulement tr.but-nous { background: color-mix(in srgb, #6E93D6 22%, transparent); }
+.sombre .deroulement tr.but-nous td:first-child { box-shadow: inset 4px 0 #6E93D6; }
+.sombre .deroulement tr.but-nous .equipe { color: #A9C1F0; }
+.sombre .deroulement tr.but-adv .equipe { color: #F27A87; }
 .code-t { font: 700 .95rem var(--titre); color: var(--rouge); display: inline-block; min-width: 1.6rem; }
 /* Situation du but (AN / DN) dans le Sommaire du match */
 .sit { font: 700 .72rem var(--titre); letter-spacing: .03em; padding: .05rem .3rem; border-radius: 4px;
@@ -202,10 +208,11 @@ td.fort { font-weight: 700; }
 .sommaire-g td.fort { font-weight: 700; }
 .sommaire-g tfoot td { background: var(--glace); }
 .legende-g { font-size: .8rem; color: var(--doux); padding: .7rem .9rem; margin: 0; background: var(--glace); border-top: 1px solid var(--trait); }
-@media (prefers-color-scheme: dark) { .sommaire-g td.v { color: #5FD08F; } .sommaire-g td.d { color: #F27A87; } }
+.sombre .sommaire-g td.v { color: #5FD08F; }
+.sombre .sommaire-g td.d { color: #F27A87; }
 .tendance { width: 100%; height: auto; display: block; margin-top: .5rem; max-height: 140px; }
 .tendance .ligne { fill: none; stroke: var(--marine); stroke-width: 2.5; }
-@media (prefers-color-scheme: dark) { .tendance .ligne { stroke: #8FB0EA; } }
+.sombre .tendance .ligne { stroke: #8FB0EA; }
 .tendance .pt { fill: var(--rouge); }
 .tendance .ref { stroke: var(--trait); stroke-dasharray: 4 4; }
 .tendance text { font: 500 11px var(--texte); fill: var(--doux); }
@@ -230,10 +237,8 @@ td.fort { font-weight: 700; }
 .legende-l i.nous { background: var(--marine); }
 .legende-l i.adv { background: var(--rouge); }
 .legende-l i.pt { width: 11px; height: 11px; border-radius: 50%; }
-@media (prefers-color-scheme: dark) {
-  .progression .nous { stroke: #8FB0EA; }
-  .progression .pt.nous, .legende-l i.nous { fill: #8FB0EA; background: #8FB0EA; }
-}
+.sombre .progression .nous { stroke: #8FB0EA; }
+.sombre .progression .pt.nous, .sombre .legende-l i.nous { fill: #8FB0EA; background: #8FB0EA; }
 
 /* D'où partent les buts : demi-patinoire (js/patinoire.js) */
 .patinoire { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto .4rem; }
@@ -254,10 +259,8 @@ td.fort { font-weight: 700; }
 .ved-score { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem .8rem; font: 700 1.25rem/1.1 var(--titre); }
 .ved-score b { font-size: 2.2rem; font-variant-numeric: tabular-nums; color: var(--marine); }
 .ved-lien { font: 600 1rem/1 var(--titre); color: var(--marine); }
-@media (prefers-color-scheme: dark) {
-  .vedette { border-left-color: #3A66C4; }
-  .ved-score b, .ved-lien { color: #8FB0EA; }
-}
+.sombre .vedette { border-left-color: #3A66C4; }
+.sombre .ved-score b, .sombre .ved-lien { color: #8FB0EA; }
 
 /* Déroulement du match : une bande par période, nos buts au-dessus, ceux de l'adversaire en dessous */
 .ligne-temps { display: flex; gap: 6px; }
@@ -277,15 +280,16 @@ td.fort { font-weight: 700; }
 .lt-but.adv { background: var(--rouge); top: calc(50% + 13px + 16px * var(--v)); }
 .lt-lab { display: flex; justify-content: space-between; gap: .25rem; padding: .2rem .15rem 0; font-size: .85rem; color: var(--doux); }
 .lt-lab b { color: var(--encre); font-weight: 600; }
-@media (prefers-color-scheme: dark) { .lt-but.nous { background: #8FB0EA; } }
+.sombre .lt-but.nous { background: #8FB0EA; }
 
 .notes { white-space: pre-wrap; }
 .pied { text-align: center; color: var(--doux); font-size: .85rem; padding: 0 1rem 2rem; }
 .pied span { display: block; }
 
 @media (max-width: 720px) {
-  .barre { position: static; }
+  .barre { position: relative; }
   .filtres { margin-left: 0; width: 100%; justify-content: space-between; }
+  .theme { position: absolute; top: 14px; right: 16px; }   /* en haut à droite, à côté de « Statistiques » */
   .score .pts { font-size: 2.6rem; }
   .barre-l { grid-template-columns: 7.5rem 1fr 2rem; }
 }

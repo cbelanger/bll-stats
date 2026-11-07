@@ -168,7 +168,9 @@ renommer le nouveau sans « (1) ». Pour l'éviter : supprimer l'ancien fichier 
 
 ## Le site
 
-En haut : saison et équipe (U16AA, U19AA). Quatre onglets ; tout se consulte aussi sur téléphone.
+En haut : saison et équipe (U16AA, U19AA), et un bouton lune / soleil pour passer en mode sombre ou clair (le choix
+est gardé dans le navigateur ; sans choix, le site suit le réglage du téléphone ou de l'ordi). Quatre onglets et l'aide ;
+tout se consulte aussi sur téléphone.
 
 - **Matchs** : en haut, le **dernier match** en vedette (score, résultat, 3 faits saillants au plus ; un clic ouvre sa
   fiche), puis la liste de la saison, du plus vieux au plus récent : résultat, score, tirs, % de sorties de zone
