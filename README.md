@@ -88,6 +88,8 @@ ou « Autre » avec nom et numéro) et responsable des stats.
    Les boutons **Supprimer / Plus tard / Enregistrer** restent visibles au bas de la fiche. « Plus tard » ferme la fiche
    sans garder les choix ; le but reste compté. Toucher la ligne d'un but dans « Buts du match » rouvre sa fiche
    (lignes BLL en bleu ; AN, 5v3, DN ou 3v5 s'affiche à côté de la zone).
+   Un but BLL est salué par quelques anneaux bleus qui s'envolent pendant une seconde (et une courte vibration) ;
+   rien n'est bloqué, et il n'y a pas d'animation si le téléphone est réglé pour réduire les animations.
 5. **Retirer un but** : toucher sa ligne dans « Buts du match » → Supprimer (le tir compté avec lui est retiré aussi).
    **Annuler** (en bas) défait la dernière action ; **Notes** pour un commentaire.
 
@@ -168,7 +170,8 @@ renommer le nouveau sans « (1) ». Pour l'éviter : supprimer l'ancien fichier 
 
 En haut : saison et équipe (U16AA, U19AA). Quatre onglets ; tout se consulte aussi sur téléphone.
 
-- **Matchs** : liste de la saison, du plus vieux au plus récent : résultat, score, tirs, % de sorties de zone
+- **Matchs** : en haut, le **dernier match** en vedette (score, résultat, 3 faits saillants au plus ; un clic ouvre sa
+  fiche), puis la liste de la saison, du plus vieux au plus récent : résultat, score, tirs, % de sorties de zone
   réussies, gardienne, % d'arrêts. Un clic ouvre la fiche du match :
   - **Faits saillants** : quelques phrases tirées des données (retard effacé, but gagnant, série de buts,
     3 buts ou plus en 5 minutes, période gagnée par 3 buts ou plus, arrêts de la gardienne, domination aux tirs,
@@ -273,6 +276,7 @@ Toutes les commandes se lancent depuis la racine du dépôt.
 | `python tools/fiches/generer_sommaire.py` | Régénère le PDF remplissable vierge `fiches/BLL - Statistiques - Sommaire - Match.pdf` |
 | `python tools/fiches/generer_saisie.py` | Régénère la feuille papier vierge `fiches/BLL - Statistiques - Saisie - Match.pdf` (paysage) |
 | `python tools/generer_icones.py` | Régénère les icônes de l'application de saisie (`assets/icones/`) |
+| `python tools/generer_apercu.py` | Régénère les images d'aperçu de lien (Messenger, courriel) : `assets/apercu.png` (site, aide) et `assets/apercu-saisie.png` |
 | `python tools/generer_glace.py` | Régénère le fond du site (glace marquée par les patins, `assets/glace*.svg`) |
 | `python tools/video/faire_video.py` | Refait la vidéo de l'aide (`assets/aide/saisie-demo.mp4`) en rejouant la saisie dans Edge ; demande `pip install imageio-ffmpeg` (pas dans requirements.txt) ; `--images DOSSIER` garde une image par étape pour vérifier |
 | `python -m http.server 8000` | Sert le site localement sur <http://localhost:8000> (ou Live Server dans VS Code) |
@@ -302,7 +306,7 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `tools/fiches/` | Scripts qui génèrent les fiches vierges |
 | `tools/generer_icones.py`, `tools/generer_glace.py` | Icônes de la saisie, fond du site |
 | `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |
-| `assets/` | Logo du club, fond de glace, icônes |
+| `assets/` | Logo du club, fond de glace, icônes, images d'aperçu de lien (`apercu*.png`) |
 
 Les fichiers de match utilisent les mêmes noms de champs que le PDF Sommaire (format `bll-match-1`) ; la saisie
 téléphone ajoute la position des buts (`but_n_lieu`) et le nombre de nos buts par période.

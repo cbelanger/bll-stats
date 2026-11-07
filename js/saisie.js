@@ -82,6 +82,23 @@ async function chargerGardiennes() {
 }
 
 function sauver() { ecrireStockage(CLE, S); }
+// But BLL : anneaux de ringuette qui s'envolent du bouton pendant une seconde. Ajoutés dans la fiche du but
+// (qui s'ouvre aussitôt, au-dessus de tout) ; rien ne bloque la saisie. Pas d'animation si le téléphone la réduit.
+function celebrer(bouton) {
+  try { navigator.vibrate && navigator.vibrate([25, 40, 25]); } catch (e) { /* rien */ }
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const r = bouton.getBoundingClientRect(), hote = $("#f-but");
+  for (let i = 0; i < 8; i++) {
+    const a = document.createElement("span");
+    a.className = "anneau";
+    a.style.left = `${r.left + r.width / 2}px`; a.style.top = `${r.top + r.height / 2}px`;
+    a.style.setProperty("--dx", `${Math.round(Math.random() * 260 - 130)}px`);
+    a.style.setProperty("--dy", `${Math.round(-160 - Math.random() * 220)}px`);
+    a.style.animationDelay = `${i * 45}ms`;
+    hote.append(a);
+    setTimeout(() => a.remove(), 1500);
+  }
+}
 function vibrer() { try { navigator.vibrate && navigator.vibrate(12); } catch (e) { /* rien */ } }
 function toast(t) {
   const e = $("#toast"); e.textContent = t; e.hidden = false;
@@ -551,6 +568,7 @@ document.addEventListener("click", e => {
       // Comme un but accordé : compte tout de suite, temps et type maintenant ou plus tard
       action(`But BLL ${lp}`, () => { S.butsNous.push({ periode: P, temps: "", type: "", zone: "" }); S.tirs.nous[P]++; }, true);
       ouvrirBut("nous", S.butsNous.length - 1);
+      celebrer(b);
       break;
     }
     case "but-adv": {

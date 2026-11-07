@@ -187,7 +187,16 @@ function vueMatchs() {
   // Du plus vieux au plus récent
   const ms = filtres().sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
   if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
+  // Dernier match en vedette : score et quelques faits saillants, un clic ouvre sa fiche
+  const der = ms[ms.length - 1], faits = faitsSaillants(der, true).slice(0, 3);
   return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}</p>
+  <a class="panneau vedette faits" href="#/match/${encodeURIComponent(der.id)}">
+    <span class="ved-tag">Dernier match · ${dateFr(der.date)}</span>
+    <span class="ved-score"><span class="eq">BLL ${esc(der.equipe)}</span><b>${der.buts.nous}–${der.buts.adv}</b><span class="eq">${esc(der.adversaire)}</span>
+      <span class="res ${resultat(der)}">${resultat(der)}</span></span>
+    ${faits.length ? `<ul>${faits.map(t => `<li>${t}</li>`).join("")}</ul>` : ""}
+    <span class="ved-lien">Voir le match →</span>
+  </a>
   <div class="panneau defile" style="margin-top:1rem"><table class="liste-matchs">
     <thead><tr><th class="opt">No</th><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n opt">Tirs</th><th class="opt">Gardienne</th><th class="n" title="Sorties de zone réussies">% sorties</th><th class="n">% arrêts</th></tr></thead>
     <tbody>${ms.map(m => `
@@ -278,7 +287,7 @@ function ligneTemps(m) {
 
 // Faits saillants : quelques phrases neutres tirées des données (retournement, séries de buts, but gagnant,
 // période décisive, gardienne, tirs, records de la saison). Les records exigent au moins 3 matchs comparables.
-function faitsSaillants(m) {
+function faitsSaillants(m, liste = false) {
   const saison = etat.matchs.filter(x => x.saison === m.saison && x.equipe === m.equipe);
   const nomEq = eq => (eq === "nous" ? `BLL ${esc(m.equipe)}` : esc(m.adversaire));
   const ord = i => (i === 4 ? "la prolongation" : `la ${i + 1}<sup>${i ? "e" : "re"}</sup> période`);
@@ -340,6 +349,7 @@ function faitsSaillants(m) {
   const sz = m.sorties_zone;
   if (sz.tentatives && record(x => x.sorties_zone.tentatives ? x.sorties_zone.reussies / x.sorties_zone.tentatives : null, saison.filter(x => x.sorties_zone.tentatives)))
     f.push(`Meilleur taux de sorties de zone de la saison : ${pct(sz.reussies, sz.tentatives)} (${sz.reussies} sur ${sz.tentatives}).`);
+  if (liste) return f;   // carte du dernier match (liste des matchs)
   if (!f.length) return "";
   return `<section class="panneau faits" style="margin-top:1rem"><h3>Faits saillants</h3>
     <ul>${f.slice(0, 6).map(t => `<li>${t}</li>`).join("")}</ul></section>`;
