@@ -19,12 +19,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/saisie.css">
-</head>
+  <script>
+    // Thème appliqué avant l'affichage : choix de l'usager (même réglage que le site), sinon réglage de l'appareil
+    (function () {
+      var c = null; try { c = localStorage.getItem("bll-theme"); } catch (e) { /* stockage bloqué */ }
+      document.documentElement.classList.toggle("sombre", c ? c === "sombre" : matchMedia("(prefers-color-scheme: dark)").matches);
+    })();
+  </script></head>
 <body class="page-aide">
   <header class="tete">
     <div class="tete-in ligne1">
       <a class="retour" id="retour" href="saisie.html">‹ Saisie</a>
       <h1>Aide</h1>
+      <button type="button" class="menu-b theme-b" id="theme" aria-label="Mode sombre">
+        <svg class="lune" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
+        <svg class="soleil" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/>
+          <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      </button>
     </div>
   </header>
 
@@ -179,6 +190,15 @@
       if (site) a.textContent = id === "retour" ? "‹ Site" : "‹ Retour au site";
     }
     if (/[?&]gestion=1(&|$)/.test(location.search)) document.body.classList.add("gestion");
+    // Mode clair / sombre : même choix que le site et la saisie (localStorage « bll-theme »)
+    const theme = document.getElementById("theme"), racine = document.documentElement;
+    const majTheme = () => theme.setAttribute("aria-label", racine.classList.contains("sombre") ? "Mode clair" : "Mode sombre");
+    theme.addEventListener("click", () => {
+      const sombre = racine.classList.toggle("sombre");
+      try { localStorage.setItem("bll-theme", sombre ? "sombre" : "clair"); } catch (e) { /* rien */ }
+      majTheme();
+    });
+    majTheme();
   </script>
 </body>
 </html>

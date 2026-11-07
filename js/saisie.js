@@ -44,6 +44,9 @@ function ecrireStockage(cle, v) { try { localStorage.setItem(cle, JSON.stringify
 // matchs du site, copie du contenu. Sans le paramètre (parents), le fichier est envoyé à Christian.
 const GESTION = new URLSearchParams(location.search).get("gestion") === "1";
 if (GESTION) document.body.classList.add("gestion");
+// Libellé du bouton du menu : propose l'autre mode
+const majTheme = () => { $("#b-theme").textContent = document.documentElement.classList.contains("sombre") ? "Mode clair" : "Mode sombre"; };
+majTheme();
 document.querySelectorAll(".aide-b").forEach(a => { a.href = "aide.html" + location.search; });   // l'aide ramène au même mode
 
 function nouveau() {
@@ -662,6 +665,13 @@ document.addEventListener("click", e => {
       break;
     }
     case "menu": ouvrirMenu(); break;
+    case "theme": {
+      // Mode clair / sombre forcé par l'usager (même choix que le site et l'aide) ; sinon réglage du téléphone
+      const sombre = document.documentElement.classList.toggle("sombre");
+      try { localStorage.setItem("bll-theme", sombre ? "sombre" : "clair"); } catch (e) { /* rien */ }
+      majTheme();
+      break;
+    }
     case "notes": $("#notes").value = S.notes; $("#f-notes").showModal(); break;
     case "notes-ok": S.notes = $("#notes").value; S.exporte = false; sauver(); $("#f-notes").close(); toast("Notes enregistrées"); break;
     case "ouvrir": if ($("#f-menu").open) $("#f-menu").close(); listerMatchs(); break;

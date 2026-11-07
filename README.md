@@ -169,7 +169,8 @@ renommer le nouveau sans « (1) ». Pour l'éviter : supprimer l'ancien fichier 
 ## Le site
 
 En haut : saison et équipe (U16AA, U19AA), et un bouton lune / soleil pour passer en mode sombre ou clair (le choix
-est gardé dans le navigateur ; sans choix, le site suit le réglage du téléphone ou de l'ordi). Quatre onglets et l'aide ;
+est gardé dans le navigateur ; sans choix, le site suit le réglage du téléphone ou de l'ordi). Le même choix vaut pour
+la saisie (menu ☰ → « Mode sombre » / « Mode clair ») et l'aide (lune / soleil en haut à droite). Quatre onglets et l'aide ;
 tout se consulte aussi sur téléphone.
 
 - **Matchs** : en haut, le **dernier match** en vedette (score, résultat, 3 faits saillants au plus ; un clic ouvre sa

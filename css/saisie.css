@@ -20,13 +20,11 @@
   --mono: ui-monospace, Consolas, "Courier New", monospace;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
+:root.sombre {
     --glace: #0E1A33; --surface: #15244A; --trait: #2A3D68; --encre: #E8EEF8; --doux: #9FB0CC;
     --marine: #3A66C4; --tete: #0F244D; --tete-trait: #2F4A80; --rouge: #E8394C; --vert: #2E9B5E;
     --voile: rgba(0, 0, 0, .6); color-scheme: dark;
   }
-}
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -302,3 +300,10 @@ body:not(.gestion) .gestion-seul { display: none !important; }
   70% { opacity: 1; }
   to { transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(200deg); opacity: 0; }
 }
+
+/* Bouton clair / sombre (en-tête de l'aide) : lune en mode clair, soleil en mode sombre */
+.theme-b { margin-left: auto; display: grid; place-items: center; padding: 0; }
+.theme-b svg { width: 22px; height: 22px; fill: currentColor; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.theme-b .lune { stroke: none; }
+.theme-b .soleil, .sombre .theme-b .lune { display: none; }
+.sombre .theme-b .soleil { display: block; }

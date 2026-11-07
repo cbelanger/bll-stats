@@ -23,7 +23,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/saisie.css">
-</head>
+  <script>
+    // Thème appliqué avant l'affichage : choix de l'usager (même réglage que le site), sinon réglage de l'appareil
+    (function () {
+      var c = null; try { c = localStorage.getItem("bll-theme"); } catch (e) { /* stockage bloqué */ }
+      document.documentElement.classList.toggle("sombre", c ? c === "sombre" : matchMedia("(prefers-color-scheme: dark)").matches);
+    })();
+  </script></head>
 <body>
   <header class="tete">
     <div class="tete-in">
@@ -243,7 +249,9 @@
         <button type="button" class="btn principal" data-act="nouveau">Nouveau match</button>
         <button type="button" class="btn gestion-seul" data-act="ouvrir">Ouvrir un match du site…</button>
         <button type="button" class="btn" data-act="infos">Infos du match</button>
-        <button type="button" class="btn" data-act="recuperer" id="b-recuperer" hidden>Récupérer le match précédent</button>      </div>
+        <button type="button" class="btn" data-act="recuperer" id="b-recuperer" hidden>Récupérer le match précédent</button>
+        <button type="button" class="btn" data-act="theme" id="b-theme">Mode sombre</button>
+      </div>
       <p class="aide">« Nouveau match »<span class="gestion-seul"> et « Ouvrir »</span> mettent de côté le match en cours s’il n’est pas exporté ;
         « Récupérer le match précédent » le remet en place.</p>
       <div class="pied-f">
