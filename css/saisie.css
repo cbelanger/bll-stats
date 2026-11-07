@@ -64,6 +64,7 @@ button:disabled { opacity: .45; cursor: default; transform: none; }
   flex: none; min-width: 44px; min-height: 44px; border: 1px solid var(--tete-trait); border-radius: 8px;
   background: transparent; color: var(--sur); font: 700 1.4rem/1 var(--texte);
 }
+.aide-b { display: inline-grid; place-items: center; padding: 0 .55rem; text-decoration: none; font: 600 1.05rem/1 var(--titre); }
 .menu-l { display: grid; gap: .5rem; margin-bottom: .8rem; }
 .periodes { display: grid; grid-template-columns: repeat(5, 1fr); gap: .35rem; margin-top: .45rem; }
 .periodes button {

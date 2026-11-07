@@ -48,15 +48,16 @@ Feuille papier ──► Sommaire PDF ──► pdf/ ───┘        (GitHub
 
 Les deux adresses partagent le même match en cours sur un même téléphone. Ce partage ne protège rien : il simplifie
 seulement la page des parents (sans identifiants, personne ne peut déposer sur GitHub). Le site lui-même ne renvoie
-jamais vers la saisie ni vers GitHub.
+jamais vers la saisie ni vers GitHub (seulement vers la page d'aide).
 
 **Installer comme une application** (icône BLL, plein écran) : dans Edge ou Chrome, menu → **Ajouter au téléphone** /
 **Installer l'application**. La page fonctionne ensuite **sans réseau** (aréna) si elle a été ouverte une fois avec du réseau.
 Après une mise à jour de la saisie, l'ouvrir avec du réseau, puis la fermer et la rouvrir pour charger la nouvelle version.
 
-**Page d'aide** : <https://cbelanger.github.io/bll-stats/aide.html>, aussi dans la saisie par menu ☰ → « Aide : comment faire
-la saisie ». Elle s'adresse aux parents (avant, pendant et après le match, fiche d'un but, codes, problèmes fréquents),
-fonctionne sans réseau et ramène à la saisie dans le même mode. À tenir à jour quand la saisie change.
+**Page d'aide** : <https://cbelanger.github.io/bll-stats/aide.html>, ouverte par le bouton « Aide » en haut de la saisie
+et par l'onglet « Aide » du site. Elle s'adresse aux parents (avant, pendant et après le match, fiche d'un but, codes,
+problèmes fréquents) et fonctionne sans réseau. Son lien de retour ramène là d'où on vient : la saisie (dans le même
+mode) ou le site (`aide.html?depuis=site`, sans lien vers la saisie). À tenir à jour quand la saisie change.
 
 ### Avant le match
 

@@ -154,8 +154,14 @@
   </main>
 
   <script>
-    // Garde le mode de la saisie (?gestion=1) au retour ; la page d'aide est la même pour tous
-    for (const id of ["retour", "retour-bas"]) document.getElementById(id).href = "saisie.html" + location.search;
+    // Retour : vers le site si l'aide a été ouverte depuis le site (?depuis=site), sinon vers la saisie
+    // en gardant son mode (?gestion=1) ; la page d'aide est la même pour tous
+    const site = /[?&]depuis=site(&|$)/.test(location.search);
+    for (const id of ["retour", "retour-bas"]) {
+      const a = document.getElementById(id);
+      a.href = site ? "index.html" : "saisie.html" + location.search;
+      if (site) a.textContent = id === "retour" ? "‹ Site" : "‹ Retour au site";
+    }
     if (/[?&]gestion=1(&|$)/.test(location.search)) document.body.classList.add("gestion");
   </script>
 </body>
