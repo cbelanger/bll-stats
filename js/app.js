@@ -176,7 +176,7 @@ function situations(ms) {
   const lignes = SITS.map(([k, l]) => ({ l, pour: compte("buts_marques", k), contre: compte("buts_accordes", k) }));
   const pour = lignes.reduce((s, x) => s + x.pour, 0), contre = lignes.reduce((s, x) => s + x.contre, 0);
   const bp = ms.reduce((s, m) => s + m.buts.nous, 0), bc = ms.reduce((s, m) => s + m.buts.adv, 0);
-  return `<table><thead><tr><th>Situation</th><th class="n">Pour</th><th class="n">Contre</th></tr></thead>
+  return `<table><thead><tr><th>Situation</th><th class="n">BLL ${etat.equipe}</th><th class="n">Contre</th></tr></thead>
     <tbody>${lignes.map(x => `<tr><td class="txt">${x.l}</td><td class="n">${x.pour}</td><td class="n">${x.contre}</td></tr>`).join("")}</tbody></table>
     <p class="sous" style="font-size:.85rem">Situation notée pour ${pour} de nos ${bp} buts et ${contre} des ${bc} buts accordés.
       « Contre » en désavantage numérique : buts accordés pendant une punition au BLL.</p>`;
@@ -376,9 +376,9 @@ function vueMatch(id) {
       <div class="periodes">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
         <div class="sec">Buts</div>
-        ${ligneP("Nous", m.buts_par_periode?.nous, m.buts.nous)}${ligneP("Adv.", m.buts_par_periode?.adv, m.buts.adv)}
+        ${ligneP(`BLL ${esc(m.equipe)}`, m.buts_par_periode?.nous, m.buts.nous)}${ligneP("Adv.", m.buts_par_periode?.adv, m.buts.adv)}
         <div class="sec">Tirs cadrés</div>
-        ${ligneP("Nous", tp.nous, m.tirs.nous)}${ligneP("Adv.", tp.adv, m.tirs.adv)}
+        ${ligneP(`BLL ${esc(m.equipe)}`, tp.nous, m.tirs.nous)}${ligneP("Adv.", tp.adv, m.tirs.adv)}
       </div>
       ${m.buts_par_periode?.nous && m.buts_par_periode?.adv && tp.nous && tp.adv ? "" : `<p class="sous" style="font-size:.85rem">– : donnée non disponible pour ce match.</p>`}
     </section>
@@ -413,7 +413,7 @@ function vueMatch(id) {
       </div>
       ${szp ? `<div class="periodes" style="margin-top:1rem">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
-        ${ligneP("Réussies", szp.reussies, sz.reussies)}${ligneP("Tent.", szp.tentatives, sz.tentatives)}
+        ${ligneP("Réussies", szp.reussies, sz.reussies)}${ligneP("Tentées", szp.tentatives, sz.tentatives)}
         <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pctP(k)}</div>`).join("")}<div class="tot">${pctN(sz.reussies, sz.tentatives)}</div>
       </div>` : sz.tentatives ? `<p class="sous" style="font-size:.85rem">Détail par période non disponible pour ce match.</p>` : ""}
     </section>
@@ -569,9 +569,9 @@ function vueEquipe() {
     <h3>Progression de la saison</h3>
     <p class="sous" style="font-size:.85rem">Match après match, du plus vieux au plus récent. Survoler ou toucher un match pour voir ses valeurs.</p>
     <h4 class="titre-g">Buts par match</h4>
-    ${progression(chrono, [{ lab: "Pour", cls: "nous", val: m => m.buts.nous }, { lab: "Contre", cls: "adv", val: m => m.buts.adv }])}
+    ${progression(chrono, [{ lab: `BLL ${etat.equipe}`, cls: "nous", val: m => m.buts.nous }, { lab: "Contre", cls: "adv", val: m => m.buts.adv }])}
     <h4 class="titre-g">Tirs cadrés par match</h4>
-    ${progression(chrono, [{ lab: "Pour", cls: "nous", val: m => m.tirs.nous }, { lab: "Contre", cls: "adv", val: m => m.tirs.adv }])}
+    ${progression(chrono, [{ lab: `BLL ${etat.equipe}`, cls: "nous", val: m => m.tirs.nous }, { lab: "Contre", cls: "adv", val: m => m.tirs.adv }])}
     ${chrono.filter(m => m.sorties_zone.tentatives).length > 1 ? `<h4 class="titre-g">Sorties de zone réussies</h4>
     ${progression(chrono, [{ lab: "Réussies", cls: "nous", val: m => m.sorties_zone.tentatives ? 100 * m.sorties_zone.reussies / m.sorties_zone.tentatives : null }], "%")}` : ""}
   </section>` : ""}
@@ -580,7 +580,7 @@ function vueEquipe() {
       <h3>Tirs cadrés moyens par période</h3>
       <div class="periodes">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t"></div>
-        <div class="l">Pour</div>${PERIODES.map(([k]) => `<div>${moyP("nous", k)}</div>`).join("")}<div></div>
+        <div class="l">BLL ${etat.equipe}</div>${PERIODES.map(([k]) => `<div>${moyP("nous", k)}</div>`).join("")}<div></div>
         <div class="l">Contre</div>${PERIODES.map(([k]) => `<div>${moyP("adv", k)}</div>`).join("")}<div></div>
       </div>
       <p class="sous" style="font-size:.85rem">Sur ${avecP.length} match${avecP.length > 1 ? "s" : ""} avec tirs par période.</p>
@@ -589,10 +589,10 @@ function vueEquipe() {
       <h3>Buts par période</h3>
       <div class="periodes">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
-        ${ligneB("Pour", "nous")}${ligneB("Contre", "adv")}
+        ${ligneB(`BLL ${etat.equipe}`, "nous")}${ligneB("Contre", "adv")}
       </div>
       <p class="sous" style="font-size:.85rem">Total de la saison, seulement pour les matchs où la période de chaque but est connue :
-        ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne Pour, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.</p>
+        ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne BLL ${etat.equipe}, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.</p>
     </section>
   </div>
   ${aSits(ms) ? `<section class="panneau" style="margin-top:1rem"><h3>Buts selon la situation</h3>${situations(ms)}</section>` : ""}
@@ -601,7 +601,7 @@ function vueEquipe() {
     <div class="periodes">
       <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
       <div class="l">Réussies</div>${PERIODES.map(([k]) => `<div>${szP[k].r ?? "–"}</div>`).join("")}<div class="tot">${szPr}</div>
-      <div class="l">Tent.</div>${PERIODES.map(([k]) => `<div>${szP[k].t ?? "–"}</div>`).join("")}<div class="tot">${szPt}</div>
+      <div class="l">Tentées</div>${PERIODES.map(([k]) => `<div>${szP[k].t ?? "–"}</div>`).join("")}<div class="tot">${szPt}</div>
       <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pctN(szP[k].r, szP[k].t)}</div>`).join("")}<div class="tot">${pctN(szPr, szPt)}</div>
     </div>
     <p class="sous" style="font-size:.85rem">Total de la saison, seulement pour les matchs où les sorties de zone sont notées par période : ${avecSz.length} sur ${nbM(ms.length)}.</p>
@@ -740,7 +740,7 @@ function vueAdversaire(cle) {
       <h3>Buts par période</h3>
       <div class="periodes">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
-        ${ligneB("Pour", "nous")}${ligneB("Contre", "adv")}
+        ${ligneB(`BLL ${etat.equipe}`, "nous")}${ligneB("Contre", "adv")}
       </div>
       <p class="sous" style="font-size:.85rem">Matchs où la période de chaque but est connue.</p>
     </section>
@@ -748,7 +748,7 @@ function vueAdversaire(cle) {
       <h3>Moment des buts dans la période</h3>
       <div class="periodes tiers">
         <div></div>${TIERS.map(t => `<div class="t">${t}</div>`).join("")}
-        <div class="l">Pour</div>${tN.map(x => `<div>${x}</div>`).join("")}
+        <div class="l">BLL ${etat.equipe}</div>${tN.map(x => `<div>${x}</div>`).join("")}
         <div class="l">Contre</div>${tA.map(x => `<div>${x}</div>`).join("")}
       </div>
       <p class="sous" style="font-size:.85rem">Début : 10:00 à 6:40 au chrono ; milieu : 6:40 à 3:20 ; fin : 3:20 à 0:00. Buts dont le temps est noté.</p>

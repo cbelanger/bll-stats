@@ -296,6 +296,7 @@ td.fort { font-weight: 700; }
   /* étiquette et total à la largeur de leur texte, les périodes se partagent le reste (jamais plus large que l'écran) */
   .periodes { grid-template-columns: auto repeat(5, minmax(0, 1fr)) auto; }
   .periodes div { padding: .4rem .1rem; white-space: nowrap; }
+  .periodes .l { white-space: normal; line-height: 1.15; }   /* « BLL U19AA » passe sur deux lignes au besoin */
   .periodes.tiers { grid-template-columns: auto repeat(3, minmax(0, 1fr)); }
   .sommaire-g { padding: 0; }
   .entete-g { margin: 0 -.8rem 1rem; padding: .75rem .8rem; gap: .6rem; }
