@@ -84,7 +84,7 @@ function barresTypes(compte, total, nous = false) {
 }
 
 function tendance(points) {
-  // points : [{date, v (0-1)}]
+  // points : [{date, v (0-1), m (le match)}] ; survol ou toucher d'une colonne = valeurs du match (comme progression())
   if (points.length < 2) return "";
   const W = 640, H = 130, px = 38, py = 14;
   const vals = points.map(p => p.v), lo = Math.max(0, Math.min(.85, ...vals) - .03), hi = 1;
@@ -92,12 +92,16 @@ function tendance(points) {
   const Y = v => py + (hi - v) / (hi - lo) * (H - 2 * py);
   const d = points.map((p, i) => `${i ? "L" : "M"}${X(i).toFixed(1)} ${Y(p.v).toFixed(1)}`).join(" ");
   const ref = .9;
-  return `<svg class="tendance" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pourcentage d’arrêts match après match">
+  const lg = (W - px) / points.length;
+  return `<div class="prog"><svg class="tendance progression" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pourcentage d’arrêts match après match">
     <line class="ref" x1="${px}" x2="${W}" y1="${Y(ref)}" y2="${Y(ref)}"/>
     <text x="0" y="${Y(ref) + 4}">90 %</text>
     <path class="ligne" d="${d}"/>
-    ${points.map((p, i) => `<circle class="pt" cx="${X(i)}" cy="${Y(p.v)}" r="5"><title>${dateCourte(p.date)} : ${(p.v * 100).toFixed(1)} %</title></circle>`).join("")}
-  </svg>`;
+    ${points.map((p, i) => `<circle class="pt" cx="${X(i)}" cy="${Y(p.v)}" r="5"/>`).join("")}
+    ${points.map((p, i) => `<rect class="survol" x="${Math.max(0, X(i) - lg / 2)}" y="0" width="${lg}" height="${H}" data-match="${esc(p.m.id)}"
+      data-titre="${esc(`${dateCourte(p.date)} · ${p.m.adversaire} (${p.m.buts.nous}–${p.m.buts.adv})`)}"
+      data-vals="${esc(`${pct(p.m.tirs.adv - p.m.buts.adv, p.m.tirs.adv)} d’arrêts (${p.m.buts.adv} buts sur ${p.m.tirs.adv} tirs)`)}"/>`).join("")}
+  </svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`;
 }
 
 // Progression match après match (onglet Équipe). series : [{lab, cls ("nous" | "adv"), val: m => nombre | null}].
@@ -106,7 +110,9 @@ function progression(ms, series, unite = "") {
   if (!series.some(se => ms.filter(m => se.val(m) != null).length >= 2))
     return `<p class="vide">Pas encore assez de matchs avec cette donnée (il en faut au moins 2).</p>`;
   // Largeur réelle de l'écran : le texte garde sa taille sur téléphone (redessiné si la fenêtre change)
-  const W = Math.max(320, Math.min(1000, el.clientWidth - 70)), H = 200, gx = 38, dx = 58, hy = 14, by = H - 30;
+  // dx : marge de droite pour les étiquettes au bout des lignes (« BLL U19AA »)
+  const W = Math.max(320, Math.min(1000, el.clientWidth - 70)), H = 200, gx = 38, hy = 14, by = H - 30;
+  const dx = 16 + 7 * Math.max(...series.map(se => se.lab.length));
   const vals = series.flatMap(s => ms.map(s.val)).filter(v => v != null);
   const pas = unite === "%" ? 25 : [1, 2, 5, 10, 20].find(p => Math.max(...vals) / p <= 5) || 50;
   const hi = unite === "%" ? 100 : Math.max(pas, Math.ceil(Math.max(...vals) / pas) * pas);
@@ -128,10 +134,21 @@ function progression(ms, series, unite = "") {
   // étiquettes au bout des lignes, écartées si elles se chevauchent
   etiq.sort((a, b) => a.y - b.y).forEach((e, k) => { if (k && e.y - etiq[k - 1].y < 13) e.y = etiq[k - 1].y + 13; });
   etiq.forEach(e => { s += `<text class="etiq" x="${e.x}" y="${e.y}">${esc(e.lab)}</text>`; });
-  // zones de survol (plus larges que les points)
+  // Zones de survol (plus larges que les points) : survol à la souris ou toucher sur téléphone = valeurs du match
+  // dans la ligne d'info sous le graphique (infoProgression() ; une info-bulle <title> n'existe pas au toucher)
   const lg = (W - gx - dx) / ms.length;
-  ms.forEach((m, i) => { s += `<rect class="survol" x="${X(i) - lg / 2}" y="${hy}" width="${lg}" height="${by - hy}"><title>${dateCourte(m.date)}, ${esc(m.adversaire)} (${m.buts.nous}–${m.buts.adv})\n${series.map(se => `${se.lab} : ${fmt(se.val(m))}`).join("\n")}</title></rect>`; });
-  return s + `</svg>` + (series.length > 1 ? `<div class="legende-l">${series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("")}</div>` : "");
+  ms.forEach((m, i) => { s += `<rect class="survol" x="${X(i) - lg / 2}" y="${hy}" width="${lg}" height="${by - hy}"
+    data-match="${esc(m.id)}" data-titre="${esc(`${dateCourte(m.date)} · ${m.adversaire} (${m.buts.nous}–${m.buts.adv})`)}"
+    data-vals="${esc(series.map(se => `${se.lab} : ${fmt(se.val(m))}`).join(" · "))}"/>`; });
+  return `<div class="prog">${s}</svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`
+    + (series.length > 1 ? `<div class="legende-l">${series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("")}</div>` : "");
+}
+function infoProgression(r) {
+  const p = r.closest(".prog");
+  p.querySelectorAll(".survol.actif").forEach(x => x.classList.remove("actif"));
+  r.classList.add("actif");
+  p.querySelector(".prog-info").innerHTML = `<b>${esc(r.dataset.titre)}</b> ${esc(r.dataset.vals)}
+    <a href="#/match/${encodeURIComponent(r.dataset.match)}">Voir le match →</a>`;
 }
 
 // cle : "buts_accordes" (buts contre) ou "buts_marques" (nos buts, zone = filet adverse)
@@ -465,7 +482,7 @@ function vueGardiennes() {
     const baTirs = avecTirs.reduce((s, m) => s + m.buts.adv, 0);
     const ag = agregerButs(ms);
     const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length, n = ms.length - v - d;
-    const pts = [...avecTirs].sort((a, b) => a.date.localeCompare(b.date)).map(m => ({ date: m.date, v: svArret(m) }));
+    const pts = [...avecTirs].sort((a, b) => a.date.localeCompare(b.date)).map(m => ({ date: m.date, v: svArret(m), m }));
     // Par période : matchs où chaque but accordé a sa période ; % d'arrêts si les tirs par période sont connus aussi.
     // Prolongation null = pas jouée : seuls les matchs avec prolongation comptent dans sa colonne.
     const avecBP = ms.filter(m => m.buts_par_periode?.adv), avecTP = avecBP.filter(m => m.tirs_par_periode.adv);
@@ -577,7 +594,7 @@ function vueEquipe() {
   </section>
   ${ms.length > 1 ? `<section class="panneau" style="margin-top:1rem">
     <h3>Progression de la saison</h3>
-    <p class="sous" style="font-size:.85rem">Match après match, du plus vieux au plus récent. Survoler ou toucher un match pour voir ses valeurs.</p>
+    <p class="sous" style="font-size:.85rem">Match après match, du plus vieux au plus récent.</p>
     <h4 class="titre-g">Buts par match</h4>
     ${progression(chrono, [{ lab: `BLL ${etat.equipe}`, cls: "nous", val: m => m.buts.nous }, { lab: "Contre", cls: "adv", val: m => m.buts.adv }])}
     <h4 class="titre-g">Tirs cadrés par match</h4>
@@ -855,7 +872,10 @@ async function demarrer() {
     else if (location.hash.startsWith("#/adversaire/")) location.hash = "#/adversaires";
     else afficher();
   }));
+  // Graphiques de progression : valeurs du match survolé (souris) ou touché (téléphone)
+  el.addEventListener("mouseover", e => { const r = e.target.closest(".progression .survol"); if (r) infoProgression(r); });
   el.addEventListener("click", e => {
+    const sv = e.target.closest(".progression .survol"); if (sv) infoProgression(sv);
     const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
     const adv = e.target.closest("tr[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
     const g = e.target.closest("tr[data-g]");

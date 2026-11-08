@@ -202,6 +202,8 @@ tout se consulte aussi sur téléphone.
   période (début, milieu, fin), buts selon la situation, types de jeu, filets et patinoires (leurs buts et les nôtres).
   Les noms d'adversaires sont regroupés sans tenir compte des majuscules, des accents ni des espaces.
 
+Dans les graphiques match après match (Équipe, tendance du % d'arrêts des gardiennes), survoler ou toucher un match
+affiche ses valeurs sous le graphique, avec un lien vers sa fiche.
 Les cartes de patinoire de plusieurs matchs (Équipe, Adversaires, Gardiennes) montrent de petits points et des
 **zones de chaleur** : plus c'est foncé, plus il part de buts de cet endroit.
 « – » = donnée non disponible. Bas de page : date de mise à jour du code et des stats.

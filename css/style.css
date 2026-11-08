@@ -230,8 +230,13 @@ td.fort { font-weight: 700; }
 .progression .adv { stroke: var(--rouge); }
 .progression .pt.adv { fill: var(--rouge); }
 .progression .pt.nous, .progression .pt.adv { stroke: var(--surface); }
-.progression .survol { fill: transparent; }
-.progression .survol:hover { fill: color-mix(in srgb, var(--marine) 7%, transparent); }
+.progression .survol { fill: transparent; cursor: pointer; }
+.progression .survol:hover, .progression .survol.actif { fill: color-mix(in srgb, var(--marine) 9%, transparent); }
+.sombre .progression .survol:hover, .sombre .progression .survol.actif { fill: color-mix(in srgb, #8FB0EA 14%, transparent); }
+/* Valeurs du match survolé ou touché, sous le graphique */
+.prog-info { min-height: 2.6em; margin: .2rem 0 .3rem; font-size: .9rem; color: var(--doux); }
+.prog-info b { color: var(--encre); margin-right: .35rem; }
+.prog-info a { margin-left: .35rem; color: var(--rouge); font-weight: 600; text-decoration: none; white-space: nowrap; }
 .legende-l { display: flex; gap: 1.25rem; font-size: .85rem; color: var(--doux); margin-top: .25rem; }
 .legende-l i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: .4rem; }
 .legende-l i.nous { background: var(--marine); }
