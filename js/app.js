@@ -106,7 +106,8 @@ function tendance(points) {
 
 // Progression match après match (onglet Équipe). series : [{lab, cls ("nous" | "adv"), val: m => nombre | null}].
 // Un match sans valeur coupe la ligne ; survol d'une colonne = valeurs du match.
-function progression(ms, series, unite = "") {
+// nom : ce que montre le graphique, pour la ligne d'info (« Tirs cadrés : 13–37 ») ; vide = rien de plus que le score
+function progression(ms, series, unite = "", nom = "") {
   if (!series.some(se => ms.filter(m => se.val(m) != null).length >= 2))
     return `<p class="vide">Pas encore assez de matchs avec cette donnée (il en faut au moins 2).</p>`;
   // Largeur réelle de l'écran : le texte garde sa taille sur téléphone (redessiné si la fenêtre change)
@@ -139,7 +140,7 @@ function progression(ms, series, unite = "") {
   const lg = (W - gx - dx) / ms.length;
   ms.forEach((m, i) => { s += `<rect class="survol" x="${X(i) - lg / 2}" y="${hy}" width="${lg}" height="${by - hy}"
     data-match="${esc(m.id)}" data-titre="${esc(`${dateCourte(m.date)} · ${m.adversaire} (${m.buts.nous}–${m.buts.adv})`)}"
-    data-vals="${esc(series.map(se => `${se.lab} : ${fmt(se.val(m))}`).join(" · "))}"/>`; });
+    data-vals="${esc(nom ? `${nom} : ${series.map(se => fmt(se.val(m))).join("–")}` : "")}"/>`; });
   return `<div class="prog">${s}</svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`
     + (series.length > 1 ? `<div class="legende-l">${series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("")}</div>` : "");
 }
@@ -598,9 +599,9 @@ function vueEquipe() {
     <h4 class="titre-g">Buts par match</h4>
     ${progression(chrono, [{ lab: `BLL ${etat.equipe}`, cls: "nous", val: m => m.buts.nous }, { lab: "Contre", cls: "adv", val: m => m.buts.adv }])}
     <h4 class="titre-g">Tirs cadrés par match</h4>
-    ${progression(chrono, [{ lab: `BLL ${etat.equipe}`, cls: "nous", val: m => m.tirs.nous }, { lab: "Contre", cls: "adv", val: m => m.tirs.adv }])}
+    ${progression(chrono, [{ lab: `BLL ${etat.equipe}`, cls: "nous", val: m => m.tirs.nous }, { lab: "Contre", cls: "adv", val: m => m.tirs.adv }], "", "Tirs cadrés")}
     ${chrono.filter(m => m.sorties_zone.tentatives).length > 1 ? `<h4 class="titre-g">Sorties de zone réussies</h4>
-    ${progression(chrono, [{ lab: "Réussies", cls: "nous", val: m => m.sorties_zone.tentatives ? 100 * m.sorties_zone.reussies / m.sorties_zone.tentatives : null }], "%")}` : ""}
+    ${progression(chrono, [{ lab: "Réussies", cls: "nous", val: m => m.sorties_zone.tentatives ? 100 * m.sorties_zone.reussies / m.sorties_zone.tentatives : null }], "%", "Sorties de zone réussies")}` : ""}
   </section>` : ""}
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
