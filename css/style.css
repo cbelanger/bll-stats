@@ -233,6 +233,13 @@ td.fort { font-weight: 700; }
 .progression .survol { fill: transparent; cursor: pointer; }
 .progression .survol:hover, .progression .survol.actif { fill: color-mix(in srgb, var(--marine) 9%, transparent); }
 .sombre .progression .survol:hover, .sombre .progression .survol.actif { fill: color-mix(in srgb, #8FB0EA 14%, transparent); }
+/* Valeurs à côté des points du match touché (contour de la couleur du fond pour rester lisibles sur les lignes) */
+.progression .val-pt { display: none; font: 700 13px var(--texte); paint-order: stroke; stroke: var(--surface); stroke-width: 4px;
+  stroke-linejoin: round; pointer-events: none; }
+.progression .val-pt.on { display: inline; }
+.progression .val-pt.v-nous { fill: var(--marine); }
+.progression .val-pt.v-adv { fill: var(--rouge); }
+.sombre .progression .val-pt.v-nous { fill: #8FB0EA; }
 /* Valeurs du match survolé ou touché, sous le graphique */
 .prog-info { min-height: 2.6em; margin: .2rem 0 .3rem; font-size: .9rem; color: var(--doux); }
 .prog-info b { color: var(--encre); margin-right: .35rem; }

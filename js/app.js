@@ -138,9 +138,18 @@ function progression(ms, series, unite = "", nom = "") {
   // Zones de survol (plus larges que les points) : survol à la souris ou toucher sur téléphone = valeurs du match
   // dans la ligne d'info sous le graphique (infoProgression() ; une info-bulle <title> n'existe pas au toucher)
   const lg = (W - gx - dx) / ms.length;
-  ms.forEach((m, i) => { s += `<rect class="survol" x="${X(i) - lg / 2}" y="${hy}" width="${lg}" height="${by - hy}"
+  ms.forEach((m, i) => { s += `<rect class="survol" x="${X(i) - lg / 2}" y="${hy}" width="${lg}" height="${by - hy}" data-i="${i}"
     data-match="${esc(m.id)}" data-titre="${esc(`${dateCourte(m.date)} · ${m.adversaire} (${m.buts.nous}–${m.buts.adv})`)}"
     data-vals="${esc(nom ? `${nom} : ${series.map(se => fmt(se.val(m))).join("–")}` : "")}"/>`; });
+  // Valeurs à côté des points, cachées : affichées pour le match touché (la plus haute au-dessus de son point,
+  // l'autre en dessous si les deux points sont proches)
+  ms.forEach((m, i) => {
+    const pts = series.map(se => ({ se, v: se.val(m) })).filter(p => p.v != null).map(p => ({ ...p, y: Y(p.v) })).sort((a, b) => a.y - b.y);
+    pts.forEach((p, k) => {
+      const dessous = k > 0 && p.y - pts[k - 1].y < 22;
+      s += `<text class="val-pt v-${p.se.cls}" data-i="${i}" x="${X(i)}" y="${(dessous ? p.y + 19 : p.y - 10).toFixed(1)}" text-anchor="middle">${fmt(p.v)}</text>`;
+    });
+  });
   return `<div class="prog">${s}</svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`
     + (series.length > 1 ? `<div class="legende-l">${series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("")}</div>` : "");
 }
@@ -148,6 +157,7 @@ function infoProgression(r) {
   const p = r.closest(".prog");
   p.querySelectorAll(".survol.actif").forEach(x => x.classList.remove("actif"));
   r.classList.add("actif");
+  p.querySelectorAll(".val-pt").forEach(t => t.classList.toggle("on", t.dataset.i === r.dataset.i));
   p.querySelector(".prog-info").innerHTML = `<b>${esc(r.dataset.titre)}</b> ${esc(r.dataset.vals)}
     <a href="#/match/${encodeURIComponent(r.dataset.match)}">Voir le match →</a>`;
 }
