@@ -471,20 +471,21 @@ function vueGardiennes() {
     const tc = avecTirs.reduce((s, m) => s + m.tirs.adv, 0), baT = avecTirs.reduce((s, m) => s + m.buts.adv, 0);
     const ba = ms.reduce((s, m) => s + m.buts.adv, 0);
     const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length;
+    const bl = ms.filter(m => m.buts.adv === 0).length;   // blanchissages : aucun but accordé dans le match
     return `<tr${cle ? ` class="lien" tabindex="0" data-g="${esc(cle)}"` : ""}>
       <td class="txt nom-g">${nom}</td><td class="n">${ms.length}</td>
       <td class="n v">${v}</td><td class="n d">${d}</td><td class="n">${ms.length - v - d}</td>
-      <td class="n">${ba}</td><td class="n">${tc}</td>
+      <td class="n">${ba}</td><td class="n">${bl}</td><td class="n">${tc}</td>
       <td class="n fort">${pct(tc - baT, tc)}</td><td class="n">${moy(ba, ms.length)}</td></tr>`;
   };
   const tableau = `<section class="panneau sommaire-g" style="margin-top:1rem"><div class="defile"><table>
     <thead><tr><th>Gardienne</th><th class="n">PJ</th><th class="n">V</th><th class="n">D</th><th class="n">N</th>
-      <th class="n">BA</th><th class="n">TC</th><th class="n">% arr.</th><th class="n">MOY</th></tr></thead>
+      <th class="n">BA</th><th class="n">BL</th><th class="n">TC</th><th class="n">% arr.</th><th class="n">MOY</th></tr></thead>
     <tbody>${tries.map(([cle, { g, ms }]) => ligneG(`${esc(g.nom || "Non indiquée")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}`, ms, cle)).join("")}</tbody>
     ${tries.length > 1 ? `<tfoot>${ligneG("Équipe", ms)}</tfoot>` : ""}
   </table></div>
   <p class="legende-g"><b>PJ</b> parties jouées · <b>V/D/N</b> victoires, défaites, nulles · <b>BA</b> buts accordés ·
-    <b>TC</b> tirs cadrés contre · <b>% arr.</b> pourcentage d’arrêts · <b>MOY</b> moyenne de buts accordés par match.
+    <b>BL</b> blanchissages (aucun but accordé dans le match) · <b>TC</b> tirs cadrés contre · <b>% arr.</b> pourcentage d’arrêts · <b>MOY</b> moyenne de buts accordés par match.
     TC et % arr. : matchs où les tirs sont notés.</p></section>`;
   const cartes = tries.map(([cle, { g, ms }]) => {
     const avecTirs = ms.filter(m => m.tirs.adv != null);
