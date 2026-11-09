@@ -241,6 +241,48 @@
     </div>
   </dialog>
 
+  <!-- Changement de gardienne -->
+  <dialog class="feuille" id="f-chg" aria-labelledby="fc-titre">
+    <div class="corps">
+      <h3 id="fc-titre">Changement de gardienne</h3>
+      <p class="aide" id="fc-actuelle"></p>
+      <div class="champ">
+        <span class="lab">Nouvelle gardienne</span>
+        <div class="puces" id="fc-gards"></div>
+        <div class="rang" id="fc-autre" hidden>
+          <div class="champ">
+            <label class="lab" for="fc-gnom">Nom</label>
+            <input type="text" id="fc-gnom" autocomplete="off" autocapitalize="words">
+          </div>
+          <div class="champ">
+            <label class="lab" for="fc-gno">Numéro</label>
+            <input type="text" id="fc-gno" inputmode="numeric" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="champ">
+        <span class="lab">Période</span>
+        <div class="puces rangee" id="fc-per"></div>
+      </div>
+      <div class="champ">
+        <label class="lab" for="fc-temps">Temps au chrono du changement</label>
+        <input type="text" id="fc-temps" inputmode="numeric" autocomplete="off" placeholder="mm:ss">
+        <span class="aide">Tape seulement les chiffres : 845 donne 8:45.</span>
+      </div>
+      <div class="champ">
+        <label class="lab" for="fc-tirs">Tirs adverses reçus jusqu’ici</label>
+        <input type="text" id="fc-tirs" inputmode="numeric" autocomplete="off">
+        <span class="aide">Compté par la saisie (toutes les gardiennes) ; corrige-le seulement s’il est faux.</span>
+      </div>
+      <span class="err" id="err-chg" hidden></span>
+      <ul class="liste" id="fc-liste"></ul>
+      <div class="pied-f">
+        <button type="button" class="btn" data-act="fermer">Fermer</button>
+        <button type="button" class="btn principal" data-act="chg-ok">Enregistrer</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Menu du match -->
   <dialog class="feuille" id="f-menu" aria-labelledby="fm-titre">
     <div class="corps">
@@ -249,6 +291,7 @@
         <button type="button" class="btn principal" data-act="nouveau">Nouveau match</button>
         <button type="button" class="btn gestion-seul" data-act="ouvrir">Ouvrir un match du site…</button>
         <button type="button" class="btn" data-act="infos">Infos du match</button>
+        <button type="button" class="btn" data-act="changement">Changement de gardienne</button>
         <button type="button" class="btn" data-act="recuperer" id="b-recuperer" hidden>Récupérer le match précédent</button>
         <button type="button" class="btn" data-act="theme" id="b-theme">Mode sombre</button>
       </div>

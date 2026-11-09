@@ -90,7 +90,10 @@ ou « Autre » avec nom et numéro) et responsable des stats.
    (lignes BLL en bleu ; AN, 5v3, DN ou 3v5 s'affiche à côté de la zone).
    Un but BLL est salué par quelques anneaux bleus qui s'envolent pendant une seconde (et une courte vibration) ;
    rien n'est bloqué, et il n'y a pas d'animation si le téléphone est réglé pour réduire les animations.
-5. **Retirer un but** : toucher sa ligne dans « Buts du match » → Supprimer (le tir compté avec lui est retiré aussi).
+5. **Changement de gardienne** (saisie téléphone seulement) : menu ☰ → « Changement de gardienne » : nouvelle gardienne,
+   période et temps au chrono du changement ; les tirs adverses reçus jusque-là sont proposés (corriger au besoin).
+   Les changements notés s'affichent dans « Buts du match » et peuvent être retirés (✕) dans la même fiche.
+6. **Retirer un but** : toucher sa ligne dans « Buts du match » → Supprimer (le tir compté avec lui est retiré aussi).
    **Annuler** (en bas) défait la dernière action ; **Notes** pour un commentaire.
 
 Tout reste dans le téléphone (localStorage), même sans réseau, en rechargeant la page ou en fermant l'application.
@@ -189,7 +192,7 @@ tout se consulte aussi sur téléphone.
   - sorties de zone (détail par période s'il est connu) et notes.
 
   Toucher un but (déroulement, Sommaire ou patinoire) l'allume en jaune partout et allume la zone du filet où il est entré.
-- **Gardiennes** : tableau comparatif (PJ, V, D, N, BA, BL = blanchissages, TC, % arr., MOY, ligne Équipe ; un clic mène à la fiche),
+- **Gardiennes** : tableau comparatif (MJ, V, D, N, BA, BL = blanchissages, TC, % arr., MOY par 40 minutes, TG = temps de glace, ligne Équipe ; un clic mène à la fiche),
   puis pour chacune : % d'arrêts, buts accordés par match, tableau match par match, moyenne et % d'arrêts par période,
   tendance du % d'arrêts, zones du filet, types de jeu, d'où partent les buts accordés.
 - **Équipe** : fiche V-D-N, moyennes par match, progression de la saison (graphiques match après match : buts,
@@ -214,7 +217,13 @@ Le site ne montre aucune statistique individuelle de joueuse (seulement l'équip
 - Un tir cadré inclut les buts.
 - % d'arrêts = (tirs cadrés adverses − buts accordés) / tirs cadrés adverses, toujours à 1 décimale.
 - Buts accordés par match = buts accordés / matchs joués (pas par 60 minutes).
-- Une gardienne par match : tous les tirs adverses du match lui sont attribués.
+- Gardiennes (règle du hockey, LNH et NCAA) : chaque gardienne qui joue reçoit un **match joué (MJ)** ; elle a les buts
+  accordés et les tirs reçus pendant qu'elle était dans le filet, et son temps de glace (TG). La **décision** (V, D ou N) va à la
+  gardienne dans le filet au **but gagnant** (le but qui donne à l'équipe gagnante un but de plus que le total final de
+  l'autre) ; match nul : au dernier but ; 0-0 : à celle qui a commencé. **Blanchissage** (BL) : seulement si une seule
+  gardienne a joué et n'a accordé aucun but. **MOY** = buts accordés × 40 ÷ minutes de glace (un match = 40 minutes ;
+  la prolongation compte comme une période de 10 minutes, jusqu'au but en prolongation s'il y en a un).
+  Sans changement de gardienne, la gardienne du match a tout. Le changement se note seulement dans la saisie téléphone.
 - Tirs par période : une période P1 à P4 laissée vide compte pour 0 ; une prolongation vide
   signifie « pas de prolongation » et n'entre pas dans la moyenne de la prolongation.
 - Buts par période : un match où un but n'a pas de période est exclu (jamais compté comme 0) ;

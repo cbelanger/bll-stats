@@ -26,6 +26,23 @@ const resultat = m => (m.buts.nous > m.buts.adv ? "V" : m.buts.nous < m.buts.adv
 const cleGardienne = g => (g.numero != null ? "#" + g.numero : g.nom || "?");
 const nomGardienne = g => [g.nom, g.numero != null ? "#" + g.numero : ""].filter(Boolean).join(" ") || "Non indiquée";
 const svArret = m => (m.tirs.adv ? (m.tirs.adv - m.buts.adv) / m.tirs.adv : null);
+// Gardiennes d'un match (extract.py, parts_gardiennes) : une entrée par gardienne qui a joué, avec ses minutes,
+// buts accordés, tirs reçus, décision (V, D, N ou null) et blanchissage. Repli pour un ancien matchs.json.
+const partsG = m => m.gardiennes || [{ ...m.gardienne, debut: null, minutes: 40, buts: m.buts.adv, tirs: m.tirs.adv,
+  decision: resultat(m), blanchissage: m.buts.adv === 0 }];
+const nomsGardiennes = m => partsG(m).map(nomGardienne).join(" / ");
+// Fiche de match : la gardienne et son % d'arrêts ; s'il y a eu un changement, la part de chacune et la décision
+function gardiennesMatch(m) {
+  const ps = partsG(m);
+  if (ps.length === 1) return `Gardienne : ${esc(nomGardienne(ps[0]))}, ${pct(m.tirs.adv - m.buts.adv, m.tirs.adv)} d’arrêts`;
+  const per = x => (/^\d$/.test(x) ? "P" + x : x);
+  const dec = { V: "victoire", D: "défaite", N: "nul" };
+  return "Gardiennes : " + ps.map(p => `${esc(nomGardienne(p))}${p.debut ? ` (à partir de ${esc(per(p.debut.periode))} ${esc(p.debut.temps)})` : ""} :
+    ${p.buts} but${p.buts > 1 ? "s" : ""} accordé${p.buts > 1 ? "s" : ""}${p.tirs != null ? `, ${pct(p.tirs - p.buts, p.tirs)} d’arrêts` : ""}${p.decision ? `, ${dec[p.decision]}` : ""}`).join(" ; ") + ".";
+}
+// Temps de glace (minutes) en « mm:ss » et moyenne de buts accordés par 40 minutes (un match complet)
+const tg = min => { const s = Math.round(min * 60); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+const moy40 = (buts, min) => (min ? (buts * 40 / min).toFixed(2).replace(".", ",") : "–");
 
 function filtres() {
   return etat.matchs.filter(m => m.saison === etat.saison && m.equipe === etat.equipe);
@@ -84,7 +101,7 @@ function barresTypes(compte, total, nous = false) {
 }
 
 function tendance(points) {
-  // points : [{date, v (0-1), m (le match)}] ; survol ou toucher d'une colonne = valeurs du match (comme progression())
+  // points : [{date, v (0-1), m (le match), tirs, buts (de cette gardienne)}] ; survol ou toucher = valeurs du match
   if (points.length < 2) return "";
   const W = 640, H = 130, px = 38, py = 14;
   const vals = points.map(p => p.v), lo = Math.max(0, Math.min(.85, ...vals) - .03), hi = 1;
@@ -100,7 +117,7 @@ function tendance(points) {
     ${points.map((p, i) => `<circle class="pt" cx="${X(i)}" cy="${Y(p.v)}" r="5"/>`).join("")}
     ${points.map((p, i) => `<rect class="survol" x="${Math.max(0, X(i) - lg / 2)}" y="0" width="${lg}" height="${H}" data-match="${esc(p.m.id)}"
       data-titre="${esc(`${dateCourte(p.date)} · ${p.m.adversaire} (${p.m.buts.nous}–${p.m.buts.adv})`)}"
-      data-vals="${esc(`${pct(p.m.tirs.adv - p.m.buts.adv, p.m.tirs.adv)} d’arrêts (${p.m.buts.adv} buts sur ${p.m.tirs.adv} tirs)`)}"/>`).join("")}
+      data-vals="${esc(`${pct(p.tirs - p.buts, p.tirs)} d’arrêts (${p.buts} buts sur ${p.tirs} tirs)`)}"/>`).join("")}
   </svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`;
 }
 
@@ -233,7 +250,7 @@ function vueMatchs() {
         <td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
         <td class="n">${m.buts.nous}–${m.buts.adv}</td>
         <td class="n opt">${m.tirs.nous == null && m.tirs.adv == null ? "–" : `${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}`}</td>
-        <td class="opt">${esc(nomGardienne(m.gardienne))}</td>
+        <td class="opt">${esc(nomsGardiennes(m))}</td>
         <td class="n">${pctC(m.sorties_zone.reussies, m.sorties_zone.tentatives)}</td>
         <td class="n">${svArret(m) == null ? "–" : pctC(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
       </tr>`).join("")}</tbody></table></div>`;
@@ -364,7 +381,8 @@ function faitsSaillants(m, liste = false) {
     if (Math.abs(n - a) >= 3) f.push(`${nomEq(n > a ? "nous" : "adv")} remporte ${ord(i)} ${Math.max(n, a)}–${Math.min(n, a)}.`);
   });
   const g = m.gardienne?.nom ? esc(m.gardienne.nom) : "La gardienne";
-  if (m.tirs.adv) {
+  if (partsG(m).length > 1) f.push(`Changement de gardienne : ${partsG(m).map(p => esc(p.nom || "?")).join(", puis ")}.`);
+  else if (m.tirs.adv) {
     const rec = record(x => svArret(x), saison.filter(x => x.tirs.adv));
     f.push(m.buts.adv === 0 ? `Blanchissage pour ${g} : ${m.tirs.adv} arrêts.`
       : `${g} arrête ${m.tirs.adv - m.buts.adv} des ${m.tirs.adv} tirs (${pct(m.tirs.adv - m.buts.adv, m.tirs.adv)})${rec ? " : meilleur % d’arrêts de la saison" : ""}.`);
@@ -425,7 +443,7 @@ function vueMatch(id) {
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Buts accordés</h3>
-      <p class="sous" style="margin-bottom:.75rem">Gardienne : ${esc(nomGardienne(m.gardienne))}, ${pct(m.tirs.adv - m.buts.adv, m.tirs.adv)} d’arrêts</p>
+      <p class="sous" style="margin-bottom:.75rem">${gardiennesMatch(m)}</p>
       ${filet(nums, "numeros")}
     </section>
     <section class="panneau">
@@ -462,42 +480,56 @@ function vueMatch(id) {
 function vueGardiennes() {
   const ms = filtres();
   if (!ms.length) return `<h1>Gardiennes ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
+  // Une « apparition » par gardienne et par match : copie du match réduite à sa part (buts accordés pendant
+  // qu'elle était dans le filet, tirs reçus) ; _p = sa part (minutes, décision, blanchissage), _complet = seule du match
   const groupes = {};
-  ms.forEach(m => { const k = cleGardienne(m.gardienne); (groupes[k] = groupes[k] || { g: m.gardienne, ms: [] }).ms.push(m); });
+  ms.forEach(m => partsG(m).forEach((p, i) => {
+    const k = cleGardienne(p);
+    (groupes[k] = groupes[k] || { g: p, ms: [] }).ms.push({ ...m, _p: p, _complet: partsG(m).length === 1,
+      buts: { ...m.buts, adv: p.buts }, tirs: { ...m.tirs, adv: p.tirs },
+      buts_accordes: m.buts_accordes.filter(b => (b.gardienne ?? 0) === i) });
+  }));
   const tries = Object.entries(groupes).sort(([, a], [, b]) => b.ms.length - a.ms.length);
+  // Ligne Équipe : par match (décision du match, blanchissage d'équipe, minutes de toutes les gardiennes)
+  const equipe = ms.map(m => ({ ...m, _p: { decision: resultat(m), blanchissage: m.buts.adv === 0,
+    minutes: partsG(m).reduce((s, p) => s + p.minutes, 0) } }));
+  const minutes = ms => ms.reduce((s, m) => s + m._p.minutes, 0);
   // Tableau comparatif : une ligne par gardienne (un clic descend à sa fiche détaillée)
   const ligneG = (nom, ms, cle) => {
     const avecTirs = ms.filter(m => m.tirs.adv != null);
     const tc = avecTirs.reduce((s, m) => s + m.tirs.adv, 0), baT = avecTirs.reduce((s, m) => s + m.buts.adv, 0);
     const ba = ms.reduce((s, m) => s + m.buts.adv, 0);
-    const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length;
-    const bl = ms.filter(m => m.buts.adv === 0).length;   // blanchissages : aucun but accordé dans le match
+    const dec = x => ms.filter(m => m._p.decision === x).length;
+    const bl = ms.filter(m => m._p.blanchissage).length;   // blanchissages : seule dans le filet, aucun but accordé
     return `<tr${cle ? ` class="lien" tabindex="0" data-g="${esc(cle)}"` : ""}>
       <td class="txt nom-g">${nom}</td><td class="n">${ms.length}</td>
-      <td class="n v">${v}</td><td class="n d">${d}</td><td class="n">${ms.length - v - d}</td>
+      <td class="n v">${dec("V")}</td><td class="n d">${dec("D")}</td><td class="n">${dec("N")}</td>
       <td class="n">${ba}</td><td class="n">${bl}</td><td class="n">${tc}</td>
-      <td class="n fort">${pct(tc - baT, tc)}</td><td class="n">${moy(ba, ms.length)}</td></tr>`;
+      <td class="n fort">${pct(tc - baT, tc)}</td><td class="n">${moy40(ba, minutes(ms))}</td><td class="n opt">${tg(minutes(ms))}</td></tr>`;
   };
   const tableau = `<section class="panneau sommaire-g" style="margin-top:1rem"><div class="defile"><table>
-    <thead><tr><th>Gardienne</th><th class="n">PJ</th><th class="n">V</th><th class="n">D</th><th class="n">N</th>
-      <th class="n">BA</th><th class="n">BL</th><th class="n">TC</th><th class="n">% arr.</th><th class="n">MOY</th></tr></thead>
+    <thead><tr><th>Gardienne</th><th class="n">MJ</th><th class="n">V</th><th class="n">D</th><th class="n">N</th>
+      <th class="n">BA</th><th class="n">BL</th><th class="n">TC</th><th class="n">% arr.</th><th class="n">MOY</th><th class="n opt">TG</th></tr></thead>
     <tbody>${tries.map(([cle, { g, ms }]) => ligneG(`${esc(g.nom || "Non indiquée")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}`, ms, cle)).join("")}</tbody>
-    ${tries.length > 1 ? `<tfoot>${ligneG("Équipe", ms)}</tfoot>` : ""}
+    ${tries.length > 1 ? `<tfoot>${ligneG("Équipe", equipe)}</tfoot>` : ""}
   </table></div>
-  <p class="legende-g"><b>PJ</b> parties jouées · <b>V/D/N</b> victoires, défaites, nulles · <b>BA</b> buts accordés ·
-    <b>BL</b> blanchissages (aucun but accordé dans le match) · <b>TC</b> tirs cadrés contre · <b>% arr.</b> pourcentage d’arrêts · <b>MOY</b> moyenne de buts accordés par match.
-    TC et % arr. : matchs où les tirs sont notés.</p></section>`;
+  <p class="legende-g"><b>MJ</b> matchs joués · <b>V/D/N</b> victoires, défaites, nulles (la décision va à la gardienne dans le filet au
+    but gagnant, ou au dernier but d’un nul) · <b>BA</b> buts accordés · <b>BL</b> blanchissages (seule dans le filet, aucun but accordé) ·
+    <b>TC</b> tirs cadrés contre · <b>% arr.</b> pourcentage d’arrêts · <b>MOY</b> buts accordés par 40 minutes de jeu (un match) ·
+    <b>TG</b> temps de glace. TC et % arr. : matchs où les tirs sont notés.</p></section>`;
   const cartes = tries.map(([cle, { g, ms }]) => {
     const avecTirs = ms.filter(m => m.tirs.adv != null);
     const tirs = avecTirs.reduce((s, m) => s + m.tirs.adv, 0);
     const ba = ms.reduce((s, m) => s + m.buts.adv, 0);
     const baTirs = avecTirs.reduce((s, m) => s + m.buts.adv, 0);
     const ag = agregerButs(ms);
-    const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length, n = ms.length - v - d;
-    const pts = [...avecTirs].sort((a, b) => a.date.localeCompare(b.date)).map(m => ({ date: m.date, v: svArret(m), m }));
-    // Par période : matchs où chaque but accordé a sa période ; % d'arrêts si les tirs par période sont connus aussi.
-    // Prolongation null = pas jouée : seuls les matchs avec prolongation comptent dans sa colonne.
-    const avecBP = ms.filter(m => m.buts_par_periode?.adv), avecTP = avecBP.filter(m => m.tirs_par_periode.adv);
+    const v = ms.filter(m => m._p.decision === "V").length, d = ms.filter(m => m._p.decision === "D").length;
+    const n = ms.filter(m => m._p.decision === "N").length, min = minutes(ms);
+    const pts = [...avecTirs].filter(m => m.tirs.adv).sort((a, b) => a.date.localeCompare(b.date))
+      .map(m => ({ date: m.date, v: svArret(m), m, tirs: m.tirs.adv, buts: m.buts.adv }));
+    // Par période : matchs joués au complet (seule dans le filet) où chaque but accordé a sa période ;
+    // % d'arrêts si les tirs par période sont connus aussi. Prolongation null = pas jouée.
+    const avecBP = ms.filter(m => m._complet && m.buts_par_periode?.adv), avecTP = avecBP.filter(m => m.tirs_par_periode.adv);
     const parP = k => {
       const b = avecBP.map(m => m.buts_par_periode.adv[k]).filter(v => v != null);
       const t = avecTP.filter(m => m.tirs_par_periode.adv[k] != null && m.buts_par_periode.adv[k] != null);
@@ -517,33 +549,35 @@ function vueGardiennes() {
         <div class="l">% arr.</div>${PERIODES.map(([k]) => `<div>${P[k].arrets}</div>`).join("")}<div class="tot">${pctN(tirsTP - butsTP, tirsTP)}</div>
       </div>
       <p class="sous" style="font-size:.85rem">Moy. = buts accordés par match. Buts et moyenne : ${avecBP.length} sur ${ms.length} match${ms.length > 1 ? "s" : ""}
-        (ceux où la période de chaque but est connue). % d’arrêts : ${avecTP.length} match${avecTP.length > 1 ? "s" : ""} où les tirs par période sont connus aussi.</p>` : "";
+        (joués au complet, où la période de chaque but est connue). % d’arrêts : ${avecTP.length} match${avecTP.length > 1 ? "s" : ""} où les tirs par période sont connus aussi.</p>` : "";
     // Tableau match par match, du plus vieux au plus récent ; la moyenne de la saison n'apparaît qu'au total
     const lignes = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || ""))).map(m => `
       <tr class="lien" tabindex="0" data-id="${esc(m.id)}">
         <td>${dateCourte(m.date)}</td><td class="txt">${esc(m.adversaire)}</td>
+        <td>${m._p.decision ? `<span class="res ${m._p.decision}">${m._p.decision}</span>` : "–"}</td>
         <td class="n">${m.tirs.adv ?? "–"}</td><td class="n">${m.buts.adv}</td>
         <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
-        <td class="n opt">${moy(m.buts.adv, 1)}</td></tr>`).join("");
+        <td class="n opt">${tg(m._p.minutes)}</td></tr>`).join("");
     return `<section class="panneau gardienne" id="g-${esc(cle.replace(/[^\w-]/g, "_"))}">
       <header class="entete-g">
         ${g.numero != null ? `<span class="dossard">${g.numero}</span>` : ""}
         <h2>${esc(g.nom || "Gardienne")}</h2>
-        <span class="bilan-g">${ms.length} PJ · ${v}-${d}-${n} · ${pct(tirs - baTirs, tirs)}</span>
+        <span class="bilan-g">${ms.length} MJ · ${v}-${d}-${n} · ${pct(tirs - baTirs, tirs)}</span>
       </header>
       <div class="chiffres">
         <div class="chiffre accent"><b>${pct(tirs - baTirs, tirs)}</b><span>% d’arrêts</span></div>
-        <div class="chiffre"><b>${moy(ba, ms.length)}</b><span>buts accordés / match</span></div>
+        <div class="chiffre"><b>${moy40(ba, min)}</b><span>buts accordés / 40 min</span></div>
         <div class="chiffre"><b>${ms.length}</b><span>matchs (${v}-${d}-${n})</span></div>
         <div class="chiffre"><b>${tirs}</b><span>tirs reçus</span></div>
         <div class="chiffre"><b>${ba}</b><span>buts accordés</span></div>
+        <div class="chiffre"><b>${tg(min)}</b><span>temps de glace</span></div>
       </div>
       <h3 style="margin-top:1.25rem">Buts accordés match par match</h3>
-      <div class="defile"><table>
-        <thead><tr><th>Date</th><th>Adversaire</th><th class="n">Tirs reçus</th><th class="n">Buts accordés</th><th class="n">% arrêts</th><th class="n opt">Moy. buts / match</th></tr></thead>
+      <div class="defile"><table class="serre">
+        <thead><tr><th>Date</th><th>Adversaire</th><th>Déc.</th><th class="n">Tirs</th><th class="n">BA</th><th class="n">% arr.</th><th class="n opt">TG</th></tr></thead>
         <tbody>${lignes}</tbody>
-        <tfoot><tr><td>Total</td><td>${ms.length} match${ms.length > 1 ? "s" : ""}</td>
-          <td class="n">${tirs}</td><td class="n">${ba}</td><td class="n">${pct(tirs - baTirs, tirs)}</td><td class="n opt">${moy(ba, ms.length)}</td></tr></tfoot>
+        <tfoot><tr><td>Total</td><td>${ms.length} match${ms.length > 1 ? "s" : ""}</td><td>${v}-${d}-${n}</td>
+          <td class="n">${tirs}</td><td class="n">${ba}</td><td class="n">${pct(tirs - baTirs, tirs)}</td><td class="n opt">${tg(min)}</td></tr></tfoot>
       </table></div>
       ${blocP}
       ${pts.length > 1 ? `<h3 style="margin-top:1.25rem">% d’arrêts match après match</h3>${tendance(pts)}` : ""}
@@ -761,7 +795,7 @@ function vueAdversaire(cle) {
         <tbody>${ms.map(m => `<tr class="lien" tabindex="0" data-id="${esc(m.id)}">
           <td>${dateCourte(m.date)}</td><td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
           <td class="n">${m.buts.nous}–${m.buts.adv}</td><td class="n">${m.tirs.nous == null && m.tirs.adv == null ? "–" : `${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}`}</td>
-          <td class="opt">${esc(nomGardienne(m.gardienne))}</td></tr>`).join("")}</tbody>
+          <td class="opt">${esc(nomsGardiennes(m))}</td></tr>`).join("")}</tbody>
       </table></div>
     </section>
     <section class="panneau">

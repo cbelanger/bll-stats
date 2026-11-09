@@ -325,6 +325,9 @@ def valider(champs):
     if erreurs:
         return None, erreurs, avertissements
 
+    gardiennes = parts_gardiennes(champs, equipe, g_nom, g_no, buts_nous, buts_adv, tirs_adv, marques, detail,
+                                  prol, periode_de, nombre, avertissements)
+
     return {
         "id": f"{d.isoformat()}_{equipe}_{slug(adversaire) or 'adversaire'}",
         "fichier": None,
@@ -337,7 +340,8 @@ def valider(champs):
         "heure_fin": texte(champs, "heure_fin") or None,
         "adversaire": adversaire,
         "responsable": texte(champs, "responsable") or None,
-        "gardienne": {"nom": g_nom or None, "numero": g_no},
+        "gardienne": {"nom": g_nom or None, "numero": g_no},   # celle qui a commencé le match
+        "gardiennes": gardiennes,                              # une entrée par gardienne qui a joué (voir parts_gardiennes)
         "buts": {"nous": buts_nous, "adv": buts_adv},
         "tirs": {"nous": tirs_nous, "adv": tirs_adv},
         "tirs_par_periode": {"nous": per_nous, "adv": per_adv},
@@ -347,6 +351,94 @@ def valider(champs):
         "buts_marques": marques,
         "notes": texte(champs, "notes") or None,
     }, [], avertissements
+
+
+DUREE_P = 600   # une période = 10 minutes (en secondes) ; match complet = 4 périodes = 40 minutes
+
+
+def parts_gardiennes(champs, equipe, g_nom, g_no, buts_nous, buts_adv, tirs_adv, marques, detail,
+                     prol, periode_de, nombre, avertissements):
+    """Une entrée par gardienne qui a joué : temps de glace, buts accordés, tirs reçus, décision, blanchissage.
+
+    Changements de gardienne (saisie téléphone seulement) : chg_N_gardienne, chg_N_periode, chg_N_temps
+    (chrono au moment du changement) et chg_N_tirs (tirs adverses reçus par toutes les gardiennes jusque-là).
+    Règle du hockey (NCAA, LNH) : la décision va à la gardienne dans le filet au moment du but gagnant
+    (le but qui donne à l'équipe gagnante un but de plus que le total final de l'autre) ; match nul : au moment
+    du dernier but ; 0-0 : celle qui a commencé. Blanchissage individuel seulement si une seule gardienne a joué.
+    Chaque but accordé reçoit « gardienne » = index de la gardienne en place (0 = celle du début)."""
+    def instant(per, temps):
+        # Secondes écoulées depuis le début du match (le chrono descend) ; None si période ou temps inconnu.
+        # La prolongation est comptée comme une 5e période de 10 minutes.
+        k = periode_de(per or "")
+        s = re.fullmatch(r"(\d+):(\d{2})", (temps or "").strip())
+        if not k or not s:
+            return None
+        return PERIODES.index(k) * DUREE_P + DUREE_P - (int(s[1]) * 60 + int(s[2]))
+
+    chg = []
+    for n in sorted({int(m[1]) for k in champs if (m := re.fullmatch(r"chg_(\d+)_gardienne", k))}):
+        nom, no = normaliser_gardienne(*gardienne_de(texte(champs, f"chg_{n}_gardienne")), equipe, avertissements)
+        per, tps = texte(champs, f"chg_{n}_periode"), texte(champs, f"chg_{n}_temps")
+        t = instant(per, tps)
+        if t is None:
+            avertissements.append(f"changement de gardienne {n} : période ou temps manquant (changement ignoré)")
+            continue
+        chg.append({"nom": nom or None, "numero": no, "t": t, "debut": {"periode": per, "temps": tps},
+                    "tirs": nombre(f"chg_{n}_tirs")})
+    chg.sort(key=lambda c: c["t"])
+
+    # Fin du match : 40 minutes, ou fin de la prolongation (dernier but en prolongation, sinon 10 minutes de plus)
+    t_prol = [t for b in [*marques, *detail] if periode_de(b["periode"] or "") == "prol"
+              and (t := instant(b["periode"], b["temps"])) is not None]
+    fin = (max(t_prol) if t_prol else 5 * DUREE_P) if prol else 4 * DUREE_P
+
+    en_place = lambda t: sum(1 for c in chg if c["t"] < t)   # un but au moment même du changement : celle d'avant
+    buts = [0] * (len(chg) + 1)
+    for b in detail:
+        t = instant(b["periode"], b["temps"])
+        if t is None and chg:
+            avertissements.append(f"but {b['no']} : période ou temps manquant, attribué à la gardienne du début")
+        b["gardienne"] = 0 if t is None else en_place(t)
+        buts[b["gardienne"]] += 1
+    if len(detail) < (buts_adv or 0):   # buts sans ligne de détail : à la gardienne du début
+        buts[0] += (buts_adv or 0) - len(detail)
+
+    # Tirs reçus : écart entre les totaux notés à chaque changement
+    tirs = [tirs_adv] if not chg else [None] * (len(chg) + 1)
+    if chg and tirs_adv is not None:
+        bornes = [0] + [c["tirs"] for c in chg] + [tirs_adv]
+        for i in range(len(chg) + 1):
+            if bornes[i] is not None and bornes[i + 1] is not None and bornes[i + 1] >= bornes[i]:
+                tirs[i] = bornes[i + 1] - bornes[i]
+        if None in tirs:
+            avertissements.append("tirs reçus par gardienne inconnus ou incohérents (changement de gardienne)")
+
+    # Décision
+    resultat = "V" if buts_nous > buts_adv else "D" if buts_nous < buts_adv else "N"
+    qui = 0
+    if chg and buts_nous + buts_adv:
+        moments = lambda liste, total: (sorted(t for b in liste if (t := instant(b["periode"], b["temps"])) is not None)
+                                        if len(liste) == total else [])
+        nous, adv = moments(marques, buts_nous), moments(detail, buts_adv)
+        if resultat == "V":
+            t_dec = nous[buts_adv] if len(nous) == buts_nous else None
+        elif resultat == "D":
+            t_dec = adv[buts_nous] if len(adv) == buts_adv else None
+        else:
+            t_dec = max(nous + adv) if len(nous) == buts_nous and len(adv) == buts_adv else None
+        if t_dec is None:
+            avertissements.append("décision donnée à la gardienne du début : période ou temps du but décisif inconnu")
+        else:
+            qui = en_place(t_dec)
+
+    debuts = [0] + [c["t"] for c in chg]
+    fins = debuts[1:] + [fin]
+    qui_joue = [{"nom": g_nom or None, "numero": g_no, "debut": None}] + \
+               [{"nom": c["nom"], "numero": c["numero"], "debut": c["debut"]} for c in chg]
+    return [{**g, "minutes": round(max(0, fins[i] - debuts[i]) / 60, 2), "buts": buts[i], "tirs": tirs[i],
+             "decision": resultat if i == qui else None,
+             "blanchissage": not chg and buts[i] == 0}
+            for i, g in enumerate(qui_joue)]
 
 
 def meme_match(a, b):

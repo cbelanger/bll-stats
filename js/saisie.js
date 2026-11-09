@@ -56,6 +56,7 @@ function nouveau() {
     heure_debut: "", heure_fin: "", responsable: p.responsable || "", gardienne: p.equipe === equipe && p.gardienne || "",
     periode: "p1", tirs: { nous: vide(), adv: vide() }, butsNous: [], butsAdv: [], sz: { r: vide(), x: vide() },
     notes: "", exporte: false,
+    changements: [],                                   // changements de gardienne : {gardienne, periode, temps, tirs}
     fichier: null, origine: "saisie", ouvert: false,   // ouvert = rechargé depuis le site, pas encore modifié
     tirsInconnus: { nous: false, adv: false }          // tirs jamais saisis (match rouvert venu d'un PDF incomplet)
   };
@@ -63,6 +64,7 @@ function nouveau() {
 // Sorties de zone par période ; inc = sorties sans période (match venu d'un fichier qui n'avait que les totaux)
 function migrer(s) {
   if (s && s.sz && typeof s.sz.r === "number") s.sz = { r: { ...vide(), inc: s.sz.r }, x: { ...vide(), inc: s.sz.x } };
+  if (s && !s.changements) s.changements = [];
   return s;
 }
 const szInc = s => (s.sz.r.inc || 0) + (s.sz.x.inc || 0);
@@ -146,7 +148,8 @@ function afficher() {
     $("#det-sz" + r).innerHTML = detail(S.sz[r]) + (S.sz[r].inc ? ` · <span class="manque-p">sans période&nbsp;${S.sz[r].inc}</span>` : "");
   }
   $("#szp").textContent = tot ? `${Math.round(100 * szR / tot)} % réussies` : "";
-  $("#gard").textContent = S.gardienne;
+  // Gardienne du début, puis chaque changement (« Stella #28 → Frédérique #30 (P3 10:00) »)
+  $("#gard").textContent = [S.gardienne, ...S.changements.map(c => `→ ${c.gardienne} (${nomP(c.periode)} ${c.temps})`)].filter(Boolean).join(" ");
 
   // Buts des deux équipes dans l'ordre du match : période, puis temps décroissant (chrono qui descend),
   // sinon ordre de saisie. Les buts accordés gardent leur numéro (celui du filet sur le site).
@@ -254,6 +257,49 @@ function gardienneChoisie() {
   return nom && no ? `${nom} #${Number(no)}` : null;
 }
 
+/* ---------- Changement de gardienne (la décision V-D-N et les stats de chacune sont calculées par extract.py) */
+let chg = null;   // brouillon : {g (index dans GARDIENNES, "autre" ou null), periode}
+const gardienneEnPlace = () => S.changements.length ? S.changements[S.changements.length - 1].gardienne : S.gardienne;
+function ouvrirChangement() {
+  chg = { g: null, periode: S.periode };
+  const actuelle = gardienneEnPlace();
+  $("#fc-actuelle").textContent = actuelle ? `En ce moment : ${actuelle}.` : "Gardienne du début non indiquée (Infos du match).";
+  $("#fc-gards").innerHTML = GARDIENNES.map((g, k) => (g.equipe || S.equipe) === S.equipe && texteGardienne(g) !== actuelle
+    ? `<button type="button" class="puce" data-cg="${k}">${esc(texteGardienne(g))}</button>` : "").join("")
+    + `<button type="button" class="puce" data-cg="autre">Autre</button>`;
+  $("#fc-per").innerHTML = PER.map(([k, l]) => `<button type="button" class="puce" data-cp="${k}">${l}</button>`).join("");
+  $("#fc-gnom").value = $("#fc-gno").value = $("#fc-temps").value = "";
+  $("#fc-tirs").value = tirsInconnus("adv") ? "" : somme(S.tirs.adv);
+  majChangement();
+  if (!$("#f-chg").open) $("#f-chg").showModal();
+}
+function majChangement() {
+  document.querySelectorAll("[data-cg]").forEach(b => b.setAttribute("aria-pressed", b.dataset.cg === String(chg.g)));
+  document.querySelectorAll("[data-cp]").forEach(b => b.setAttribute("aria-pressed", b.dataset.cp === chg.periode));
+  $("#fc-autre").hidden = chg.g !== "autre";
+  $("#err-chg").hidden = true;
+  $("#fc-liste").innerHTML = (S.changements.length ? `<li class="vide">Changements déjà notés (✕ pour en retirer un) :</li>` : "")
+    + S.changements.map((c, i) => `<li><button type="button" class="but adv" data-act="chg-suppr" data-i="${i}"
+    aria-label="Retirer ce changement"><span class="no">${i + 1}</span><span>${nomP(c.periode)}</span><span>${esc(c.temps)}</span>
+    <span class="ty">${esc(c.gardienne)}</span><span></span><span class="fl">✕</span></button></li>`).join("");
+}
+function enregistrerChangement() {
+  const err = t => { $("#err-chg").textContent = t; $("#err-chg").hidden = false; };
+  let g = chg.g === null ? "" : chg.g === "autre" ? "" : texteGardienne(GARDIENNES[chg.g]);
+  if (chg.g === "autre") {
+    const nom = $("#fc-gnom").value.trim(), no = $("#fc-gno").value.replace(/\D/g, "");
+    g = nom && no ? `${nom} #${Number(no)}` : "";
+  }
+  const temps = normTemps($("#fc-temps").value), tirs = $("#fc-tirs").value.replace(/\D/g, "");
+  if (!g) return err("Choisis la nouvelle gardienne (nom et numéro pour « Autre »).");
+  if (!temps) return err("Indique le temps au chrono du changement (ex. 845 pour 8:45).");
+  action(`Changement de gardienne (${g})`, () => {
+    S.changements.push({ gardienne: g, periode: chg.periode, temps, tirs: tirs === "" ? null : Number(tirs) });
+  });
+  $("#f-chg").close();
+  toast(`${g} est dans le filet.`);
+}
+
 /* ---------- Export (mêmes champs que le PDF Sommaire) */
 function prolJouee() {
   return S.periode === "prol" || S.tirs.nous.prol > 0 || S.tirs.adv.prol > 0 || S.sz.r.prol + S.sz.x.prol > 0 ||
@@ -288,6 +334,12 @@ function champs() {
     c[`but_${n}_temps`] = b.temps; c[`but_${n}_type`] = b.type; c[`but_${n}_zone`] = b.zone;
     c[`but_${n}_sit`] = b.sit || "EG";
     if (b.lieu) c[`but_${n}_lieu`] = b.lieu;
+  });
+  // Changements de gardienne (saisie téléphone seulement) ; tirs = tirs adverses reçus jusque-là, toutes gardiennes
+  S.changements.forEach((ch, i) => {
+    const n = i + 1;
+    c[`chg_${n}_gardienne`] = ch.gardienne; c[`chg_${n}_periode`] = ch.periode === "prol" ? "Prol." : ch.periode.slice(1);
+    c[`chg_${n}_temps`] = ch.temps; c[`chg_${n}_tirs`] = ch.tirs;
   });
   // Buts BLL : nombre par période, et une ligne par but détaillé (période, temps, type, zone du filet adverse)
   const bp = compteP(S.butsNous);
@@ -336,6 +388,9 @@ function depuisChamps(c, fichier, origine) {
                 type: t(`but_${i}_type`).split(/\s+[–-]\s+/)[0], zone: t(`but_${i}_zone`), lieu: t(`but_${i}_lieu`), sit: t(`but_${i}_sit`) };
     if (t(`but_${i}_periode`) || b.temps || b.type || b.zone || b.lieu || b.sit) s.butsAdv.push(b);
   }
+  for (let i = 1; t(`chg_${i}_gardienne`); i++)
+    s.changements.push({ gardienne: t(`chg_${i}_gardienne`), periode: per[t(`chg_${i}_periode`)] || "p1",
+                         temps: t(`chg_${i}_temps`), tirs: n(`chg_${i}_tirs`) });
   // Buts accordés sans ligne de détail : lignes vides à compléter, pour garder le bon score
   while (s.butsAdv.length < n("buts_adv")) s.butsAdv.push({ periode: null, temps: "", type: "", zone: "" });
   if (PER.some(([k]) => t(`sz_tentatives_${k}`) || t(`sz_reussies_${k}`)))
@@ -534,6 +589,10 @@ document.addEventListener("click", e => {
   const fo = e.target.closest("[data-fichier]");
   if (fo) { ouvrirMatch(fo.dataset.fichier); return; }
 
+  const cg = e.target.closest("[data-cg]"), cp = e.target.closest("[data-cp]");
+  if (cg) { const v = cg.dataset.cg === "autre" ? "autre" : Number(cg.dataset.cg); chg.g = chg.g === v ? null : v; majChangement(); return; }
+  if (cp) { chg.periode = cp.dataset.cp; majChangement(); return; }
+
   const gd = e.target.closest("[data-gd]");
   if (gd) {
     const v = gd.dataset.gd === "autre" ? "autre" : Number(gd.dataset.gd);
@@ -679,12 +738,21 @@ document.addEventListener("click", e => {
     case "telecharger": telecharger(); break;
     case "telecharger-pdf": telechargerPdf(); break;
     case "copier": copier(); break;
+    case "changement": if ($("#f-menu").open) $("#f-menu").close(); ouvrirChangement(); break;
+    case "chg-ok": enregistrerChangement(); break;
+    case "chg-suppr": {
+      const i = Number(b.dataset.i);
+      action("Retrait d’un changement de gardienne", () => { S.changements.splice(i, 1); });
+      majChangement();
+      toast("Changement retiré. « Annuler » le remet.");
+      break;
+    }
     case "fermer": b.closest("dialog").close(); break;
   }
 });
 
 // Temps : chiffres seulement, le « : » s'ajoute tout seul (845 → 8:45)
-$("#temps").addEventListener("input", e => {
+for (const id of ["#temps", "#fc-temps"]) $(id).addEventListener("input", e => {
   const d = e.target.value.replace(/\D/g, "").slice(0, 4);
   e.target.value = d.length > 2 ? d.slice(0, -2) + ":" + d.slice(-2) : d;
   $("#err-temps").hidden = true;
