@@ -58,7 +58,7 @@ Après une mise à jour de la saisie, l'ouvrir avec du réseau, puis la fermer e
 et par l'onglet « Aide » du site. Elle s'adresse aux parents (avant, pendant et après le match, fiche d'un but, codes,
 problèmes fréquents) et fonctionne sans réseau. Son lien de retour ramène là d'où on vient : la saisie (dans le même
 mode) ou le site (`aide.html?depuis=site`, sans lien vers la saisie). À tenir à jour quand la saisie change.
-En haut de l'aide, une **vidéo** d'environ 1 min 40 (`assets/aide/saisie-demo.mp4`, sans son, avec sous-titres) montre
+En haut de l'aide, une **vidéo** d'environ 2 minutes (`assets/aide/saisie-demo.mp4`, sans son, avec sous-titres) montre
 un match fictif « Équipe A » ; les vrais noms des gardiennes y sont remplacés par « Gardienne 1 », « Gardienne 2 ».
 Elle est fabriquée automatiquement à partir de la vraie saisie : **après un changement de la saisie, la refaire** avec
 `python tools/video/faire_video.py` (les étapes et sous-titres sont dans `tools/video/demo.html`).

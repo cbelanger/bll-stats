@@ -45,7 +45,7 @@ const pat = (x, y) => { const svg = $("#fb-pat svg"), r = svg.getBoundingClientR
 // Chaque étape : actions à rejouer (avant), ce qu'il faut toucher ensuite (cible), sous-titre.
 // carte = écran de titre sans la saisie.
 const ETAPES = [
-  { carte: `<img src="../../assets/logo-bll.png" alt=""><h1>Saisir les stats<br>d'un match</h1><p>Sur ton téléphone, en moins de 2 minutes</p>`,
+  { carte: `<img src="../../assets/logo-bll.png" alt=""><h1>Saisir les stats<br>d'un match</h1><p>Sur ton téléphone, en 2 minutes</p>`,
     st: "Saisie de match – BLL Élite" },
   { cible: "#fi-adv", st: "Avant le match : inscris <b>l'adversaire</b>…" },
   { faire: () => taper("#fi-adv", "Équipe A"), cible: "#fi-gards [data-gd]", st: "…choisis <b>la gardienne</b>…" },
@@ -73,7 +73,13 @@ const ETAPES = [
   { faire: () => { clic(".but.adv"); clic('[data-bt="L"]'); clic('[data-bz="BG"]'); }, cible: '[data-act="but-ok"]',
     st: "Complète, puis <b>Enregistrer</b>." },
   { faire: () => clic('[data-act="but-ok"]'), cible: "#annuler", st: "Une erreur ? <b>Annuler</b> défait la dernière action." },
-  { cible: '[data-act="terminer"]', st: "À la fin du match : <b>Terminer</b>." },
+  { cible: '[data-act="menu"]', st: "La gardienne est remplacée ? Ouvre le menu <b>☰</b>…" },
+  { faire: () => clic('[data-act="menu"]'), cible: '[data-act="changement"]', st: "…puis <b>Changement de gardienne</b>." },
+  { faire: () => clic('[data-act="changement"]'), cible: "#fc-gards [data-cg]", st: "Choisis la gardienne qui entre…" },
+  { faire: () => clic("#fc-gards [data-cg]"), cible: "#fc-temps", st: "…tape le temps au chrono du changement…" },
+  { faire: () => taper("#fc-temps", "500"), cible: '#f-chg [data-act="chg-ok"]',
+    st: "…et <b>Enregistrer</b>. Les tirs reçus se partagent tout seuls." },
+  { faire: () => clic('#f-chg [data-act="chg-ok"]'), cible: '[data-act="terminer"]', st: "À la fin du match : <b>Terminer</b>." },
   { faire: () => clic('[data-act="terminer"]'), cible: "#b-telecharger", st: "Vérifie le jaune, puis <b>Télécharger le fichier</b>." },
   { carte: `<h1>Dernière étape</h1><p>Envoie le fichier <b>.json</b> (dans Téléchargements) à <b>Christian</b>, par courriel ou texto.</p>
       <p>Une question ? Bouton <b>Aide</b> en haut de la saisie.</p>`, st: "C'est tout ! Merci 🙌" },
