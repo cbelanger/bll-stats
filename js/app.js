@@ -170,6 +170,23 @@ function progression(ms, series, unite = "", nom = "") {
   return `<div class="prog">${s}</svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`
     + (series.length > 1 ? `<div class="legende-l">${series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("")}</div>` : "");
 }
+// Tableau triable (gardiennes) : un clic sur un en-tête trie les lignes du corps selon data-v de la colonne
+// (nombres : du plus grand au plus petit d'abord ; texte : alphabétique) ; un 2e clic inverse. Le pied (Équipe) ne bouge pas.
+function trierTableau(th) {
+  const table = th.closest("table"), i = th.cellIndex, corps = table.tBodies[0];
+  const lignes = [...corps.rows], val = r => r.cells[i]?.dataset.v ?? "";
+  const nombres = lignes.every(r => val(r) === "" || !isNaN(Number(val(r))));
+  const avant = th.getAttribute("aria-sort");
+  const sens = avant === "none" ? (nombres ? "descending" : "ascending") : avant === "descending" ? "ascending" : "descending";
+  table.querySelectorAll("thead th").forEach(x => x.setAttribute("aria-sort", "none"));
+  th.setAttribute("aria-sort", sens);
+  const k = sens === "ascending" ? 1 : -1;
+  lignes.sort((a, b) => {
+    const x = val(a), y = val(b);
+    if (x === "" || y === "") return (x === "") - (y === "");   // valeur inconnue toujours à la fin
+    return k * (nombres ? Number(x) - Number(y) : x.localeCompare(y, "fr"));
+  }).forEach(r => corps.append(r));
+}
 function infoProgression(r) {
   const p = r.closest(".prog");
   p.querySelectorAll(".survol.actif").forEach(x => x.classList.remove("actif"));
@@ -501,22 +518,25 @@ function vueGardiennes() {
     const ba = ms.reduce((s, m) => s + m.buts.adv, 0);
     const dec = x => ms.filter(m => m._p.decision === x).length;
     const bl = ms.filter(m => m._p.blanchissage).length;   // blanchissages : seule dans le filet, aucun but accordé
+    // data-v : valeur brute pour le tri par colonne (trierTableau)
+    const min = minutes(ms), cell = (v, txt, cls = "n") => `<td class="${cls}" data-v="${v ?? ""}">${txt}</td>`;
     return `<tr${cle ? ` class="lien" tabindex="0" data-g="${esc(cle)}"` : ""}>
-      <td class="txt nom-g">${nom}</td><td class="n">${ms.length}</td>
-      <td class="n v">${dec("V")}</td><td class="n d">${dec("D")}</td><td class="n">${dec("N")}</td>
-      <td class="n">${ba}</td><td class="n">${bl}</td><td class="n">${tc}</td>
-      <td class="n fort">${pct(tc - baT, tc)}</td><td class="n">${moy40(ba, minutes(ms))}</td><td class="n opt">${tg(minutes(ms))}</td></tr>`;
+      <td class="txt nom-g" data-v="${esc(nom.replace(/<[^>]+>/g, ""))}">${nom}</td>${cell(ms.length, ms.length)}
+      ${cell(dec("V"), dec("V"), "n v")}${cell(dec("D"), dec("D"), "n d")}${cell(dec("N"), dec("N"))}
+      ${cell(ba, ba)}${cell(bl, bl)}${cell(tc, tc)}
+      ${cell(tc ? (tc - baT) / tc : null, pct(tc - baT, tc), "n fort")}${cell(min ? ba * 40 / min : null, moy40(ba, min))}${cell(min, tg(min), "n opt")}</tr>`;
   };
-  const tableau = `<section class="panneau sommaire-g" style="margin-top:1rem"><div class="defile"><table>
-    <thead><tr><th>Gardienne</th><th class="n">MJ</th><th class="n">V</th><th class="n">D</th><th class="n">N</th>
-      <th class="n">BA</th><th class="n">BL</th><th class="n">TC</th><th class="n">% arr.</th><th class="n">MOY</th><th class="n opt">TG</th></tr></thead>
+  const th = (lab, cls = "n") => `<th class="${cls}" tabindex="0" aria-sort="none" title="Trier">${lab}</th>`;
+  const tableau = `<section class="panneau sommaire-g" style="margin-top:1rem"><div class="defile"><table class="triable">
+    <thead><tr>${th("Gardienne", "")}${th("MJ")}${th("V")}${th("D")}${th("N")}
+      ${th("BA")}${th("BL")}${th("TC")}${th("% arr.")}${th("MOY")}${th("TG", "n opt")}</tr></thead>
     <tbody>${tries.map(([cle, { g, ms }]) => ligneG(`${esc(g.nom || "Non indiquée")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}`, ms, cle)).join("")}</tbody>
     ${tries.length > 1 ? `<tfoot>${ligneG("Équipe", equipe)}</tfoot>` : ""}
   </table></div>
   <p class="legende-g"><b>MJ</b> matchs joués · <b>V/D/N</b> victoires, défaites, nulles (la décision va à la gardienne dans le filet au
     but gagnant, ou au dernier but d’un nul) · <b>BA</b> buts accordés · <b>BL</b> blanchissages (seule dans le filet, aucun but accordé) ·
     <b>TC</b> tirs cadrés contre · <b>% arr.</b> pourcentage d’arrêts · <b>MOY</b> buts accordés par 40 minutes de jeu (un match) ·
-    <b>TG</b> temps de glace. TC et % arr. : matchs où les tirs sont notés.</p></section>`;
+    <b>TG</b> temps de glace. TC et % arr. : matchs où les tirs sont notés. Toucher un en-tête pour trier (deux fois : ordre inverse).</p></section>`;
   const cartes = tries.map(([cle, { g, ms }]) => {
     const avecTirs = ms.filter(m => m.tirs.adv != null);
     const tirs = avecTirs.reduce((s, m) => s + m.tirs.adv, 0);
@@ -922,6 +942,7 @@ async function demarrer() {
   el.addEventListener("mouseover", e => { const r = e.target.closest(".progression .survol"); if (r) infoProgression(r); });
   el.addEventListener("click", e => {
     const sv = e.target.closest(".progression .survol"); if (sv) infoProgression(sv);
+    const ent = e.target.closest("table.triable thead th"); if (ent) trierTableau(ent);
     const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
     const adv = e.target.closest("tr[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
     const g = e.target.closest("tr[data-g]");
@@ -947,7 +968,7 @@ async function demarrer() {
       const y = window.scrollY; el.innerHTML = vueEquipe(); window.scrollTo(0, y);
     }, 200);
   });
-  el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], tr[data-g], tr[data-adv]")) e.target.click(); });
+  el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], tr[data-g], tr[data-adv], table.triable thead th")) e.target.click(); });
   window.addEventListener("hashchange", afficher);
   majFiltres();
   afficher();

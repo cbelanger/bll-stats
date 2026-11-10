@@ -192,7 +192,7 @@ tout se consulte aussi sur téléphone.
   - sorties de zone (détail par période s'il est connu) et notes.
 
   Toucher un but (déroulement, Sommaire ou patinoire) l'allume en jaune partout et allume la zone du filet où il est entré.
-- **Gardiennes** : tableau comparatif (MJ, V, D, N, BA, BL = blanchissages, TC, % arr., MOY par 40 minutes, TG = temps de glace, ligne Équipe ; un clic mène à la fiche),
+- **Gardiennes** : tableau comparatif (MJ, V, D, N, BA, BL = blanchissages, TC, % arr., MOY par 40 minutes, TG = temps de glace, ligne Équipe ; un clic sur un en-tête trie le tableau, un deuxième inverse l'ordre ; un clic mène à la fiche),
   puis pour chacune : % d'arrêts, buts accordés par match, tableau match par match, moyenne et % d'arrêts par période,
   tendance du % d'arrêts, zones du filet, types de jeu, d'où partent les buts accordés.
 - **Équipe** : fiche V-D-N, moyennes par match, progression de la saison (graphiques match après match : buts,
