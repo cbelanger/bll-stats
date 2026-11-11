@@ -804,7 +804,8 @@ function vueAdversaire(cle) {
   const manque = [ag.n && !detail(ag) && "leurs buts", agN.n && !detail(agN) && "nos buts"].filter(Boolean);
   const ligneC = (lab, a, b) => `<tr><td class="txt">${lab}</td><td class="n fort">${a}</td><td class="n">${b}</td></tr>`;
   return `<a class="retour" href="#/adversaires">← Adversaires</a>
-  <h1>${esc(nom)}</h1>
+  <div class="titre-imp"><h1>${esc(nom)}</h1>
+    <button type="button" class="imprimer" data-act="imprimer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6h-3M7 14h10v7H7z"/></svg>Imprimer</button></div>
   <p class="sous">Dossier adversaire, ${esc(etat.equipe)}, saison ${etat.saison} : ${ms.length} match${ms.length > 1 ? "s" : ""}, fiche ${v}-${d}-${ms.length - v - d}</p>
   ${retenir.length ? `<section class="panneau faits" style="margin-top:1rem"><h3>À retenir</h3><ul>${retenir.map(t => `<li>${t}</li>`).join("")}</ul></section>` : ""}
   <div class="grille g2" style="margin-top:1rem">
@@ -943,6 +944,7 @@ async function demarrer() {
   el.addEventListener("click", e => {
     const sv = e.target.closest(".progression .survol"); if (sv) infoProgression(sv);
     const ent = e.target.closest("table.triable thead th"); if (ent) trierTableau(ent);
+    if (e.target.closest('[data-act="imprimer"]')) window.print();
     const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
     const adv = e.target.closest("tr[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
     const g = e.target.closest("tr[data-g]");
@@ -989,6 +991,10 @@ function themeBouton() {
     if (!choix) { document.documentElement.classList.toggle("sombre", e.matches); maj(); }
   });
   maj();
+  // Impression toujours en clair (encre sur papier blanc), puis retour au thème choisi
+  let avant = false;
+  addEventListener("beforeprint", () => { avant = sombre(); document.documentElement.classList.remove("sombre"); });
+  addEventListener("afterprint", () => document.documentElement.classList.toggle("sombre", avant));
 }
 
 themeBouton();

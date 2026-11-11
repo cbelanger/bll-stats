@@ -204,6 +204,8 @@ tout se consulte aussi sur téléphone.
   nos affrontements, moyennes contre elles comparées à toute la saison, buts par période, moment des buts dans la
   période (début, milieu, fin), buts selon la situation, types de jeu, filets et patinoires (leurs buts et les nôtres).
   Les noms d'adversaires sont regroupés sans tenir compte des majuscules, des accents ni des espaces.
+  Bouton **Imprimer** à côté du nom : version papier (ou PDF) sans bandeau ni fond, toujours en mode clair,
+  sur deux pages environ, sans couper un panneau entre deux pages (règles `@media print` à la fin de `css/style.css`).
 
 Dans les graphiques match après match (Équipe, tendance du % d'arrêts des gardiennes), survoler ou toucher un match
 affiche ses valeurs sous le graphique, avec un lien vers sa fiche.

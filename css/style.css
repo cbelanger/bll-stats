@@ -299,6 +299,16 @@ td.fort { font-weight: 700; }
 .lt-lab b { color: var(--encre); font-weight: 600; }
 .sombre .lt-but.nous { background: #8FB0EA; }
 
+/* Titre du dossier adversaire avec le bouton Imprimer */
+.titre-imp { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
+.imprimer {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .75rem; cursor: pointer;
+  font: 600 1rem/1 var(--titre); color: var(--encre); background: var(--surface);
+  border: 1px solid var(--trait); border-radius: 4px;
+}
+.imprimer:hover { border-color: var(--doux); }
+.imprimer svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+
 .notes { white-space: pre-wrap; }
 .pied { text-align: center; color: var(--doux); font-size: .85rem; padding: 0 1rem 2rem; }
 .pied span { display: block; }
@@ -341,3 +351,22 @@ td.fort { font-weight: 700; }
   .sommaire-g .nom-g { font-size: 1rem; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- Impression (dossier adversaire surtout) : papier blanc, sans bandeau ni boutons,
+   panneaux jamais coupés entre deux pages. Le thème sombre est retiré par app.js (beforeprint). */
+@page { size: letter; margin: 10mm; }
+@media print {
+  body { background: #fff; font-size: 13px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .barre, .retour, .imprimer, .pied span:not(#maj) { display: none; }
+  main { max-width: none; padding: 0; }
+  h1 { font-size: 1.9rem; }
+  .panneau { border-color: #C9D3E3; padding: .6rem .8rem; break-inside: avoid; }
+  .grille { gap: .6rem; }
+  .grille[style], .panneau[style] { margin-top: .6rem !important; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .defile { overflow: visible; }
+  th, td { padding: .3rem .45rem; }
+  .filet { max-width: 240px; }
+  .patinoire { max-width: 300px; }
+  .pied { padding: .5rem 0 0; }
+}
