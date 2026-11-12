@@ -299,8 +299,9 @@ td.fort { font-weight: 700; }
 .lt-lab b { color: var(--encre); font-weight: 600; }
 .sombre .lt-but.nous { background: #8FB0EA; }
 
-/* Titre du dossier adversaire avec le bouton Imprimer */
+/* Titre de page avec les boutons Partager / Imprimer (titreActions() dans app.js) */
 .titre-imp { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
+.titre-imp .actions { display: flex; gap: .5rem; }
 .imprimer {
   display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .75rem; cursor: pointer;
   font: 600 1rem/1 var(--titre); color: var(--encre); background: var(--surface);
@@ -367,6 +368,11 @@ td.fort { font-weight: 700; }
   .defile { overflow: visible; }
   th, td { padding: .3rem .45rem; }
   .filet { max-width: 240px; }
-  .patinoire { max-width: 300px; }
+  .patinoire, .carte-m .patinoire { max-width: 300px; }
+  /* Progression de la saison (Équipe) : trop haute pour une page, coupée entre deux graphiques seulement */
+  .panneau:has(.prog) { break-inside: auto; }
+  .prog { break-inside: avoid; }
+  .titre-g { break-after: avoid; }
+  .prog-info { display: none; }
   .pied { padding: .5rem 0 0; }
 }

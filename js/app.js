@@ -418,6 +418,23 @@ function faitsSaillants(m, liste = false) {
     <ul>${f.slice(0, 6).map(t => `<li>${t}</li>`).join("")}</ul></section>`;
 }
 
+// Titre de page avec ses boutons : Partager (si texte de partage) et Imprimer
+const ICONE_IMP = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6h-3M7 14h10v7H7z"/></svg>`;
+const ICONE_PART = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg>`;
+function titreActions(titre, partage) {
+  return `<div class="titre-imp"><h1>${titre}</h1><div class="actions">
+    ${partage ? `<button type="button" class="imprimer" data-act="partager" data-texte="${esc(partage)}">${ICONE_PART}<span>Partager</span></button>` : ""}
+    <button type="button" class="imprimer" data-act="imprimer">${ICONE_IMP}<span>Imprimer</span></button></div></div>`;
+}
+// Partage du téléphone (Messenger, texto…) ; sur ordi sans partage : lien copié
+async function partager(b) {
+  const url = location.href, texte = b.dataset.texte;
+  if (navigator.share) { try { await navigator.share({ title: texte, text: texte, url }); } catch (e) { /* annulé */ } return; }
+  try { await navigator.clipboard.writeText(`${texte}\n${url}`); } catch (e) { prompt("Lien du match :", url); return; }
+  const s = b.querySelector("span"); s.textContent = "Lien copié";
+  setTimeout(() => { s.textContent = "Partager"; }, 2000);
+}
+
 function vueMatch(id) {
   const m = etat.matchs.find(x => x.id === id);
   if (!m) return `<a class="retour" href="#/matchs">← Matchs</a><p class="vide">Ce match n’existe pas ou n’a pas encore été publié.</p>`;
@@ -428,8 +445,9 @@ function vueMatch(id) {
   const ligneP = (lab, o, tot) => `<div class="l">${lab}</div>${PERIODES.map(([k]) => `<div>${o ? o[k] ?? "–" : "–"}</div>`).join("")}<div class="tot">${tot ?? "–"}</div>`;
   const sz = m.sorties_zone, szp = sz.par_periode;
   const pctP = k => szp && szp.tentatives[k] ? pctN(szp.reussies[k], szp.tentatives[k]) : "–";
+  const partage = `BLL ${m.equipe} ${m.buts.nous} – ${m.buts.adv} ${m.adversaire}, ${dateCourte(m.date)}`;
   return `<a class="retour" href="#/matchs">← Matchs</a>
-  <h1>${esc(m.equipe)} contre ${esc(m.adversaire)}</h1>
+  ${titreActions(`${esc(m.equipe)} contre ${esc(m.adversaire)}`, partage)}
   <p class="sous">${dateFr(m.date)}${m.heure_debut ? `, ${m.heure_debut}${m.heure_fin ? "–" + m.heure_fin : ""}` : ""}${m.no_match ? `, match no ${esc(m.no_match)}` : ""}</p>
   <div class="score">
     <div class="eq">BLL ${esc(m.equipe)}<small>${m.tirs.nous ?? "–"} tirs cadrés</small></div>
@@ -646,7 +664,7 @@ function vueEquipe() {
   const szPt = avecSz.reduce((s, m) => s + m.sorties_zone.tentatives, 0), szPr = avecSz.reduce((s, m) => s + m.sorties_zone.reussies, 0);
   const ag = agregerButs(ms), agN = agregerButs(ms, "buts_marques");
   const detN = ms.reduce((s, m) => s + (m.buts_marques || []).filter(b => b.type || b.zone).length, 0);
-  return `<h1>Équipe ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}</p>
+  return `${titreActions(`Équipe ${etat.equipe}`)}<p class="sous">Cumulatif de la saison ${etat.saison}</p>
   <section class="panneau" style="margin-top:1rem">
     <div class="chiffres" style="margin-top:0">
       <div class="chiffre"><b>${v}-${d}-${n}</b><span>fiche V-D-N</span></div>
@@ -804,8 +822,7 @@ function vueAdversaire(cle) {
   const manque = [ag.n && !detail(ag) && "leurs buts", agN.n && !detail(agN) && "nos buts"].filter(Boolean);
   const ligneC = (lab, a, b) => `<tr><td class="txt">${lab}</td><td class="n fort">${a}</td><td class="n">${b}</td></tr>`;
   return `<a class="retour" href="#/adversaires">← Adversaires</a>
-  <div class="titre-imp"><h1>${esc(nom)}</h1>
-    <button type="button" class="imprimer" data-act="imprimer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6h-3M7 14h10v7H7z"/></svg>Imprimer</button></div>
+  ${titreActions(esc(nom))}
   <p class="sous">Dossier adversaire, ${esc(etat.equipe)}, saison ${etat.saison} : ${ms.length} match${ms.length > 1 ? "s" : ""}, fiche ${v}-${d}-${ms.length - v - d}</p>
   ${retenir.length ? `<section class="panneau faits" style="margin-top:1rem"><h3>À retenir</h3><ul>${retenir.map(t => `<li>${t}</li>`).join("")}</ul></section>` : ""}
   <div class="grille g2" style="margin-top:1rem">
@@ -945,6 +962,7 @@ async function demarrer() {
     const sv = e.target.closest(".progression .survol"); if (sv) infoProgression(sv);
     const ent = e.target.closest("table.triable thead th"); if (ent) trierTableau(ent);
     if (e.target.closest('[data-act="imprimer"]')) window.print();
+    const pa = e.target.closest('[data-act="partager"]'); if (pa) partager(pa);
     const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
     const adv = e.target.closest("tr[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
     const g = e.target.closest("tr[data-g]");
