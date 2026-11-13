@@ -7,7 +7,7 @@ const TYPES = {
 const ZONES = [["HG", "HC", "HD"], ["CG", "C", "CD"], ["BG", "BC", "BD"]];
 const PERIODES = [["p1", "P1"], ["p2", "P2"], ["p3", "P3"], ["p4", "P4"], ["prol", "Prol."]];
 
-const etat = { matchs: [], saison: null, equipe: "U19AA" };
+const etat = { matchs: [], calendrier: [], saison: null, equipe: "U19AA" };
 const $ = (s, r = document) => r.querySelector(s);
 const el = $("#contenu");
 
@@ -245,13 +245,49 @@ function situations(ms) {
 }
 
 /* ---------- Vues */
+// Calendrier LERQ (data/calendrier.json, tools/lerq.py) : matchs de l'équipe et de la saison choisies,
+// à partir d'aujourd'hui, sauf ceux déjà publiés (même numéro de match)
+const saisonDe = iso => { const [a, m] = iso.split("-").map(Number); return m >= 8 ? `${a}-${a + 1}` : `${a - 1}-${a}`; };
+const aujourdhui = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const dateJour = iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" });
+const heureFr = h => (h ? h.replace(/^0/, "").replace(":", " h ") : "");
+function aVenir() {
+  const auj = aujourdhui();
+  return etat.calendrier.filter(c => c.equipe === etat.equipe && saisonDe(c.date) === etat.saison && c.date >= auj
+    && !etat.matchs.some(m => m.equipe === c.equipe && m.no_match === c.no))
+    .sort((a, b) => (a.date + (a.heure || "")).localeCompare(b.date + (b.heure || "")));
+}
+// Dossier de l'adversaire s'il existe (au moins un match contre elles cette saison)
+const aDossier = nom => filtres().some(m => cleAdv(m.adversaire) === cleAdv(nom));
+function carteProchain(c) {
+  const dossier = aDossier(c.adversaire);
+  return `<${dossier ? `a href="#/adversaire/${encodeURIComponent(cleAdv(c.adversaire))}"` : "div"} class="panneau vedette prochain">
+    <span class="ved-tag">Prochain match · ${dateJour(c.date)}${c.heure ? `, ${heureFr(c.heure)}` : ""}</span>
+    <span class="ved-score"><span class="eq">BLL ${esc(c.equipe)}</span><span class="contre">contre</span><span class="eq">${esc(c.adversaire)}</span></span>
+    <span class="sous">${esc(c.endroit)} · BLL ${c.domicile ? "à domicile" : "visiteur"} · match no ${esc(c.no)}</span>
+    <span class="ved-lien">${dossier ? "Dossier de l’adversaire →" : "Premier affrontement de la saison"}</span>
+  </${dossier ? "a" : "div"}>`;
+}
+function tableauAVenir(cs) {
+  if (!cs.length) return "";
+  return `<h2>À venir</h2><div class="panneau defile"><table class="a-venir">
+    <thead><tr><th>Date</th><th>Heure</th><th>Adversaire</th><th class="opt">Aréna</th><th class="opt">No</th></tr></thead>
+    <tbody>${cs.map(c => `<tr${aDossier(c.adversaire) ? ` class="lien" tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
+      <td>${dateCourte(c.date)}</td><td>${esc(c.heure || "–")}</td><td class="txt">${esc(c.adversaire)}${c.domicile ? "" : ` <span class="vis">(visiteur)</span>`}</td>
+      <td class="opt txt">${esc(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`).join("")}</tbody></table></div>
+    <p class="sous" style="font-size:.85rem">Calendrier de la LERQ, relu chaque nuit.</p>`;
+}
+
 function vueMatchs() {
   // Du plus vieux au plus récent
   const ms = filtres().sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
-  if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
+  const venir = aVenir();
+  if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>
+    ${venir.length ? carteProchain(venir[0]) + tableauAVenir(venir.slice(1)) : ""}`;
   // Dernier match en vedette : score et quelques faits saillants, un clic ouvre sa fiche
   const der = ms[ms.length - 1], faits = faitsSaillants(der, true).slice(0, 3);
   return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}</p>
+  <div class="grille g2 vedettes">
   <a class="panneau vedette faits" href="#/match/${encodeURIComponent(der.id)}">
     <span class="ved-tag">Dernier match · ${dateFr(der.date)}</span>
     <span class="ved-score"><span class="eq">BLL ${esc(der.equipe)}</span><b>${der.buts.nous}–${der.buts.adv}</b><span class="eq">${esc(der.adversaire)}</span>
@@ -259,6 +295,8 @@ function vueMatchs() {
     ${faits.length ? `<ul>${faits.map(t => `<li>${t}</li>`).join("")}</ul>` : ""}
     <span class="ved-lien">Voir le match →</span>
   </a>
+  ${venir.length ? carteProchain(venir[0]) : ""}
+  </div>
   <div class="panneau defile" style="margin-top:1rem"><table class="liste-matchs">
     <thead><tr><th class="opt">No</th><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n opt">Tirs</th><th class="opt">Gardienne</th><th class="n" title="Sorties de zone réussies">% sorties</th><th class="n">% arrêts</th></tr></thead>
     <tbody>${ms.map(m => `
@@ -270,7 +308,8 @@ function vueMatchs() {
         <td class="opt">${esc(nomsGardiennes(m))}</td>
         <td class="n">${pctC(m.sorties_zone.reussies, m.sorties_zone.tentatives)}</td>
         <td class="n">${svArret(m) == null ? "–" : pctC(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
-      </tr>`).join("")}</tbody></table></div>`;
+      </tr>`).join("")}</tbody></table></div>
+  ${tableauAVenir(venir.slice(1))}`;
 }
 
 // Index dans PERIODES (0 à 4, -1 si inconnue) et temps au chrono en secondes
@@ -821,9 +860,11 @@ function vueAdversaire(cle) {
   // Buts marqués mais sans type ni zone : le dire plutôt qu'afficher des panneaux vides
   const manque = [ag.n && !detail(ag) && "leurs buts", agN.n && !detail(agN) && "nos buts"].filter(Boolean);
   const ligneC = (lab, a, b) => `<tr><td class="txt">${lab}</td><td class="n fort">${a}</td><td class="n">${b}</td></tr>`;
+  const prochain = aVenir().find(c => cleAdv(c.adversaire) === cle);
   return `<a class="retour" href="#/adversaires">← Adversaires</a>
   ${titreActions(esc(nom))}
   <p class="sous">Dossier adversaire, ${esc(etat.equipe)}, saison ${etat.saison} : ${ms.length} match${ms.length > 1 ? "s" : ""}, fiche ${v}-${d}-${ms.length - v - d}</p>
+  ${prochain ? `<p class="prochain-adv">Prochain match contre elles : <b>${dateJour(prochain.date)}${prochain.heure ? `, ${heureFr(prochain.heure)}` : ""}</b>, ${esc(prochain.endroit)}</p>` : ""}
   ${retenir.length ? `<section class="panneau faits" style="margin-top:1rem"><h3>À retenir</h3><ul>${retenir.map(t => `<li>${t}</li>`).join("")}</ul></section>` : ""}
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
@@ -942,7 +983,12 @@ async function demarrer() {
     // En local : lancer tools/extract.py, puis ouvrir le site par un serveur (Live Server ou python -m http.server)
     return;
   }
-  const saisons = [...new Set(etat.matchs.map(m => m.saison))].sort().reverse();
+  // Calendrier LERQ (facultatif : sans lui, pas de prochain match)
+  try {
+    const c = await fetch("data/calendrier.json", { cache: "no-cache" });
+    if (c.ok) etat.calendrier = (await c.json()).matchs || [];
+  } catch (e) { /* rien */ }
+  const saisons = [...new Set([...etat.matchs.map(m => m.saison), ...etat.calendrier.map(c => saisonDe(c.date))])].sort().reverse();
   let pref = {};
   try { pref = JSON.parse(localStorage.getItem("bll-filtres") || "{}"); } catch (e) { /* rien */ }
   etat.saison = saisons.includes(pref.saison) ? pref.saison : saisons[0];

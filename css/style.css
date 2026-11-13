@@ -276,7 +276,16 @@ td.fort { font-weight: 700; }
 .ved-score { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem .8rem; font: 700 1.25rem/1.1 var(--titre); }
 .ved-score b { font-size: 2.2rem; font-variant-numeric: tabular-nums; color: var(--marine); }
 .ved-lien { font: 600 1rem/1 var(--titre); color: var(--marine); }
+/* Dernier et prochain match côte à côte (prochain : calendrier LERQ) */
+.vedettes { margin-top: 1rem; align-items: start; }
+.vedettes .vedette { margin-top: 0; }
+.prochain { border-left-color: var(--rouge); align-content: start; }
+.prochain .contre { font: 500 1rem/1 var(--texte); color: var(--doux); }
+.prochain .sous { margin: 0; font-size: .92rem; }
+.prochain-adv { margin: .6rem 0 0; padding: .5rem .8rem; border-left: 4px solid var(--rouge); background: var(--surface); border-radius: 4px; }
+.a-venir .vis { color: var(--doux); font-size: .88em; }
 .sombre .vedette { border-left-color: #3A66C4; }
+.sombre .prochain { border-left-color: var(--rouge); }
 .sombre .ved-score b, .sombre .ved-lien { color: #8FB0EA; }
 
 /* Déroulement du match : une bande par période, nos buts au-dessus, ceux de l'adversaire en dessous */

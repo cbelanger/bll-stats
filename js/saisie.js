@@ -85,6 +85,15 @@ async function chargerGardiennes() {
     if (r.ok) { GARDIENNES = (await r.json()).gardiennes || []; ecrireStockage(CLE_GARDIENNES, GARDIENNES); }
   } catch (e) { /* hors ligne : on garde la dernière copie */ }
 }
+// Calendrier LERQ (data/calendrier.json, écrit chaque nuit par l'Action) ; dernière copie gardée pour le hors-ligne
+const CLE_CALENDRIER = "bll-saisie-calendrier";
+let CALENDRIER = lireStockage(CLE_CALENDRIER) || [];
+async function chargerCalendrier() {
+  try {
+    const r = await fetch("data/calendrier.json", { cache: "no-cache" });
+    if (r.ok) { CALENDRIER = (await r.json()).matchs || []; ecrireStockage(CLE_CALENDRIER, CALENDRIER); }
+  } catch (e) { /* hors ligne : on garde la dernière copie */ }
+}
 
 function sauver() { ecrireStockage(CLE, S); }
 // But BLL : anneaux de ringuette qui s'envolent du bouton pendant une seconde. Ajoutés dans la fiche du but
@@ -233,7 +242,25 @@ function ouvrirInfos() {
   $("#fi-gnom").value = i < 0 && S.gardienne ? (m ? m[1] : S.gardienne) : "";
   $("#fi-gno").value = i < 0 && m ? m[2] : "";
   boutonsGardiennes(S.equipe);
+  boutonsCalendrier(S.equipe);
   if (!$("#f-infos").open) $("#f-infos").showModal();
+}
+// Prochains matchs de l'équipe au calendrier LERQ (d'hier à dans deux semaines, 3 au plus) ; rien si aucun
+function boutonsCalendrier(eq) {
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  const hier = `${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}`;
+  d.setDate(d.getDate() + 15);
+  const fin = `${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}`;
+  const liste = CALENDRIER.map((c, k) => ({ c, k })).filter(({ c }) => c.equipe === eq && c.date >= hier && c.date <= fin).slice(0, 3);
+  $("#fi-cal").innerHTML = liste.map(({ c, k }) => `<button type="button" class="puce" data-cal="${k}">
+    <b>${new Date(c.date + "T12:00").toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short" })}${c.heure ? ` · ${c.heure}` : ""}</b>
+    ${esc(c.adversaire)}</button>`).join("");
+  $("#fi-cal-champ").hidden = !liste.length;
+  majCalendrier();
+}
+function majCalendrier() {
+  document.querySelectorAll("[data-cal]").forEach(b => { const c = CALENDRIER[Number(b.dataset.cal)];
+    b.setAttribute("aria-pressed", c.no === $("#fi-no").value.trim() && c.date === $("#fi-date").value); });
 }
 // Seulement les gardiennes de l'équipe choisie (une gardienne sans équipe dans la liste est proposée partout)
 function boutonsGardiennes(eq) {
@@ -602,7 +629,16 @@ document.addEventListener("click", e => {
   }
 
   const eq = e.target.closest("[data-eq]");
-  if (eq) { document.querySelectorAll("[data-eq]").forEach(b => b.setAttribute("aria-pressed", b === eq)); boutonsGardiennes(eq.dataset.eq); return; }
+  if (eq) { document.querySelectorAll("[data-eq]").forEach(b => b.setAttribute("aria-pressed", b === eq)); boutonsGardiennes(eq.dataset.eq); boutonsCalendrier(eq.dataset.eq); return; }
+
+  // Match du calendrier LERQ : remplit adversaire, date et numéro (l'heure de début reste celle du premier tir)
+  const cal = e.target.closest("[data-cal]");
+  if (cal) {
+    const c = CALENDRIER[Number(cal.dataset.cal)];
+    $("#fi-adv").value = c.adversaire; $("#fi-date").value = c.date; $("#fi-no").value = c.no;
+    majCalendrier();
+    return;
+  }
 
   const b = e.target.closest("[data-act]"); if (!b) return;
   const P = S.periode, lp = nomP(P);
@@ -752,6 +788,7 @@ document.addEventListener("click", e => {
 });
 
 // Temps : chiffres seulement, le « : » s'ajoute tout seul (845 → 8:45)
+for (const id of ["#fi-no", "#fi-date"]) $(id).addEventListener("input", majCalendrier);
 for (const id of ["#temps", "#fc-temps"]) $(id).addEventListener("input", e => {
   const d = e.target.value.replace(/\D/g, "").slice(0, 4);
   e.target.value = d.length > 2 ? d.slice(0, -2) + ":" + d.slice(-2) : d;
@@ -766,5 +803,5 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw-saisie.js
 construireFeuilleBut();
 afficher();
 // Liste des gardiennes d'abord, pour que les infos du match s'ouvrent avec les bons boutons
-if (!S.adversaire && !aDesDonnees()) chargerGardiennes().then(ouvrirInfos);
-else chargerGardiennes();
+if (!S.adversaire && !aDesDonnees()) Promise.all([chargerGardiennes(), chargerCalendrier()]).then(ouvrirInfos);
+else { chargerGardiennes(); chargerCalendrier(); }

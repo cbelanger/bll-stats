@@ -30,6 +30,7 @@ LISTE_GARDIENNES = RACINE / "data" / "gardiennes.json"
 FORMAT = "bll-match-1"
 FORMATS_LUS = {FORMAT, "bll-saisie-1"}   # bll-saisie-1 : premiers exports de saisie.html
 SORTIE = RACINE / "data" / "matchs.json"
+CALENDRIER = RACINE / "data" / "calendrier.json"   # tools/lerq.py
 
 SUR_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
 
@@ -441,6 +442,31 @@ def parts_gardiennes(champs, equipe, g_nom, g_no, buts_nous, buts_adv, tirs_adv,
             for i, g in enumerate(qui_joue)]
 
 
+def calendrier():
+    # data/calendrier.json (tools/lerq.py) : {(équipe, no de match): match LERQ} ; absent = rien à vérifier
+    try:
+        ms = json.loads(CALENDRIER.read_text(encoding="utf-8"))["matchs"]
+    except (OSError, ValueError, KeyError):
+        return {}
+    return {(m["equipe"], m["no"]): m for m in ms}
+
+
+def selon_lerq(m, cal):
+    # Nom de l'adversaire écrit comme dans le calendrier de la LERQ (dossiers d'adversaires jamais séparés) ;
+    # le fichier du match n'est pas modifié
+    c = cal.get((m["equipe"], m["no_match"]))
+    if not c:
+        return []
+    avert = []
+    if m["adversaire"] != c["adversaire"]:
+        if slug(m["adversaire"]) != slug(c["adversaire"]):
+            avert.append(f"adversaire « {m['adversaire']} » remplacé par « {c['adversaire']} » (calendrier LERQ, match {c['no']})")
+        m["adversaire"] = c["adversaire"]
+    if m["date"] != c["date"]:
+        avert.append(f"date {m['date']} différente du calendrier LERQ ({c['date']}) pour le match {c['no']}")
+    return avert
+
+
 def meme_match(a, b):
     # Même date, équipe et adversaire ; deux numéros de match différents = deux matchs distincts
     if (a["date"], a["equipe"], slug(a["adversaire"])) != (b["date"], b["equipe"], slug(b["adversaire"])):
@@ -467,7 +493,7 @@ class Rapport:
 
 
 def main(importer):
-    rapport, matchs = Rapport(), []
+    rapport, matchs, cal = Rapport(), [], calendrier()
 
     # 1. Matchs enregistrés (data/matchs/*.json)
     for f in sorted(DOSSIER_MATCHS.glob("*.json")):
@@ -475,6 +501,7 @@ def main(importer):
         if err:
             rapport.fichier(f.name, "✗", " — ignoré", err, avert)
             continue
+        avert = avert + selon_lerq(m, cal)
         autre = next((x for x in matchs if meme_match(x, m)), None)
         if autre:
             # Deux fichiers pour le même match (ex. renommé « (1) » au téléchargement) : le plus récent gagne
@@ -492,6 +519,7 @@ def main(importer):
         if err:
             rapport.fichier(pdf.name, "✗", " — ignoré, reste dans pdf/", err, avert)
             continue
+        avert = avert + selon_lerq(m, cal)
         i = next((k for k, x in enumerate(matchs) if meme_match(x, m)), None)
         cible = matchs[i]["fichier"] if i is not None else nom_fichier(m)
         if i is None and (DOSSIER_MATCHS / cible).exists():

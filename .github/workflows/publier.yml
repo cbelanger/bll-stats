@@ -4,12 +4,15 @@
 #   (commit « Import automatique des PDF » : faire Pull avant ton prochain push), puis le site est publié.
 #   Un fichier en erreur est laissé de côté, les autres matchs sont publiés, et l'exécution finit
 #   en échec pour que tu reçoives un courriel.
+# - Chaque nuit (schedule) : même chose sur main, pour relire le calendrier de la LERQ (tools/lerq.py).
 # Prérequis (une seule fois) : Settings → Pages → Source : « GitHub Actions ».
 name: Extraire et publier
 
 on:
   push:
   workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * *"   # chaque nuit (4 h 17 ou 5 h 17 à Montréal) : calendrier LERQ à jour sans push
 
 concurrency:
   group: pages-${{ github.ref }}
@@ -35,6 +38,10 @@ jobs:
           python-version: "3.12"
 
       - run: pip install -r requirements.txt
+
+      - name: Calendrier LERQ (data/calendrier.json)
+        # Avant l'extraction : les noms d'adversaires suivent la LERQ. N'échoue jamais (avertissement seulement).
+        run: python tools/lerq.py
 
       - name: Importer les PDF et extraire les matchs
         id: extract

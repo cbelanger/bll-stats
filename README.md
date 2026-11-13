@@ -69,6 +69,11 @@ Toucher le nom du match en haut pour remplir les infos : équipe (U16AA ou U19AA
 (le lien **LERQ** ouvre le calendrier de Ringuette Québec), heures, gardienne (seulement celles de l'équipe choisie,
 ou « Autre » avec nom et numéro) et responsable des stats.
 
+**Match au calendrier LERQ** : sous l'équipe, les prochains matchs de l'équipe (d'hier à dans deux semaines, 3 au plus,
+tirés de `data/calendrier.json`). En toucher un remplit l'adversaire (nom écrit comme à la LERQ), la date et le no de
+match ; l'heure de début reste celle du premier tir compté. La dernière copie du calendrier est gardée dans le
+téléphone pour l'aréna sans réseau.
+
 ### Pendant le match
 
 1. Choisir la **période** en haut (P1 à P4, Prol.). Tout est noté par période.
@@ -177,8 +182,11 @@ la saisie (menu ☰ → « Mode sombre » / « Mode clair ») et l'aide (lune / 
 tout se consulte aussi sur téléphone.
 
 - **Matchs** : en haut, le **dernier match** en vedette (score, résultat, 3 faits saillants au plus ; un clic ouvre sa
-  fiche), puis la liste de la saison, du plus vieux au plus récent : résultat, score, tirs, % de sorties de zone
-  réussies, gardienne, % d'arrêts. Un clic ouvre la fiche du match :
+  fiche) et, à côté, le **prochain match** au calendrier LERQ (date, heure, aréna, domicile ou visiteur, numéro ; un clic
+  ouvre le dossier de l'adversaire s'il y a déjà eu un match contre elles), puis la liste de la saison, du plus vieux au
+  plus récent : résultat, score, tirs, % de sorties de zone réussies, gardienne, % d'arrêts. Sous la liste, **À venir** :
+  les autres matchs du calendrier. Un match du calendrier disparaît des matchs à venir dès que son fichier est publié
+  (même numéro). Le dossier d'un adversaire indique aussi le prochain match contre elles. Un clic sur un match joué ouvre sa fiche :
   - **Faits saillants** : quelques phrases tirées des données (retard effacé, but gagnant, série de buts,
     3 buts ou plus en 5 minutes, période gagnée par 3 buts ou plus, arrêts de la gardienne, domination aux tirs,
     records de la saison dès 3 matchs) ; 6 au plus ;
@@ -249,8 +257,9 @@ contient toutes les gardiennes. Le site regroupe les gardiennes par numéro.
 
 ## Publication (GitHub Actions)
 
-À chaque push, `.github/workflows/publier.yml` :
+À chaque push, et chaque nuit vers 4 h ou 5 h (pour relire le calendrier sans push), `.github/workflows/publier.yml` :
 
+1. lance `tools/lerq.py`, qui lit le calendrier sur le site de la LERQ et écrit `data/calendrier.json` (voir plus bas) ;
 1. lance `tools/extract.py` (sur `main` : avec `--importer`, qui convertit les PDF de `pdf/` et les archive) ;
 2. sur `main`, enregistre l'import (commit « Import automatique des PDF » par le bot) ;
 3. écrit `data/version.json` (date du dernier changement de code, affichée en bas du site) ;
@@ -260,6 +269,22 @@ contient toutes les gardiennes. Le site regroupe les gardiennes par numéro.
 
 Réglage (une seule fois) : Settings → Pages → Source = « GitHub Actions ».
 La saisie a son propre cache hors ligne (`sw-saisie.js`) : incrémenter `CACHE` à chaque modification de la saisie.
+Un PDF en erreur laissé dans `pdf/` fait échouer aussi l'exécution de chaque nuit (un courriel par jour) tant qu'il n'est
+pas corrigé ou retiré.
+
+### Calendrier LERQ (`tools/lerq.py`)
+
+- Source : <https://membres.ringuette-quebec.qc.ca/cedules_liste_web.asp>, recherche par ligue. La page n'écrit que
+  « BLL », sans catégorie : la ligue la donne. En ringuette, **Cadette** est plus vieux que Junior :
+  **LERQ-Cadette AA = U19AA**, **LERQ-Junior AA = U16AA**. Les numéros des ligues sont relus dans le formulaire.
+- `data/calendrier.json` (non versionné) : pour chaque match BLL de la saison, numéro, date, heure, aréna,
+  adversaire, domicile ou visiteur. Seulement le calendrier : jamais les feuilles de match, qui contiennent les noms
+  des joueuses.
+- Noms d'adversaires : majuscule à chaque mot (« Eastern rush » → « Eastern Rush »). `extract.py` remplace le nom
+  d'un match par celui du calendrier quand l'équipe et le numéro de match correspondent (avertissement si le nom
+  change vraiment ou si la date diffère) : les dossiers d'adversaires ne se séparent pas. Le fichier du match n'est pas modifié.
+- La page de la LERQ montre 100 matchs au plus par ligue : avertissement si une ligue en a davantage.
+- LERQ inaccessible : on garde le dernier calendrier publié (avertissement jaune, jamais d'échec).
 
 ### Si quelque chose ne va pas
 
@@ -290,6 +315,7 @@ Toutes les commandes se lancent depuis la racine du dépôt.
 | Commande | Rôle |
 |---|---|
 | `pip install -r requirements.txt` | Installe les dépendances Python (pypdf, reportlab, pillow) |
+| `python tools/lerq.py` | Relit le calendrier de la LERQ et écrit `data/calendrier.json` (à lancer avant `extract.py` pour vérifier localement) |
 | `python tools/extract.py` | Lit `data/matchs/` et les PDF de `pdf/` (sans les déplacer), réécrit `data/matchs.json` : vérification locale |
 | `python tools/extract.py --importer` | Comme ci-dessus, mais convertit les PDF en `data/matchs/*.json` et les archive (ce que fait GitHub Actions) |
 | `python tools/fiches/generer_sommaire.py` | Régénère le PDF remplissable vierge `fiches/BLL - Statistiques - Sommaire - Match.pdf` |
@@ -318,10 +344,11 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `js/vendor/pdf-lib.min.js` | [pdf-lib](https://pdf-lib.js.org/) 1.17.1 (licence MIT, `js/vendor/pdf-lib-LICENSE.md`) : remplit le PDF Sommaire dans la saisie |
 | `data/matchs/` | **Un fichier JSON par match (source des données)** |
 | `data/gardiennes.json` | Liste officielle des gardiennes (nom, numéro, équipe) — éditée à la main |
-| `data/matchs.json`, `data/version.json` | Générés (extract.py, Action) — non versionnés, ne pas éditer à la main |
+| `data/matchs.json`, `data/version.json`, `data/calendrier.json` | Générés (extract.py, lerq.py, Action) — non versionnés, ne pas éditer à la main |
 | `pdf/` | PDF déposés, en attente d'import ; `pdf/archives/` : PDF déjà importés |
 | `fiches/` | Fiches vierges à distribuer (Sommaire remplissable, Saisie papier) |
 | `tools/extract.py` | Validation, import des PDF, production de `data/matchs.json` |
+| `tools/lerq.py` | Lecture du calendrier de la LERQ → `data/calendrier.json` |
 | `tools/fiches/` | Scripts qui génèrent les fiches vierges |
 | `tools/generer_icones.py`, `tools/generer_glace.py` | Icônes de la saisie, fond du site |
 | `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |

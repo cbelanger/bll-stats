@@ -47,8 +47,8 @@ const pat = (x, y) => { const svg = $("#fb-pat svg"), r = svg.getBoundingClientR
 const ETAPES = [
   { carte: `<img src="../../assets/logo-bll.png" alt=""><h1>Saisir les stats<br>d'un match</h1><p>Sur ton téléphone, en 2 minutes</p>`,
     st: "Saisie de match – BLL Élite" },
-  { cible: "#fi-adv", st: "Avant le match : inscris <b>l'adversaire</b>…" },
-  { faire: () => taper("#fi-adv", "Équipe A"), cible: "#fi-gards [data-gd]", st: "…choisis <b>la gardienne</b>…" },
+  { cible: "#fi-cal [data-cal]", st: "Avant le match : touche <b>le match</b> au calendrier…" },
+  { faire: () => clic("#fi-cal [data-cal]"), cible: "#fi-gards [data-gd]", st: "…choisis <b>la gardienne</b>…" },
   { faire: () => { clic("#fi-gards [data-gd]"); $("#fi-resp").value = "Parent BLL"; }, cible: "#fi-resp", st: "…écris <b>ton nom</b>…" },
   { cible: '[data-act="infos-ok"]', st: "…puis <b>Enregistrer</b>." },
   { faire: () => clic('[data-act="infos-ok"]'), cible: '#periodes [data-p="p1"]', st: "Choisis <b>la période</b> en cours." },
@@ -80,7 +80,7 @@ const ETAPES = [
   { faire: () => taper("#fc-temps", "500"), cible: '#f-chg [data-act="chg-ok"]',
     st: "…et <b>Enregistrer</b>. Les tirs reçus se partagent tout seuls." },
   { faire: () => clic('#f-chg [data-act="chg-ok"]'), cible: '[data-act="terminer"]', st: "À la fin du match : <b>Terminer</b>." },
-  { faire: () => clic('[data-act="terminer"]'), cible: "#b-telecharger", st: "Vérifie le jaune, puis <b>Télécharger le fichier</b>." },
+  { faire: () => clic('[data-act="terminer"]'), cible: "#b-telecharger", st: "Lis les vérifications, puis <b>Télécharger le fichier</b>." },
   { carte: `<h1>Dernière étape</h1><p>Envoie le fichier <b>.json</b> (dans Téléchargements) à <b>Christian</b>, par courriel ou texto.</p>
       <p>Une question ? Bouton <b>Aide</b> en haut de la saisie.</p>`, st: "C'est tout ! Merci 🙌" },
 ];

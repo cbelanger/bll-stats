@@ -175,6 +175,11 @@ dialog.feuille::backdrop { background: var(--voile); }
   background: var(--glace); font: 700 1.1rem/1 var(--titre);
 }
 .puce[aria-pressed="true"] { background: var(--marine); border-color: var(--marine); color: var(--sur); }
+/* Matchs du calendrier LERQ (infos du match) : un par ligne, date en haut, adversaire en dessous */
+.puces.cal { display: grid; }
+.cal .puce { display: grid; gap: .2rem; justify-items: start; padding: .45rem .8rem; text-align: left; }
+.cal .puce b { font: 600 .85rem/1 var(--texte); color: var(--doux); }
+.cal .puce[aria-pressed="true"] b { color: var(--sur); }
 .types { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
 .types .puce { display: grid; place-items: center; align-content: center; gap: .15rem; padding: .35rem .2rem; min-height: 58px; }
 .types .puce b { font-size: 1.25rem; color: var(--rouge); }
