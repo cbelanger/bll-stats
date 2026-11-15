@@ -100,6 +100,9 @@ function barresTypes(compte, total, nous = false) {
       <b>${compte[c]}</b></div>`).join("")}</div>`;
 }
 
+// Explication repliée : un petit « i » à toucher (méthode de calcul, source, matchs comptés) ; label = texte à côté
+const note = (texte, label = "") => `<details class="note"><summary><span class="i" aria-hidden="true">i</span>${label
+  ? esc(label) : `<span class="sr">Explication</span>`}</summary><p>${texte}</p></details>`;
 // Matchs de tournoi dans les tableaux par match (« T » après la date, légende sous le tableau) et les graphiques
 // (bande dorée derrière la colonne du match, nom du tournoi dans la ligne d'info)
 const tagT = m => (m.tournoi ? ` <span class="tag-t" title="${esc(m.tournoi.nom)}">T</span>` : "");
@@ -127,7 +130,7 @@ function tendance(points) {
     ${points.map((p, i) => `<rect class="survol" x="${Math.max(0, X(i) - lg / 2)}" y="0" width="${lg}" height="${H}" data-match="${esc(p.m.id)}"
       data-titre="${esc(titreMatch(p.m))}"
       data-vals="${esc(`${pct(p.tirs - p.buts, p.tirs)} d’arrêts (${p.buts} buts sur ${p.tirs} tirs)`)}"/>`).join("")}
-  </svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>
+  </svg><p class="prog-info" aria-live="polite">Toucher un match pour voir ses valeurs.</p></div>
   ${points.some(p => p.m.tournoi) ? `<div class="legende-l"><span><i class="t"></i>Match de tournoi</span></div>` : ""}`;
 }
 
@@ -151,7 +154,10 @@ function progression(ms, series, unite = "", nom = "") {
   let s = `<svg class="progression" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(x => x.lab).join(" et "))}, match après match">`
     + bandesT(ms, X, lg, hy, by - hy);
   for (let v = 0; v <= hi; v += pas) s += `<line class="grille-l" x1="${gx}" x2="${W - dx + 8}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axe" x="${gx - 6}" y="${Y(v) + 4}" text-anchor="end">${v}${unite === "%" ? " %" : ""}</text>`;
-  ms.forEach((m, i) => { if (i % chaque === 0 || i === ms.length - 1) s += `<text class="axe" x="${X(i)}" y="${H - 10}" text-anchor="middle">${dateCourte(m.date)}</text>`; });
+  // dates : une sur « chaque », plus la dernière (l'avant-dernière affichée saute si elle la toucherait)
+  const dates = ms.map((m, i) => i).filter(i => i % chaque === 0);
+  if (dates[dates.length - 1] !== ms.length - 1) { if (dates.length > 1 && ms.length - 1 - dates[dates.length - 1] < chaque) dates.pop(); dates.push(ms.length - 1); }
+  dates.forEach(i => { s += `<text class="axe" x="${X(i)}" y="${H - 10}" text-anchor="middle">${dateCourte(ms[i].date)}</text>`; });
   for (const se of series) {
     // segments continus entre matchs qui ont une valeur
     const d = ms.map((m, i) => [i, se.val(m)]).reduce((a, [i, v], k, arr) =>
@@ -178,10 +184,38 @@ function progression(ms, series, unite = "", nom = "") {
       s += `<text class="val-pt v-${p.se.cls}" data-i="${i}" x="${X(i)}" y="${(dessous ? p.y + 19 : p.y - 10).toFixed(1)}" text-anchor="middle">${fmt(p.v)}</text>`;
     });
   });
-  return `<div class="prog">${s}</svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`
+  return `<div class="prog">${s}</svg><p class="prog-info" aria-live="polite">Toucher un match pour voir ses valeurs.</p></div>`
     + (series.length > 1 || ms.some(m => m.tournoi) ? `<div class="legende-l">${series.length > 1 ? series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("") : ""}${
       ms.some(m => m.tournoi) ? `<span><i class="t"></i>Match de tournoi</span>` : ""}</div>` : "");
 }
+// Progression de la saison (Équipe) : un seul graphique à la fois, choisi par les boutons Buts / Tirs / Sorties
+// (tous dessinés, les autres cachés ; tous imprimés). Le choix est gardé en changeant d'onglet.
+function progressionSaison(chrono) {
+  const nous = `BLL ${etat.equipe}`;
+  const graphes = [
+    ["buts", "Buts", "Buts par match", progression(chrono, [{ lab: nous, cls: "nous", val: m => m.buts.nous }, { lab: "Contre", cls: "adv", val: m => m.buts.adv }])],
+    ["tirs", "Tirs", "Tirs cadrés par match", progression(chrono, [{ lab: nous, cls: "nous", val: m => m.tirs.nous }, { lab: "Contre", cls: "adv", val: m => m.tirs.adv }], "", "Tirs cadrés")],
+  ];
+  if (chrono.filter(m => m.sorties_zone.tentatives).length > 1)
+    graphes.push(["sz", "Sorties", "Sorties de zone réussies", progression(chrono, [{ lab: "Réussies", cls: "nous",
+      val: m => m.sorties_zone.tentatives ? 100 * m.sorties_zone.reussies / m.sorties_zone.tentatives : null }], "%", "Sorties de zone réussies")]);
+  const choix = graphes.some(g => g[0] === etat.graphe) ? etat.graphe : "buts";
+  return `<section class="panneau" style="margin-top:1rem">
+    <div class="titre-graphe"><h3>Progression de la saison</h3>
+      <div class="choix-g" role="group" aria-label="Graphique">${graphes.map(([k, b]) =>
+        `<button type="button" data-graphe="${k}" aria-pressed="${k === choix}">${b}</button>`).join("")}</div></div>
+    ${graphes.map(([k, , titre, html]) => `<div class="graphe" data-graphe-de="${k}"${k === choix ? "" : " hidden"}>
+      <h4 class="titre-g">${titre}</h4>${html}</div>`).join("")}
+    ${note("Match après match, du plus vieux au plus récent.")}
+  </section>`;
+}
+function choisirGraphe(b) {
+  etat.graphe = b.dataset.graphe;
+  const s = b.closest("section");
+  s.querySelectorAll("[data-graphe]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  s.querySelectorAll("[data-graphe-de]").forEach(x => { x.hidden = x.dataset.grapheDe !== etat.graphe; });
+}
+
 // Tableau triable (gardiennes) : un clic sur un en-tête trie les lignes du corps selon data-v de la colonne
 // (nombres : du plus grand au plus petit d'abord ; texte : alphabétique) ; un 2e clic inverse. Le pied (Équipe) ne bouge pas.
 function trierTableau(th) {
@@ -234,7 +268,7 @@ function carteButs(ms, cle, vide) {
   const pts = ptsLieux(ms, cle);
   const n = ms.reduce((s, m) => s + (m[cle] || []).length, 0);
   // Plusieurs matchs : petits points sans numéro et zones de chaleur (plus foncé = plus de buts)
-  return pts.length ? `${patinoire(pts, undefined, 11, true)}<p class="sous" style="font-size:.85rem">${pts.length} but${pts.length > 1 ? "s" : ""} placé${pts.length > 1 ? "s" : ""} sur ${n}. Filet en haut, vu de la tireuse ; plus la zone est foncée, plus il en part de buts.</p>`
+  return pts.length ? `${patinoire(pts, undefined, 11, true)}${note(`${pts.length} but${pts.length > 1 ? "s" : ""} placé${pts.length > 1 ? "s" : ""} sur ${n}. Filet en haut, vu de la tireuse ; plus la zone est foncée, plus il en part de buts.`)}`
     : `<p class="vide">${vide}</p>`;
 }
 const aLieux = (ms, cle) => ms.some(m => (m[cle] || []).some(b => b.lieu));
@@ -252,8 +286,8 @@ function situations(ms) {
   const bp = ms.reduce((s, m) => s + m.buts.nous, 0), bc = ms.reduce((s, m) => s + m.buts.adv, 0);
   return `<table><thead><tr><th>Situation</th><th class="n">BLL</th><th class="n">Contre</th></tr></thead>
     <tbody>${lignes.map(x => `<tr><td class="txt">${x.l}</td><td class="n">${x.pour}</td><td class="n">${x.contre}</td></tr>`).join("")}</tbody></table>
-    <p class="sous" style="font-size:.85rem">Situation notée pour ${pour} de nos ${bp} buts et ${contre} des ${bc} buts accordés.
-      « Contre » en désavantage numérique : buts accordés pendant une punition au BLL.</p>`;
+    ${note(`Situation notée pour ${pour} de nos ${bp} buts et ${contre} des ${bc} buts accordés.
+      « Contre » en désavantage numérique : buts accordés pendant une punition au BLL.`)}`;
 }
 
 /* ---------- Vues */
@@ -309,16 +343,29 @@ function carteProchain(c) {
     <span class="ved-lien">${dossier ? "Dossier de l’adversaire →" : c.adversaire ? "Premier affrontement de la saison" : ""}</span>
   </${dossier ? "a" : "div"}>`;
 }
+// Les 5 prochains matchs ; les autres dans un 2e corps de tableau, ouvert par « Voir tout le calendrier »
+const NB_A_VENIR = 5;
 function tableauAVenir(cs) {
   if (!cs.length) return "";
   const t = cs.some(c => c.tournoi);
-  return `<h2>À venir</h2><div class="panneau defile"><table class="a-venir">
-    <thead><tr><th>Date</th><th>Heure</th><th>Adversaire</th><th class="opt">Aréna</th><th class="opt">No</th></tr></thead>
-    <tbody>${lignesGroupees(cs, c => c.tournoi, nomTournoi, 5, c => `<tr class="${aDossier(c.adversaire) ? "lien" : ""}${c.tournoi ? " en-t" : ""}"${aDossier(c.adversaire) ? ` tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
+  const lignes = liste => lignesGroupees(liste, c => c.tournoi, nomTournoi, 5, c => `<tr class="${aDossier(c.adversaire) ? "lien" : ""}${c.tournoi ? " en-t" : ""}"${aDossier(c.adversaire) ? ` tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
       <td>${dateCourte(c.date)}</td><td>${esc(c.heure || "–")}</td>
       <td class="txt">${advCal(c)}${c.tournoi || c.domicile ? "" : ` <span class="vis">(visiteur)</span>`}${c.eventuel ? ` <span class="vis">si qualifiées</span>` : ""}</td>
-      <td class="opt txt">${esc(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`, false)}</tbody></table></div>
-    <p class="sous" style="font-size:.85rem">Calendrier de la LERQ${t ? " et horaires des tournois" : ""}, relus chaque nuit.</p>`;
+      <td class="opt txt">${esc(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`, false);
+  const reste = cs.slice(NB_A_VENIR);
+  return `<h2>À venir</h2><div class="panneau defile"><table class="a-venir">
+    <thead><tr><th>Date</th><th>Heure</th><th>Adversaire</th><th class="opt">Aréna</th><th class="opt">No</th></tr></thead>
+    <tbody>${lignes(cs.slice(0, NB_A_VENIR))}</tbody>
+    ${reste.length ? `<tbody class="reste-cal"${etat.toutCal ? "" : " hidden"}>${lignes(reste)}</tbody>` : ""}</table>
+    ${reste.length ? `<button type="button" class="tout-cal" data-tout-cal>${etat.toutCal ? "Voir moins" : `Voir tout le calendrier (${reste.length} autres)`}</button>` : ""}</div>
+    ${note(`Calendrier de la LERQ${t ? " et horaires des tournois" : ""}, relus chaque nuit.`)}`;
+}
+
+function toutCalendrier(b) {
+  etat.toutCal = !etat.toutCal;
+  const r = b.closest(".panneau").querySelector(".reste-cal");
+  r.hidden = !etat.toutCal;
+  b.textContent = etat.toutCal ? "Voir moins" : `Voir tout le calendrier (${r.rows.length - r.querySelectorAll(".groupe-t").length} autres)`;
 }
 
 function vueMatchs() {
@@ -578,7 +625,7 @@ function vueMatch(id) {
     <h3>D’où partent les buts</h3>
     <div class="legende-l" style="margin:0 0 .6rem"><span><i class="pt nous"></i>BLL ${esc(m.equipe)} (dans leur zone)</span><span><i class="pt adv"></i>${esc(m.adversaire)} (dans notre zone)</span></div>
     ${patinoire([...ptsLieux([m], "buts_marques", true), ...ptsLieux([m], "buts_accordes", true)], undefined, 21)}
-    <p class="sous" style="font-size:.85rem">Filet en haut, vu de la tireuse ; numéros des buts. Toucher un point allume sa ligne dans le Sommaire et sa zone dans le filet.</p>
+    ${note("Filet en haut, vu de la tireuse ; numéros des buts. Toucher un point allume sa ligne dans le Sommaire et sa zone dans le filet.")}
   </section>` : ""}
 
   <div class="grille g2" style="margin-top:1rem">
@@ -612,6 +659,7 @@ function vueGardiennes() {
       buts_accordes: m.buts_accordes.filter(b => (b.gardienne ?? 0) === i) });
   }));
   const tries = Object.entries(groupes).sort(([, a], [, b]) => b.ms.length - a.ms.length);
+  const choix = tries.some(([k]) => k === etat.gardienne) ? etat.gardienne : tries[0]?.[0];   // fiche affichée
   // Ligne Équipe : par match (décision du match, blanchissage d'équipe, minutes de toutes les gardiennes)
   const equipe = ms.map(m => ({ ...m, _p: { decision: resultat(m), blanchissage: m.buts.adv === 0,
     minutes: partsG(m).reduce((s, p) => s + p.minutes, 0) } }));
@@ -638,10 +686,11 @@ function vueGardiennes() {
     <tbody>${tries.map(([cle, { g, ms }]) => ligneG(`${esc(g.nom || "Non indiquée")}${g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}`, ms, cle)).join("")}</tbody>
     ${tries.length > 1 ? `<tfoot>${ligneG("Équipe", equipe)}</tfoot>` : ""}
   </table></div>
-  <p class="legende-g"><b>MJ</b> matchs joués · <b>V/D/N</b> victoires, défaites, nulles (la décision va à la gardienne dans le filet au
+  <div class="legende-g">${note(`<b>MJ</b> matchs joués · <b>V/D/N</b> victoires, défaites, nulles (la décision va à la gardienne dans le filet au
     but gagnant, ou au dernier but d’un nul) · <b>BA</b> buts accordés · <b>BL</b> blanchissages (seule dans le filet, aucun but accordé) ·
     <b>TC</b> tirs cadrés contre · <b>% arr.</b> pourcentage d’arrêts · <b>MOY</b> buts accordés par 40 minutes de jeu (un match) ·
-    <b>TG</b> temps de glace. TC et % arr. : matchs où les tirs sont notés. Toucher un en-tête pour trier (deux fois : ordre inverse).</p></section>`;
+    <b>TG</b> temps de glace. TC et % arr. : matchs où les tirs sont notés. Toucher un en-tête pour trier (deux fois : ordre inverse).`,
+    "Abréviations")}</div></section>`;
   const cartes = tries.map(([cle, { g, ms }]) => {
     const avecTirs = ms.filter(m => m.tirs.adv != null);
     const tirs = avecTirs.reduce((s, m) => s + m.tirs.adv, 0);
@@ -673,8 +722,8 @@ function vueGardiennes() {
         <div class="l">Moy.</div>${PERIODES.map(([k]) => `<div>${P[k].n ? moy(P[k].buts, P[k].n) : "–"}</div>`).join("")}<div class="tot">${moy(totBP, avecBP.length)}</div>
         <div class="l">% arr.</div>${PERIODES.map(([k]) => `<div>${P[k].arrets}</div>`).join("")}<div class="tot">${pctN(tirsTP - butsTP, tirsTP)}</div>
       </div>
-      <p class="sous" style="font-size:.85rem">Moy. = buts accordés par match. Buts et moyenne : ${avecBP.length} sur ${ms.length} match${ms.length > 1 ? "s" : ""}
-        (joués au complet, où la période de chaque but est connue). % d’arrêts : ${avecTP.length} match${avecTP.length > 1 ? "s" : ""} où les tirs par période sont connus aussi.</p>` : "";
+      ${note(`Moy. = buts accordés par match. Buts et moyenne : ${avecBP.length} sur ${ms.length} match${ms.length > 1 ? "s" : ""}
+        (joués au complet, où la période de chaque but est connue). % d’arrêts : ${avecTP.length} match${avecTP.length > 1 ? "s" : ""} où les tirs par période sont connus aussi.`)}` : "";
     // Tableau match par match, du plus vieux au plus récent ; la moyenne de la saison n'apparaît qu'au total
     const lignes = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || ""))).map(m => `
       <tr class="lien${m.tournoi ? " en-t" : ""}" tabindex="0" data-id="${esc(m.id)}">
@@ -683,7 +732,7 @@ function vueGardiennes() {
         <td class="n">${m.tirs.adv ?? "–"}</td><td class="n">${m.buts.adv}</td>
         <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
         <td class="n opt">${tg(m._p.minutes)}</td></tr>`).join("");
-    return `<section class="panneau gardienne" id="g-${esc(cle.replace(/[^\w-]/g, "_"))}">
+    return `<section class="panneau gardienne" id="g-${esc(cle.replace(/[^\w-]/g, "_"))}" data-gcarte="${esc(cle)}"${cle === choix ? "" : " hidden"}>
       <header class="entete-g">
         ${g.numero != null ? `<span class="dossard">${g.numero}</span>` : ""}
         <h2>${esc(g.nom || "Gardienne")}</h2>
@@ -714,9 +763,21 @@ function vueGardiennes() {
       ${aLieux(ms, "buts_accordes") ? `<div class="carte-g"><h3 style="margin-top:1.25rem">D’où partent les buts</h3>${carteButs(ms, "buts_accordes", "")}</div>` : ""}
     </section>`;
   });
+  // Une fiche à la fois : onglets au nom des gardiennes (toutes imprimées)
+  const onglets = tries.length > 1 ? `<div class="onglets-g" role="tablist" aria-label="Fiche de la gardienne">${tries.map(([cle, { g }]) =>
+    `<button type="button" role="tab" data-gsel="${esc(cle)}" aria-selected="${cle === choix}">${esc(g.nom || "Non indiquée")}${
+      g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}</button>`).join("")}</div>` : "";
   return `<h1>Gardiennes ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}. V-D-N = victoires, défaites, nulles.</p>
     ${tableau}
-    <div class="grille" style="margin-top:1rem">${cartes.join("")}</div>`;
+    ${onglets}
+    <div class="grille" style="margin-top:${onglets ? ".5rem" : "1rem"}">${cartes.join("")}</div>`;
+}
+// Onglet ou ligne du tableau comparatif : affiche la fiche de cette gardienne (choix gardé en changeant d'onglet)
+function choisirGardienne(cle, defiler) {
+  etat.gardienne = cle;
+  document.querySelectorAll("[data-gcarte]").forEach(c => { c.hidden = c.dataset.gcarte !== cle; });
+  document.querySelectorAll("[data-gsel]").forEach(b => b.setAttribute("aria-selected", b.dataset.gsel === cle));
+  if (defiler) (document.querySelector(".onglets-g") || document.querySelector(`[data-gcarte="${CSS.escape(cle)}"]`))?.scrollIntoView({ behavior: "smooth" });
 }
 
 function vueEquipe() {
@@ -764,16 +825,7 @@ function vueEquipe() {
       <div class="chiffre accent"><b>${pct(szR, szT)}</b><span>sorties de zone réussies</span></div>
     </div>
   </section>
-  ${ms.length > 1 ? `<section class="panneau" style="margin-top:1rem">
-    <h3>Progression de la saison</h3>
-    <p class="sous" style="font-size:.85rem">Match après match, du plus vieux au plus récent.</p>
-    <h4 class="titre-g">Buts par match</h4>
-    ${progression(chrono, [{ lab: `BLL ${etat.equipe}`, cls: "nous", val: m => m.buts.nous }, { lab: "Contre", cls: "adv", val: m => m.buts.adv }])}
-    <h4 class="titre-g">Tirs cadrés par match</h4>
-    ${progression(chrono, [{ lab: `BLL ${etat.equipe}`, cls: "nous", val: m => m.tirs.nous }, { lab: "Contre", cls: "adv", val: m => m.tirs.adv }], "", "Tirs cadrés")}
-    ${chrono.filter(m => m.sorties_zone.tentatives).length > 1 ? `<h4 class="titre-g">Sorties de zone réussies</h4>
-    ${progression(chrono, [{ lab: "Réussies", cls: "nous", val: m => m.sorties_zone.tentatives ? 100 * m.sorties_zone.reussies / m.sorties_zone.tentatives : null }], "%", "Sorties de zone réussies")}` : ""}
-  </section>` : ""}
+  ${ms.length > 1 ? progressionSaison(chrono) : ""}
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Tirs cadrés moyens par période</h3>
@@ -782,7 +834,7 @@ function vueEquipe() {
         <div class="l">BLL</div>${PERIODES.map(([k]) => `<div>${moyP("nous", k)}</div>`).join("")}<div></div>
         <div class="l">Contre</div>${PERIODES.map(([k]) => `<div>${moyP("adv", k)}</div>`).join("")}<div></div>
       </div>
-      <p class="sous" style="font-size:.85rem">Sur ${avecP.length} match${avecP.length > 1 ? "s" : ""} avec tirs par période.</p>
+      ${note(`Sur ${avecP.length} match${avecP.length > 1 ? "s" : ""} avec tirs par période.`)}
     </section>
     <section class="panneau">
       <h3>Buts par période</h3>
@@ -790,8 +842,8 @@ function vueEquipe() {
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
         ${ligneB("BLL", "nous")}${ligneB("Contre", "adv")}
       </div>
-      <p class="sous" style="font-size:.85rem">Total de la saison, seulement pour les matchs où la période de chaque but est connue :
-        ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne BLL, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.</p>
+      ${note(`Total de la saison, seulement pour les matchs où la période de chaque but est connue :
+        ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne BLL, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.`)}
     </section>
   </div>
   ${aSits(ms) ? `<section class="panneau" style="margin-top:1rem"><h3>Buts selon la situation</h3>${situations(ms)}</section>` : ""}
@@ -803,12 +855,12 @@ function vueEquipe() {
       <div class="l">Tentées</div>${PERIODES.map(([k]) => `<div>${szP[k].t ?? "–"}</div>`).join("")}<div class="tot">${szPt}</div>
       <div class="l">%</div>${PERIODES.map(([k]) => `<div>${pctN(szP[k].r, szP[k].t)}</div>`).join("")}<div class="tot">${pctN(szPr, szPt)}</div>
     </div>
-    <p class="sous" style="font-size:.85rem">Total de la saison, seulement pour les matchs où les sorties de zone sont notées par période : ${avecSz.length} sur ${nbM(ms.length)}.</p>
+    ${note(`Total de la saison, seulement pour les matchs où les sorties de zone sont notées par période : ${avecSz.length} sur ${nbM(ms.length)}.`)}
   </section>` : ""}
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Nos buts par type de jeu</h3>${barresTypes(agN.types, agN.n, true)}
-      <p class="sous" style="font-size:.85rem">${detN} de nos ${bp} buts ont un type ou une zone notés (saisie téléphone ou section 3 du Sommaire).</p>
+      ${note(`${detN} de nos ${bp} buts ont un type ou une zone notés (saisie téléphone ou section 3 du Sommaire).`)}
     </section>
     <section class="panneau">
       <h3>Où entrent nos buts</h3>${Object.keys(agN.zones).length ? filet(agN.zones, "chaleur") : `<p class="vide">Aucun de nos buts n’a de zone notée.</p>`}    </section>
@@ -944,7 +996,7 @@ function vueAdversaire(cle) {
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
         ${ligneB("BLL", "nous")}${ligneB("Contre", "adv")}
       </div>
-      <p class="sous" style="font-size:.85rem">Matchs où la période de chaque but est connue.</p>
+      ${note("Matchs où la période de chaque but est connue.")}
     </section>
     <section class="panneau">
       <h3>Moment des buts dans la période</h3>
@@ -953,7 +1005,7 @@ function vueAdversaire(cle) {
         <div class="l">BLL</div>${tN.map(x => `<div>${x}</div>`).join("")}
         <div class="l">Contre</div>${tA.map(x => `<div>${x}</div>`).join("")}
       </div>
-      <p class="sous" style="font-size:.85rem">Début : 10:00 à 6:40 au chrono ; milieu : 6:40 à 3:20 ; fin : 3:20 à 0:00. Buts dont le temps est noté.</p>
+      ${note("Début : 10:00 à 6:40 au chrono ; milieu : 6:40 à 3:20 ; fin : 3:20 à 0:00. Buts dont le temps est noté.")}
     </section>
   </div>
   ${aSits(ms) ? `<section class="panneau" style="margin-top:1rem"><h3>Buts selon la situation</h3>${situations(ms)}</section>` : ""}
@@ -1057,12 +1109,15 @@ async function demarrer() {
   el.addEventListener("click", e => {
     const sv = e.target.closest(".progression .survol"); if (sv) infoProgression(sv);
     const ent = e.target.closest("table.triable thead th"); if (ent) trierTableau(ent);
+    const gr = e.target.closest("[data-graphe]"); if (gr) choisirGraphe(gr);
+    const og = e.target.closest("[data-gsel]"); if (og) choisirGardienne(og.dataset.gsel);
+    const tc = e.target.closest("[data-tout-cal]"); if (tc) toutCalendrier(tc);
     if (e.target.closest('[data-act="imprimer"]')) window.print();
     const pa = e.target.closest('[data-act="partager"]'); if (pa) partager(pa);
     const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
     const adv = e.target.closest("tr[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
     const g = e.target.closest("tr[data-g]");
-    if (g) document.getElementById("g-" + g.dataset.g.replace(/[^\w-]/g, "_"))?.scrollIntoView({ behavior: "smooth" });
+    if (g) choisirGardienne(g.dataset.g, true);
     // Fiche de match : toucher un but (déroulement, Sommaire, patinoire) allume ce but partout
     // et la zone du filet où il est entré ; on fait défiler jusqu'au filet (sinon jusqu'à la ligne du Sommaire)
     const but = e.target.closest("[data-but]");

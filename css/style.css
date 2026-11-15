@@ -211,7 +211,8 @@ td.fort { font-weight: 700; }
 .sommaire-g td.d { color: var(--rouge); font-weight: 700; }
 .sommaire-g td.fort { font-weight: 700; }
 .sommaire-g tfoot td { background: var(--glace); }
-.legende-g { font-size: .8rem; color: var(--doux); padding: .7rem .9rem; margin: 0; background: var(--glace); border-top: 1px solid var(--trait); }
+.legende-g { font-size: .8rem; color: var(--doux); padding: .5rem .9rem; margin: 0; background: var(--glace); border-top: 1px solid var(--trait); }
+.legende-g .note { margin: 0; font-size: inherit; }
 /* Tri par colonne : en-tête cliquable, flèche sur la colonne triée */
 .triable thead th { cursor: pointer; user-select: none; }
 .triable thead th:hover { text-decoration: underline; }
@@ -343,6 +344,37 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
 .imprimer:hover { border-color: var(--doux); }
 .imprimer svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 
+/* Progression de la saison : boutons Buts / Tirs / Sorties à droite du titre */
+.titre-graphe { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
+.titre-graphe h3 { margin: 0; }
+.choix-g { display: flex; border: 1px solid var(--trait); border-radius: 6px; overflow: hidden; }
+.choix-g button { font: 600 .95rem/1 var(--titre); padding: .45rem .8rem; border: 0; background: var(--surface); color: var(--doux); cursor: pointer; }
+.choix-g button + button { border-left: 1px solid var(--trait); }
+.choix-g button[aria-pressed="true"] { background: var(--marine); color: #fff; }
+.sombre .choix-g button[aria-pressed="true"] { background: #3A66C4; }
+/* Gardiennes : une fiche à la fois, onglets au nom des gardiennes */
+.onglets-g { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; scroll-margin-top: 1rem; }
+.onglets-g button { font: 600 1.05rem/1 var(--titre); padding: .55rem .9rem; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--trait); background: var(--surface); color: var(--encre); }
+.onglets-g button .no { color: var(--doux); font-weight: 500; }
+.onglets-g button[aria-selected="true"] { background: var(--marine); border-color: var(--marine); color: #fff; }
+.onglets-g button[aria-selected="true"] .no { color: #C9D6EE; }
+.sombre .onglets-g button[aria-selected="true"] { background: #3A66C4; border-color: #3A66C4; }
+/* À venir : « Voir tout le calendrier » */
+.tout-cal { display: block; margin: .6rem auto 0; padding: .45rem 1rem; font: 600 .95rem/1 var(--titre); cursor: pointer;
+  color: var(--marine); background: transparent; border: 1px solid var(--trait); border-radius: 6px; }
+.sombre .tout-cal { color: #8FB0EA; }
+
+/* Explication repliée (note() dans app.js) : un « i » cerclé à toucher */
+.note { margin-top: .4rem; font-size: .85rem; color: var(--doux); }
+.note summary { display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; list-style: none; font-weight: 600; }
+.note summary::-webkit-details-marker { display: none; }
+.note .i { display: grid; place-items: center; width: 18px; height: 18px; border: 1.5px solid currentColor; border-radius: 50%;
+  font: italic 700 12px/1 Georgia, serif; }
+.note[open] .i { background: var(--doux); color: var(--surface); border-color: var(--doux); }
+.note p { margin: .3rem 0 0; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
 .notes { white-space: pre-wrap; }
 .pied { text-align: center; color: var(--doux); font-size: .85rem; padding: 0 1rem 2rem; }
 .pied span { display: block; }
@@ -412,5 +444,9 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
   .prog { break-inside: avoid; }
   .titre-g { break-after: avoid; }
   .prog-info { display: none; }
+  /* Tout imprimer : les 3 graphiques, toutes les gardiennes, tout le calendrier ; pas de boutons */
+  .graphe[hidden], .gardienne[hidden] { display: block !important; }
+  .reste-cal[hidden] { display: table-row-group !important; }
+  .choix-g, .onglets-g, .tout-cal, .note { display: none; }
   .pied { padding: .5rem 0 0; }
 }

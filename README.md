@@ -186,7 +186,8 @@ tout se consulte aussi sur téléphone.
   fiche) et, à côté, le **prochain match** au calendrier LERQ (date, heure, aréna, domicile ou visiteur, numéro ; un clic
   ouvre le dossier de l'adversaire s'il y a déjà eu un match contre elles), puis la liste de la saison, du plus vieux au
   plus récent : résultat, score, tirs, % de sorties de zone réussies, gardienne, % d'arrêts. Sous la liste, **À venir** :
-  tous les matchs à venir du calendrier, en commençant par le prochain. Un match du calendrier disparaît des matchs à venir dès que son fichier est publié
+  les 5 prochains matchs du calendrier, en commençant par le prochain, et « Voir tout le calendrier » pour les autres.
+  Un match du calendrier disparaît des matchs à venir dès que son fichier est publié
   (même numéro). Le dossier d'un adversaire indique aussi le prochain match contre elles.
   **Tournois** (couleur or) : dans la liste et dans À venir, les matchs d'un même tournoi sont regroupés sous un bandeau
   (« Tournoi de Nepean · 20–22 nov. · 2-1-0 ») avec un liseré à gauche ; étiquette « Tournoi » sur le dernier et le
@@ -208,11 +209,14 @@ tout se consulte aussi sur téléphone.
   - sorties de zone (détail par période s'il est connu) et notes.
 
   Toucher un but (déroulement, Sommaire ou patinoire) l'allume en jaune partout et allume la zone du filet où il est entré.
+
+  Partout, les explications (matchs comptés, méthode, source) sont repliées derrière un petit **ⓘ** à toucher ; elles
+  ne sont pas imprimées. Les remarques sur des données manquantes d'un match restent visibles.
 - **Gardiennes** : tableau comparatif (MJ, V, D, N, BA, BL = blanchissages, TC, % arr., MOY par 40 minutes, TG = temps de glace, ligne Équipe ; un clic sur un en-tête trie le tableau, un deuxième inverse l'ordre ; un clic mène à la fiche),
-  puis pour chacune : % d'arrêts, buts accordés par match, tableau match par match, moyenne et % d'arrêts par période,
+  puis **une fiche à la fois**, choisie par les onglets au nom des gardiennes (ou un clic sur sa ligne du tableau) : % d'arrêts, buts accordés par match, tableau match par match, moyenne et % d'arrêts par période,
   tendance du % d'arrêts, zones du filet, types de jeu, d'où partent les buts accordés.
-- **Équipe** : fiche V-D-N, moyennes par match, progression de la saison (graphiques match après match : buts,
-  tirs cadrés, % de sorties de zone réussies), tirs cadrés moyens par période, buts pour et contre par période,
+- **Équipe** : fiche V-D-N, moyennes par match, progression de la saison (un graphique match après match, choisi par
+  les boutons Buts · Tirs · Sorties ; les trois sont imprimés), tirs cadrés moyens par période, buts pour et contre par période,
   sorties de zone par période, **buts selon la situation** (à égalité, AN, 5 contre 3, DN, 3 contre 5 ; pour et contre),
   nos buts et les buts accordés par type de jeu, par zone du filet et par endroit d'où ils partent.
 - **Adversaires** : équipes affrontées dans la saison (PJ, V-D-N, buts) ; un clic ouvre le dossier d'avant-match :
