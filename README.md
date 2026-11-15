@@ -191,7 +191,9 @@ tout se consulte aussi sur téléphone.
   **Tournois** (couleur or) : dans la liste et dans À venir, les matchs d'un même tournoi sont regroupés sous un bandeau
   (« Tournoi de Nepean · 20–22 nov. · 2-1-0 ») avec un liseré à gauche ; étiquette « Tournoi » sur le dernier et le
   prochain match et sur la fiche (avec la ronde : Demi-finale, Finale) ; « T » à côté de la date dans le dossier d'un
-  adversaire. Rondes éliminatoires pas encore jouées : « Demi-finale (2e c. 3e) si qualifiées », jamais dans la carte du
+  adversaire et dans le tableau match par match de chaque gardienne (sur téléphone, le liseré seul) ; bande dorée
+  derrière les matchs de tournoi dans les graphiques (Progression de la saison, % d'arrêts des gardiennes), et nom du
+  tournoi dans la ligne d'info quand on touche le match. Rondes éliminatoires pas encore jouées : « Demi-finale (2e c. 3e) si qualifiées », jamais dans la carte du
   prochain match. Les stats comptent tous les matchs, saison et tournois. Un clic sur un match joué ouvre sa fiche :
   - **Faits saillants** : quelques phrases tirées des données (retard effacé, but gagnant, série de buts,
     3 buts ou plus en 5 minutes, période gagnée par 3 buts ou plus, arrêts de la gardienne, domination aux tirs,

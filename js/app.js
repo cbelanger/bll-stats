@@ -100,6 +100,14 @@ function barresTypes(compte, total, nous = false) {
       <b>${compte[c]}</b></div>`).join("")}</div>`;
 }
 
+// Matchs de tournoi dans les tableaux par match (« T » après la date, légende sous le tableau) et les graphiques
+// (bande dorée derrière la colonne du match, nom du tournoi dans la ligne d'info)
+const tagT = m => (m.tournoi ? ` <span class="tag-t" title="${esc(m.tournoi.nom)}">T</span>` : "");
+const legendeT = ms => (ms.some(m => m.tournoi) ? `<p class="sous leg-t" style="font-size:.85rem"><i></i><span class="tag-t">T</span> match de tournoi</p>` : "");
+const titreMatch = m => `${dateCourte(m.date)} · ${m.adversaire} (${m.buts.nous}–${m.buts.adv})${m.tournoi ? ` · ${m.tournoi.nom}` : ""}`;
+const bandesT = (ms, X, lg, y, h) => ms.map((m, i) => (m.tournoi
+  ? `<rect class="bande-t" x="${Math.max(0, X(i) - lg / 2)}" y="${y}" width="${lg}" height="${h}"/>` : "")).join("");
+
 function tendance(points) {
   // points : [{date, v (0-1), m (le match), tirs, buts (de cette gardienne)}] ; survol ou toucher = valeurs du match
   if (points.length < 2) return "";
@@ -111,14 +119,16 @@ function tendance(points) {
   const ref = .9;
   const lg = (W - px) / points.length;
   return `<div class="prog"><svg class="tendance progression" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pourcentage d’arrêts match après match">
+    ${bandesT(points.map(p => p.m), X, lg, 0, H)}
     <line class="ref" x1="${px}" x2="${W}" y1="${Y(ref)}" y2="${Y(ref)}"/>
     <text x="0" y="${Y(ref) + 4}">90 %</text>
     <path class="ligne" d="${d}"/>
     ${points.map((p, i) => `<circle class="pt" cx="${X(i)}" cy="${Y(p.v)}" r="5"/>`).join("")}
     ${points.map((p, i) => `<rect class="survol" x="${Math.max(0, X(i) - lg / 2)}" y="0" width="${lg}" height="${H}" data-match="${esc(p.m.id)}"
-      data-titre="${esc(`${dateCourte(p.date)} · ${p.m.adversaire} (${p.m.buts.nous}–${p.m.buts.adv})`)}"
+      data-titre="${esc(titreMatch(p.m))}"
       data-vals="${esc(`${pct(p.tirs - p.buts, p.tirs)} d’arrêts (${p.buts} buts sur ${p.tirs} tirs)`)}"/>`).join("")}
-  </svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`;
+  </svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>
+  ${points.some(p => p.m.tournoi) ? `<div class="legende-l"><span><i class="t"></i>Match de tournoi</span></div>` : ""}`;
 }
 
 // Progression match après match (onglet Équipe). series : [{lab, cls ("nous" | "adv"), val: m => nombre | null}].
@@ -137,7 +147,9 @@ function progression(ms, series, unite = "", nom = "") {
   const X = i => gx + 8 + i * (W - gx - 8 - dx) / (ms.length - 1), Y = v => by - v / hi * (by - hy);
   const fmt = v => v == null ? "–" : `${unite === "%" ? Math.round(v) : v}${unite === "%" ? " %" : ""}`;
   const chaque = Math.ceil(ms.length / Math.floor((W - gx - dx) / 55)), etiq = [];   // dates espacées d'au moins 55 px
-  let s = `<svg class="progression" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(x => x.lab).join(" et "))}, match après match">`;
+  const lg = (W - gx - dx) / ms.length;
+  let s = `<svg class="progression" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(x => x.lab).join(" et "))}, match après match">`
+    + bandesT(ms, X, lg, hy, by - hy);
   for (let v = 0; v <= hi; v += pas) s += `<line class="grille-l" x1="${gx}" x2="${W - dx + 8}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axe" x="${gx - 6}" y="${Y(v) + 4}" text-anchor="end">${v}${unite === "%" ? " %" : ""}</text>`;
   ms.forEach((m, i) => { if (i % chaque === 0 || i === ms.length - 1) s += `<text class="axe" x="${X(i)}" y="${H - 10}" text-anchor="middle">${dateCourte(m.date)}</text>`; });
   for (const se of series) {
@@ -154,9 +166,8 @@ function progression(ms, series, unite = "", nom = "") {
   etiq.forEach(e => { s += `<text class="etiq" x="${e.x}" y="${e.y}">${esc(e.lab)}</text>`; });
   // Zones de survol (plus larges que les points) : survol à la souris ou toucher sur téléphone = valeurs du match
   // dans la ligne d'info sous le graphique (infoProgression() ; une info-bulle <title> n'existe pas au toucher)
-  const lg = (W - gx - dx) / ms.length;
   ms.forEach((m, i) => { s += `<rect class="survol" x="${X(i) - lg / 2}" y="${hy}" width="${lg}" height="${by - hy}" data-i="${i}"
-    data-match="${esc(m.id)}" data-titre="${esc(`${dateCourte(m.date)} · ${m.adversaire} (${m.buts.nous}–${m.buts.adv})`)}"
+    data-match="${esc(m.id)}" data-titre="${esc(titreMatch(m))}"
     data-vals="${esc(nom ? `${nom} : ${series.map(se => fmt(se.val(m))).join("–")}` : "")}"/>`; });
   // Valeurs à côté des points, cachées : affichées pour le match touché (la plus haute au-dessus de son point,
   // l'autre en dessous si les deux points sont proches)
@@ -168,7 +179,8 @@ function progression(ms, series, unite = "", nom = "") {
     });
   });
   return `<div class="prog">${s}</svg><p class="prog-info" aria-live="polite">Survoler ou toucher un match pour voir ses valeurs.</p></div>`
-    + (series.length > 1 ? `<div class="legende-l">${series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("")}</div>` : "");
+    + (series.length > 1 || ms.some(m => m.tournoi) ? `<div class="legende-l">${series.length > 1 ? series.map(se => `<span><i class="${se.cls}"></i>${esc(se.lab)}</span>`).join("") : ""}${
+      ms.some(m => m.tournoi) ? `<span><i class="t"></i>Match de tournoi</span>` : ""}</div>` : "");
 }
 // Tableau triable (gardiennes) : un clic sur un en-tête trie les lignes du corps selon data-v de la colonne
 // (nombres : du plus grand au plus petit d'abord ; texte : alphabétique) ; un 2e clic inverse. Le pied (Équipe) ne bouge pas.
@@ -665,8 +677,8 @@ function vueGardiennes() {
         (joués au complet, où la période de chaque but est connue). % d’arrêts : ${avecTP.length} match${avecTP.length > 1 ? "s" : ""} où les tirs par période sont connus aussi.</p>` : "";
     // Tableau match par match, du plus vieux au plus récent ; la moyenne de la saison n'apparaît qu'au total
     const lignes = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || ""))).map(m => `
-      <tr class="lien" tabindex="0" data-id="${esc(m.id)}">
-        <td>${dateCourte(m.date)}</td><td class="txt">${esc(m.adversaire)}</td>
+      <tr class="lien${m.tournoi ? " en-t" : ""}" tabindex="0" data-id="${esc(m.id)}">
+        <td>${dateCourte(m.date)}${tagT(m)}</td><td class="txt">${esc(m.adversaire)}</td>
         <td>${m._p.decision ? `<span class="res ${m._p.decision}">${m._p.decision}</span>` : "–"}</td>
         <td class="n">${m.tirs.adv ?? "–"}</td><td class="n">${m.buts.adv}</td>
         <td class="n">${svArret(m) == null ? "–" : pct(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
@@ -692,6 +704,7 @@ function vueGardiennes() {
         <tfoot><tr><td>Total</td><td>${ms.length} match${ms.length > 1 ? "s" : ""}</td><td>${v}-${d}-${n}</td>
           <td class="n">${tirs}</td><td class="n">${ba}</td><td class="n">${pct(tirs - baTirs, tirs)}</td><td class="n opt">${tg(min)}</td></tr></tfoot>
       </table></div>
+      ${legendeT(ms)}
       ${blocP}
       ${pts.length > 1 ? `<h3 style="margin-top:1.25rem">% d’arrêts match après match</h3>${tendance(pts)}` : ""}
       <div class="grille g2" style="margin-top:1.25rem">
@@ -908,11 +921,11 @@ function vueAdversaire(cle) {
       <div class="defile"><table>
         <thead><tr><th>Date</th><th>Rés.</th><th class="n">Score</th><th class="n">Tirs</th><th class="opt">Gardienne</th></tr></thead>
         <tbody>${ms.map(m => `<tr class="lien${m.tournoi ? " en-t" : ""}" tabindex="0" data-id="${esc(m.id)}">
-          <td>${dateCourte(m.date)}${m.tournoi ? ` <span class="tag-t" title="${esc(m.tournoi.nom)}">T</span>` : ""}</td><td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
+          <td>${dateCourte(m.date)}${tagT(m)}</td><td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
           <td class="n">${m.buts.nous}–${m.buts.adv}</td><td class="n">${m.tirs.nous == null && m.tirs.adv == null ? "–" : `${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}`}</td>
           <td class="opt">${esc(nomsGardiennes(m))}</td></tr>`).join("")}</tbody>
       </table></div>
-      ${ms.some(m => m.tournoi) ? `<p class="sous" style="font-size:.85rem"><span class="tag-t">T</span> match de tournoi</p>` : ""}
+      ${legendeT(ms)}
     </section>
     <section class="panneau">
       <h3>Contre elles et toute la saison</h3>
