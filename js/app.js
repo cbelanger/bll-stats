@@ -111,6 +111,36 @@ const titreMatch = m => `${dateCourte(m.date)} · ${m.adversaire} (${m.buts.nous
 const bandesT = (ms, X, lg, y, h) => ms.map((m, i) => (m.tournoi
   ? `<rect class="bande-t" x="${Math.max(0, X(i) - lg / 2)}" y="${y}" width="${lg}" height="${h}"/>` : "")).join("");
 
+// Forme récente : les 5 derniers résultats en pastilles (du plus vieux au plus récent, chacune mène au match)
+// et la série en cours si au moins 2 résultats pareils de suite
+function forme(ms) {
+  const chrono = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
+  if (chrono.length < 2) return "";
+  const der = chrono.slice(-5), r = resultat(chrono[chrono.length - 1]);
+  let n = 0; while (n < chrono.length && resultat(chrono[chrono.length - 1 - n]) === r) n++;
+  const mot = { V: ["victoire", "victoires"], D: ["défaite", "défaites"], N: ["nulle", "nulles"] }[r][1];
+  return `<div class="forme"><span class="forme-t">Forme récente</span>${der.map(m =>
+    `<a class="res ${resultat(m)}" href="#/match/${encodeURIComponent(m.id)}" title="${esc(titreMatch(m))}">${resultat(m)}</a>`).join("")}${
+    n >= 2 ? `<span class="serie">${n} ${mot} de suite</span>` : ""}</div>`;
+}
+// Animations (désactivées si l'appareil demande moins de mouvement) : chiffres clés et score qui montent
+const animer = () => !matchMedia("(prefers-reduced-motion: reduce)").matches;
+function compteurs(racine) {
+  if (!animer()) return;
+  racine.querySelectorAll(".chiffre b, .cb").forEach(b => {
+    if (b.closest("[hidden]")) return;
+    const t = b.textContent, x = /^(\d+)(?:,(\d+))?(\s%)?$/.exec(t.trim());
+    if (!x || !Number(x[1] + "." + (x[2] || 0))) return;
+    const fin = Number(x[1] + "." + (x[2] || 0)), dec = x[2] ? x[2].length : 0, debut = performance.now();
+    const pas = now => {
+      const k = Math.min(1, (now - debut) / 700);
+      b.textContent = k < 1 ? (fin * (1 - (1 - k) ** 3)).toFixed(dec).replace(".", ",") + (x[3] || "") : t;
+      if (k < 1) requestAnimationFrame(pas);
+    };
+    requestAnimationFrame(pas);
+  });
+}
+
 function tendance(points) {
   // points : [{date, v (0-1), m (le match), tirs, buts (de cette gardienne)}] ; survol ou toucher = valeurs du match
   if (points.length < 2) return "";
@@ -125,7 +155,7 @@ function tendance(points) {
     ${bandesT(points.map(p => p.m), X, lg, 0, H)}
     <line class="ref" x1="${px}" x2="${W}" y1="${Y(ref)}" y2="${Y(ref)}"/>
     <text x="0" y="${Y(ref) + 4}">90 %</text>
-    <path class="ligne" d="${d}"/>
+    <path class="ligne" pathLength="1" d="${d}"/>
     ${points.map((p, i) => `<circle class="pt" cx="${X(i)}" cy="${Y(p.v)}" r="5"/>`).join("")}
     ${points.map((p, i) => `<rect class="survol" x="${Math.max(0, X(i) - lg / 2)}" y="0" width="${lg}" height="${H}" data-match="${esc(p.m.id)}"
       data-titre="${esc(titreMatch(p.m))}"
@@ -162,7 +192,7 @@ function progression(ms, series, unite = "", nom = "") {
     // segments continus entre matchs qui ont une valeur
     const d = ms.map((m, i) => [i, se.val(m)]).reduce((a, [i, v], k, arr) =>
       v == null ? a : a + `${k && arr[k - 1][1] != null ? "L" : "M"}${X(i).toFixed(1)} ${Y(v).toFixed(1)} `, "");
-    s += `<path class="ligne ${se.cls}" d="${d}"/>`;
+    s += `<path class="ligne ${se.cls}" pathLength="1" d="${d}"/>`;
     ms.forEach((m, i) => { const v = se.val(m); if (v != null) s += `<circle class="pt ${se.cls}" cx="${X(i)}" cy="${Y(v)}" r="4.5"/>`; });
     const dern = ms.length - 1 - [...ms].reverse().findIndex(m => se.val(m) != null);
     if (dern < ms.length) etiq.push({ x: X(dern) + 9, y: Y(se.val(ms[dern])) + 4, lab: se.lab });
@@ -379,13 +409,17 @@ function vueMatchs() {
   // Dernier match en vedette : score et quelques faits saillants, un clic ouvre sa fiche
   const der = ms[ms.length - 1], faits = faitsSaillants(der, true).slice(0, 3);
   const nT = ms.filter(m => m.tournoi).length;
+  const rd = resultat(der);
   return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}${nT ? `, dont ${nT} en tournoi` : ""}</p>
+  ${forme(ms)}
   <div class="grille g2 vedettes">
   <a class="panneau vedette faits${der.tournoi ? " en-t" : ""}" href="#/match/${encodeURIComponent(der.id)}">
     <span class="ved-tag">Dernier match · ${dateFr(der.date)}</span>
     ${der.tournoi ? `<span class="ligne-t" style="margin:0"><span class="tag-t">Tournoi</span>${esc(der.tournoi.nom)}${der.ronde ? ` · ${esc(der.ronde)}` : ""}</span>` : ""}
-    <span class="ved-score"><span class="eq">BLL ${esc(der.equipe)}</span><b>${der.buts.nous}–${der.buts.adv}</b><span class="eq">${esc(der.adversaire)}</span>
-      <span class="res ${resultat(der)}">${resultat(der)}</span></span>
+    <span class="mini-score" aria-label="BLL ${esc(der.equipe)} ${der.buts.nous}, ${esc(der.adversaire)} ${der.buts.adv}">
+      <span class="eq nous${rd === "V" ? " gagne" : ""}">BLL ${esc(der.equipe)}</span><b class="cb${rd === "V" ? " gagne" : ""}">${der.buts.nous}</b>
+      <span class="res ${rd}">${rd}</span>
+      <span class="eq${rd === "D" ? " gagne" : ""}">${esc(der.adversaire)}</span><b class="cb${rd === "D" ? " gagne" : ""}">${der.buts.adv}</b></span>
     ${faits.length ? `<ul>${faits.map(t => `<li>${t}</li>`).join("")}</ul>` : ""}
     <span class="ved-lien">Voir le match →</span>
   </a>
@@ -579,13 +613,17 @@ function vueMatch(id) {
   const sz = m.sorties_zone, szp = sz.par_periode;
   const pctP = k => szp && szp.tentatives[k] ? pctN(szp.reussies[k], szp.tentatives[k]) : "–";
   const partage = `BLL ${m.equipe} ${m.buts.nous} – ${m.buts.adv} ${m.adversaire}, ${dateCourte(m.date)}`;
+  // Tableau de marque : chiffre de la gagnante en blanc vif, « prol. » si un but est venu en prolongation
+  const r = resultat(m), prol = [...m.buts_accordes, ...(m.buts_marques || [])].some(b => idxP(b.periode) === 4)
+    || !!(m.buts_par_periode?.nous?.prol || m.buts_par_periode?.adv?.prol);
   return `<a class="retour" href="#/matchs">← Matchs</a>
   ${titreActions(`${esc(m.equipe)} contre ${esc(m.adversaire)}`, partage)}
   <p class="sous">${dateFr(m.date)}${m.heure_debut ? `, ${m.heure_debut}${m.heure_fin ? "–" + m.heure_fin : ""}` : ""}${m.no_match ? `, match no ${esc(m.no_match)}` : ""}</p>
   ${m.tournoi ? `<p class="ligne-t"><span class="tag-t">Tournoi</span>${esc(m.tournoi.nom)}${m.ronde ? ` · ${esc(m.ronde)}` : ""}</p>` : ""}
-  <div class="score">
-    <div class="eq">BLL ${esc(m.equipe)}<small>${m.tirs.nous ?? "–"} tirs cadrés</small></div>
-    <div class="pts">${m.buts.nous}–${m.buts.adv}</div>
+  <div class="score" role="group" aria-label="Score final : BLL ${esc(m.equipe)} ${m.buts.nous}, ${esc(m.adversaire)} ${m.buts.adv}">
+    <div class="eq nous">BLL ${esc(m.equipe)}<small>${m.tirs.nous ?? "–"} tirs cadrés</small></div>
+    <div class="pts"><b class="cb${r === "V" ? " gagne" : ""}">${m.buts.nous}</b>
+      <span class="fin">Final${prol ? "<br>prol." : ""}</span><b class="cb${r === "D" ? " gagne" : ""}">${m.buts.adv}</b></div>
     <div class="eq droite">${esc(m.adversaire)}<small>${m.tirs.adv ?? "–"} tirs cadrés</small></div>
   </div>
   ${faitsSaillants(m)}
@@ -734,7 +772,7 @@ function vueGardiennes() {
         <td class="n opt">${tg(m._p.minutes)}</td></tr>`).join("");
     return `<section class="panneau gardienne" id="g-${esc(cle.replace(/[^\w-]/g, "_"))}" data-gcarte="${esc(cle)}"${cle === choix ? "" : " hidden"}>
       <header class="entete-g">
-        ${g.numero != null ? `<span class="dossard">${g.numero}</span>` : ""}
+        ${g.numero != null ? `<span class="filigrane" aria-hidden="true">${g.numero}</span><span class="dossard">${g.numero}</span>` : ""}
         <h2>${esc(g.nom || "Gardienne")}</h2>
         <span class="bilan-g">${ms.length} MJ · ${v}-${d}-${n} · ${pct(tirs - baTirs, tirs)}</span>
       </header>
@@ -775,7 +813,7 @@ function vueGardiennes() {
 // Onglet ou ligne du tableau comparatif : affiche la fiche de cette gardienne (choix gardé en changeant d'onglet)
 function choisirGardienne(cle, defiler) {
   etat.gardienne = cle;
-  document.querySelectorAll("[data-gcarte]").forEach(c => { c.hidden = c.dataset.gcarte !== cle; });
+  document.querySelectorAll("[data-gcarte]").forEach(c => { c.hidden = c.dataset.gcarte !== cle; if (!c.hidden) compteurs(c); });
   document.querySelectorAll("[data-gsel]").forEach(b => b.setAttribute("aria-selected", b.dataset.gsel === cle));
   if (defiler) (document.querySelector(".onglets-g") || document.querySelector(`[data-gcarte="${CSS.escape(cle)}"]`))?.scrollIntoView({ behavior: "smooth" });
 }
@@ -824,6 +862,7 @@ function vueEquipe() {
       <div class="chiffre"><b>${moy(tc, avecTa.length, 1)}</b><span>tirs contre / match</span></div>
       <div class="chiffre accent"><b>${pct(szR, szT)}</b><span>sorties de zone réussies</span></div>
     </div>
+    ${forme(ms)}
   </section>
   ${ms.length > 1 ? progressionSaison(chrono) : ""}
   <div class="grille g2" style="margin-top:1rem">
@@ -1047,6 +1086,9 @@ function afficher() {
     : vue === "adversaires" ? vueAdversaires()
     : vue === "adversaire" ? vueAdversaire(decodeURIComponent(id || ""))
     : vueMatchs();
+  // Entrée de la vue : fondu court (CSS), puis chiffres qui montent
+  el.classList.remove("calme", "entre"); void el.offsetWidth; el.classList.add("entre");
+  compteurs(el);
   el.focus({ preventScroll: true });
   window.scrollTo(0, 0);
 }
@@ -1136,7 +1178,8 @@ async function demarrer() {
     minuterie = setTimeout(() => {
       if (el.clientWidth === largeur || !location.hash.startsWith("#/equipe")) return;
       largeur = el.clientWidth;
-      const y = window.scrollY; el.innerHTML = vueEquipe(); window.scrollTo(0, y);
+      // redessin sans animation (.calme) : rien ne doit bouger quand on tourne le téléphone
+      const y = window.scrollY; el.classList.add("calme"); el.innerHTML = vueEquipe(); window.scrollTo(0, y);
     }, 200);
   });
   el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], tr[data-g], tr[data-adv], table.triable thead th")) e.target.click(); });
