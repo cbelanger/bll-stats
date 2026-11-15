@@ -1190,3 +1190,6 @@ function themeBouton() {
 
 themeBouton();
 demarrer();
+// Application installée : le service worker de la saisie (même portée, un seul par site) rend le site installable.
+// Il ne touche pas aux fichiers du site (toujours lus sur le réseau). Enregistré après le chargement : rien de ralenti.
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw-saisie.js").catch(() => { /* sans conséquence */ }));

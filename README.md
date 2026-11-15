@@ -182,6 +182,12 @@ est gardé dans le navigateur ; sans choix, le site suit le réglage du téléph
 la saisie (menu ☰ → « Mode sombre » / « Mode clair ») et l'aide (lune / soleil en haut à droite). Quatre onglets et l'aide ;
 tout se consulte aussi sur téléphone, où les onglets forment une barre fixe en bas de l'écran (icône et nom).
 
+**Installer le site comme application** (« Stats BLL », logo sur fond marine ; la saisie garde son icône sur fond
+blanc) : Edge ou Chrome sur Android → menu ⋯ → « Ajouter au téléphone » / « Installer l'application » ; Safari sur
+iPhone → Partager → « Sur l'écran d'accueil » ; ordi : icône d'installation dans la barre d'adresse. Le site s'ouvre
+alors en plein écran, sans barre du navigateur. Les données sont toujours lues en ligne (pas de mode hors ligne pour le
+site) : la mise à jour est la même que dans le navigateur.
+
 Allure : résultats en pastilles rondes (V vert, D rouge, N gris) ; **forme récente** = les 5 derniers résultats
 (le plus récent cerclé, chacun mène à son match) et la série en cours, dans Matchs et Équipe ; score façon tableau
 d'aréna (chiffre de la gagnante en blanc vif) sur la fiche du match et la carte du dernier match ; gros numéro pâle
@@ -365,7 +371,7 @@ Toutes les commandes se lancent depuis la racine du dépôt.
 | `python tools/extract.py --importer` | Comme ci-dessus, mais convertit les PDF en `data/matchs/*.json` et les archive (ce que fait GitHub Actions) |
 | `python tools/fiches/generer_sommaire.py` | Régénère le PDF remplissable vierge `fiches/BLL - Statistiques - Sommaire - Match.pdf` |
 | `python tools/fiches/generer_saisie.py` | Régénère la feuille papier vierge `fiches/BLL - Statistiques - Saisie - Match.pdf` (paysage) |
-| `python tools/generer_icones.py` | Régénère les icônes de l'application de saisie (`assets/icones/`) |
+| `python tools/generer_icones.py` | Régénère les icônes des applications (saisie sur fond blanc, site sur fond marine ; `assets/icones/`) |
 | `python tools/generer_apercu.py` | Régénère les images d'aperçu de lien (Messenger, courriel) : `assets/apercu.png` (site, aide) et `assets/apercu-saisie.png` |
 | `python tools/generer_glace.py` | Régénère le fond du site (glace marquée par les patins, `assets/glace*.svg`) |
 | `python tools/video/faire_video.py` | Refait la vidéo de l'aide (`assets/aide/saisie-demo.mp4`) en rejouant la saisie dans Edge ; demande `pip install imageio-ffmpeg` (pas dans requirements.txt) ; `--images DOSSIER` garde une image par étape pour vérifier |
@@ -386,6 +392,7 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `tools/video/` | Fabrication de la vidéo : `demo.html` (étapes, sous-titres) et `faire_video.py` |
 | `sw-saisie.js` | Cache hors ligne de la saisie (incrémenter `CACHE` à chaque modification) |
 | `saisie.webmanifest`, `saisie-gestion.webmanifest`, `assets/icones/` | Installation de la saisie comme application (parents, admin) |
+| `site.webmanifest` | Installation du site des statistiques comme application (« Stats BLL ») |
 | `js/vendor/pdf-lib.min.js` | [pdf-lib](https://pdf-lib.js.org/) 1.17.1 (licence MIT, `js/vendor/pdf-lib-LICENSE.md`) : remplit le PDF Sommaire dans la saisie |
 | `data/matchs/` | **Un fichier JSON par match (source des données)** |
 | `data/gardiennes.json` | Liste officielle des gardiennes (nom, numéro, équipe) — éditée à la main |
