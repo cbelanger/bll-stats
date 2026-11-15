@@ -188,7 +188,7 @@ iPhone → Partager → « Sur l'écran d'accueil » ; ordi : icône d'installat
 alors en plein écran, sans barre du navigateur. Les données sont toujours lues en ligne (pas de mode hors ligne pour le
 site) : la mise à jour est la même que dans le navigateur.
 
-Allure : résultats en pastilles rondes (V vert, D rouge, N gris) ; **forme récente** = les 5 derniers résultats
+Allure : résultats en pastilles rondes (V vert, D rouge, N gris) ; **séquence actuelle** = les 5 derniers résultats
 (le plus récent cerclé, chacun mène à son match) et la série en cours, dans Matchs et Équipe ; score façon tableau
 d'aréna (chiffre de la gagnante en blanc vif) sur la fiche du match et la carte du dernier match ; gros numéro pâle
 dans le bandeau de chaque gardienne. Aucune animation : tout s'affiche d'un coup.

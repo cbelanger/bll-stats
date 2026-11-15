@@ -111,7 +111,7 @@ const titreMatch = m => `${dateCourte(m.date)} · ${m.adversaire} (${m.buts.nous
 const bandesT = (ms, X, lg, y, h) => ms.map((m, i) => (m.tournoi
   ? `<rect class="bande-t" x="${Math.max(0, X(i) - lg / 2)}" y="${y}" width="${lg}" height="${h}"/>` : "")).join("");
 
-// Forme récente : les 5 derniers résultats en pastilles (du plus vieux au plus récent, chacune mène au match)
+// Séquence actuelle : les 5 derniers résultats en pastilles (du plus vieux au plus récent, chacune mène au match)
 // et la série en cours si au moins 2 résultats pareils de suite
 function forme(ms) {
   const chrono = [...ms].sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
@@ -119,7 +119,7 @@ function forme(ms) {
   const der = chrono.slice(-5), r = resultat(chrono[chrono.length - 1]);
   let n = 0; while (n < chrono.length && resultat(chrono[chrono.length - 1 - n]) === r) n++;
   const mot = { V: ["victoire", "victoires"], D: ["défaite", "défaites"], N: ["nulle", "nulles"] }[r][1];
-  return `<div class="forme"><span class="forme-t">Forme récente</span>${der.map(m =>
+  return `<div class="forme"><span class="forme-t">Séquence actuelle</span>${der.map(m =>
     `<a class="res ${resultat(m)}" href="#/match/${encodeURIComponent(m.id)}" title="${esc(titreMatch(m))}">${resultat(m)}</a>`).join("")}${
     n >= 2 ? `<span class="serie">${n} ${mot} de suite</span>` : ""}</div>`;
 }
