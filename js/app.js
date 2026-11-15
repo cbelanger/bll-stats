@@ -250,7 +250,7 @@ function situations(ms) {
 const saisonDe = iso => { const [a, m] = iso.split("-").map(Number); return m >= 8 ? `${a}-${a + 1}` : `${a - 1}-${a}`; };
 const aujourdhui = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const dateJour = iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" });
-const heureFr = h => (h ? h.replace(/^0/, "").replace(":", " h ") : "");
+const heureFr = h => (h ? h.replace(/^0/, "").replace(":00", " h").replace(":", " h ") : "");   // 12 h, 12 h 30
 function aVenir() {
   const auj = aujourdhui();
   return etat.calendrier.filter(c => c.equipe === etat.equipe && saisonDe(c.date) === etat.saison && c.date >= auj
@@ -313,9 +313,10 @@ function vueMatchs() {
   // Du plus vieux au plus récent
   const ms = filtres().sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
   // Prochain match : jamais une ronde éliminatoire dont BLL n'est pas encore sûre (« éventuel »)
-  const venir = aVenir(), pro = venir.find(c => !c.eventuel), reste = venir.filter(c => c !== pro);
+  // (la liste À venir le reprend aussi : le calendrier complet)
+  const venir = aVenir(), pro = venir.find(c => !c.eventuel);
   if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>
-    ${pro ? carteProchain(pro) : ""}${tableauAVenir(reste)}`;
+    ${pro ? carteProchain(pro) : ""}${tableauAVenir(venir)}`;
   // Dernier match en vedette : score et quelques faits saillants, un clic ouvre sa fiche
   const der = ms[ms.length - 1], faits = faitsSaillants(der, true).slice(0, 3);
   const nT = ms.filter(m => m.tournoi).length;
@@ -343,7 +344,7 @@ function vueMatchs() {
         <td class="n">${pctC(m.sorties_zone.reussies, m.sorties_zone.tentatives)}</td>
         <td class="n">${svArret(m) == null ? "–" : pctC(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
       </tr>`, true)}</tbody></table></div>
-  ${tableauAVenir(reste)}`;
+  ${tableauAVenir(venir)}`;
 }
 
 // Index dans PERIODES (0 à 4, -1 si inconnue) et temps au chrono en secondes

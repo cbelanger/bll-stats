@@ -186,7 +186,7 @@ tout se consulte aussi sur téléphone.
   fiche) et, à côté, le **prochain match** au calendrier LERQ (date, heure, aréna, domicile ou visiteur, numéro ; un clic
   ouvre le dossier de l'adversaire s'il y a déjà eu un match contre elles), puis la liste de la saison, du plus vieux au
   plus récent : résultat, score, tirs, % de sorties de zone réussies, gardienne, % d'arrêts. Sous la liste, **À venir** :
-  les autres matchs du calendrier. Un match du calendrier disparaît des matchs à venir dès que son fichier est publié
+  tous les matchs à venir du calendrier, en commençant par le prochain. Un match du calendrier disparaît des matchs à venir dès que son fichier est publié
   (même numéro). Le dossier d'un adversaire indique aussi le prochain match contre elles.
   **Tournois** (couleur or) : dans la liste et dans À venir, les matchs d'un même tournoi sont regroupés sous un bandeau
   (« Tournoi de Nepean · 20–22 nov. · 2-1-0 ») avec un liseré à gauche ; étiquette « Tournoi » sur le dernier et le
