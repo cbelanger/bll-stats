@@ -21,6 +21,7 @@ import json, os, re, sys, unicodedata
 from datetime import date, datetime, timezone
 from pathlib import Path
 from pypdf import PdfReader
+from tournois import sans_categorie, cle as cle_nom, table_noms
 
 RACINE = Path(__file__).resolve().parent.parent
 DOSSIER_PDF = RACINE / "pdf"
@@ -30,7 +31,8 @@ LISTE_GARDIENNES = RACINE / "data" / "gardiennes.json"
 FORMAT = "bll-match-1"
 FORMATS_LUS = {FORMAT, "bll-saisie-1"}   # bll-saisie-1 : premiers exports de saisie.html
 SORTIE = RACINE / "data" / "matchs.json"
-CALENDRIER = RACINE / "data" / "calendrier.json"   # tools/lerq.py
+CALENDRIER = RACINE / "data" / "calendrier.json"   # tools/lerq.py puis tools/tournois.py
+TOURNOIS = RACINE / "data" / "tournois.json"
 
 SUR_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
 
@@ -451,19 +453,45 @@ def calendrier():
     return {(m["equipe"], m["no"]): m for m in ms}
 
 
-def selon_lerq(m, cal):
-    # Nom de l'adversaire écrit comme dans le calendrier de la LERQ (dossiers d'adversaires jamais séparés) ;
-    # le fichier du match n'est pas modifié
-    c = cal.get((m["equipe"], m["no_match"]))
-    if not c:
+def tournois_saison():
+    # data/tournois.json (versionné) : liste des tournois ; absent = aucun
+    try:
+        return json.loads(TOURNOIS.read_text(encoding="utf-8")).get("tournois", [])
+    except (OSError, ValueError):
         return []
-    avert = []
-    if m["adversaire"] != c["adversaire"]:
-        if slug(m["adversaire"]) != slug(c["adversaire"]):
-            avert.append(f"adversaire « {m['adversaire']} » remplacé par « {c['adversaire']} » (calendrier LERQ, match {c['no']})")
+
+
+def selon_calendrier(m, cal, tournois, noms):
+    # Nom de l'adversaire écrit comme à la LERQ (dossiers d'adversaires jamais séparés) : correspondances des
+    # noms de tournoi (data/tournois.json), puis calendrier (même équipe et même no de match). Match joué pendant
+    # un tournoi de son équipe : m["tournoi"] (et la ronde si l'horaire la donne). Le fichier du match n'est pas modifié.
+    avert, avant = [], m["adversaire"]
+    officiel = noms.get(cle_nom(sans_categorie(avant)))
+    if officiel:
+        m["adversaire"] = officiel
+    c = cal.get((m["equipe"], m["no_match"]))
+    if not c and not m["no_match"]:
+        # Sans numéro : le match du calendrier de la même équipe ce jour-là, s'il n'y en a qu'un
+        # (sinon celui dont l'adversaire porte le même nom)
+        jour = [x for x in cal.values() if x["equipe"] == m["equipe"] and x["date"] == m["date"] and not x.get("eventuel")]
+        meme = [x for x in jour if x.get("adversaire") and slug(x["adversaire"]) == slug(m["adversaire"])]
+        c = jour[0] if len(jour) == 1 else meme[0] if len(meme) == 1 else None
+        if c:
+            m["no_match"] = c["no"]
+            avert.append(f"numéro de match {c['no']} pris dans le calendrier (seul match {m['equipe']} ce jour-là)"
+                         if len(jour) == 1 else f"numéro de match {c['no']} pris dans le calendrier")
+    source = "horaire du tournoi" if c and c.get("tournoi") else "calendrier LERQ"
+    if c and c.get("adversaire"):
         m["adversaire"] = c["adversaire"]
-    if m["date"] != c["date"]:
-        avert.append(f"date {m['date']} différente du calendrier LERQ ({c['date']}) pour le match {c['no']}")
+    if slug(m["adversaire"]) != slug(avant):
+        avert.append(f"adversaire « {avant} » remplacé par « {m['adversaire']} »"
+                     + (f" ({source}, match {c['no']})" if c and c.get("adversaire") else " (data/tournois.json)"))
+    if c and m["date"] != c["date"]:
+        avert.append(f"date {m['date']} différente du {source} ({c['date']}) pour le match {c['no']}")
+    t = next((t for t in tournois if t["debut"] <= m["date"] <= t["fin"] and m["equipe"] in t.get("horaires", {})), None)
+    m["tournoi"] = {"id": t["id"], "nom": t["nom"]} if t else None
+    m["ronde"] = c.get("ronde") if t and c else None
+    m["id"] = f"{m['date']}_{m['equipe']}_{slug(m['adversaire']) or 'adversaire'}"   # lien du site : nom corrigé
     return avert
 
 
@@ -494,6 +522,7 @@ class Rapport:
 
 def main(importer):
     rapport, matchs, cal = Rapport(), [], calendrier()
+    tournois, noms = tournois_saison(), table_noms()
 
     # 1. Matchs enregistrés (data/matchs/*.json)
     for f in sorted(DOSSIER_MATCHS.glob("*.json")):
@@ -501,7 +530,7 @@ def main(importer):
         if err:
             rapport.fichier(f.name, "✗", " — ignoré", err, avert)
             continue
-        avert = avert + selon_lerq(m, cal)
+        avert = avert + selon_calendrier(m, cal, tournois, noms)
         autre = next((x for x in matchs if meme_match(x, m)), None)
         if autre:
             # Deux fichiers pour le même match (ex. renommé « (1) » au téléchargement) : le plus récent gagne
@@ -519,7 +548,7 @@ def main(importer):
         if err:
             rapport.fichier(pdf.name, "✗", " — ignoré, reste dans pdf/", err, avert)
             continue
-        avert = avert + selon_lerq(m, cal)
+        avert = avert + selon_calendrier(m, cal, tournois, noms)
         i = next((k for k, x in enumerate(matchs) if meme_match(x, m)), None)
         cible = matchs[i]["fichier"] if i is not None else nom_fichier(m)
         if i is None and (DOSSIER_MATCHS / cible).exists():

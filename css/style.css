@@ -12,6 +12,8 @@
   --chaleur-2: #93AEDB;
   --chaleur-3: #4D73B8;
   --chaleur-4: #16336B;
+  --or: #B7850B;          /* matchs de tournoi */
+  --or-pale: #FBF1D6;
   --titre: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --texte: "Barlow", "Segoe UI", system-ui, sans-serif;
   color-scheme: light;
@@ -23,6 +25,8 @@
     --encre: #E8EEF8;
     --doux: #9FB0CC;
     --chaleur-0: #1B2C55;
+    --or: #E2B53E;
+    --or-pale: #3A3218;
     color-scheme: dark;
   }
 
@@ -283,7 +287,20 @@ td.fort { font-weight: 700; }
 .prochain .contre { font: 500 1rem/1 var(--texte); color: var(--doux); }
 .prochain .sous { margin: 0; font-size: .92rem; }
 .prochain-adv { margin: .6rem 0 0; padding: .5rem .8rem; border-left: 4px solid var(--rouge); background: var(--surface); border-radius: 4px; }
-.a-venir .vis { color: var(--doux); font-size: .88em; }
+.a-venir .vis { color: var(--doux); font-size: .88em; margin-left: .2rem; }
+.a-venir .eventuel { color: var(--doux); font-style: italic; }
+
+/* Matchs de tournoi : bandeau doré au-dessus du groupe, liseré à gauche des lignes, étiquette « Tournoi » */
+tr.groupe-t td { background: var(--or-pale); border-bottom: 0; padding-top: .45rem; padding-bottom: .45rem;
+  font: 600 1rem/1.2 var(--titre); white-space: normal; }
+tr.groupe-t td svg { width: 16px; height: 16px; margin-right: .35rem; vertical-align: -2px; fill: var(--or); }
+tr.groupe-t td span { color: var(--doux); font-weight: 500; }
+tr.en-t { border-left: 4px solid var(--or); }
+.tag-t { display: inline-block; padding: .12rem .4rem; border-radius: 3px; background: var(--or); color: #fff;
+  font: 700 .78rem/1 var(--titre); letter-spacing: .05em; text-transform: uppercase; vertical-align: 1px; }
+.sombre .tag-t { color: #1B1404; }
+.ligne-t { margin: .5rem 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font: 600 1.05rem/1.2 var(--titre); }
+.vedettes .vedette.en-t, .vedette.prochain.en-t { border-left-color: var(--or); }
 .sombre .vedette { border-left-color: #3A66C4; }
 .sombre .prochain { border-left-color: var(--rouge); }
 .sombre .ved-score b, .sombre .ved-lien { color: #8FB0EA; }

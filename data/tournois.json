@@ -1,0 +1,28 @@
+{
+  "_lisezmoi": "Tournois de la saison (édité à la main). horaires = liens .ics des divisions (site du tournoi : Schedule → télécharger le calendrier ; DID = division). noms = nom au tournoi (sans U16AA/U19AA) → nom à la LERQ ou nom court.",
+  "tournois": [
+    {
+      "id": "nepean-2026",
+      "nom": "Tournoi de Nepean",
+      "debut": "2026-11-20",
+      "fin": "2026-11-22",
+      "horaires": {
+        "U16AA": "https://ringetteontario.com/calendar/master-schedule/3106.ics?SID=14985&DID=20515&TournamentAID=3106&TZ=America%2FToronto",
+        "U19AA": "https://ringetteontario.com/calendar/master-schedule/3106.ics?SID=14985&DID=20518&TournamentAID=3106&TZ=America%2FToronto"
+      }
+    }
+  ],
+  "noms": {
+    "Cyclones de Quebec": "Québec",
+    "Eastern Ontario Rush": "Eastern Rush",
+    "Eastern Ontario Surge": "Eastern Surge",
+    "Nepean Ravens - Cram": "Nepean",
+    "West Ottawa Wild - Fioravanti": "West Ottawa",
+    "Ottawa Ice": "Ottawa",
+    "Outaouais": "Outaouais",
+    "Waterloo": "Waterloo",
+    "PEI": "PEI",
+    "Kitchener": "Kitchener",
+    "London": "London"
+  }
+}

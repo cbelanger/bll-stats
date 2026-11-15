@@ -7,7 +7,7 @@ const TYPES = {
 const ZONES = [["HG", "HC", "HD"], ["CG", "C", "CD"], ["BG", "BC", "BD"]];
 const PERIODES = [["p1", "P1"], ["p2", "P2"], ["p3", "P3"], ["p4", "P4"], ["prol", "Prol."]];
 
-const etat = { matchs: [], calendrier: [], saison: null, equipe: "U19AA" };
+const etat = { matchs: [], calendrier: [], tournois: [], saison: null, equipe: "U19AA" };
 const $ = (s, r = document) => r.querySelector(s);
 const el = $("#contenu");
 
@@ -258,49 +258,83 @@ function aVenir() {
     .sort((a, b) => (a.date + (a.heure || "")).localeCompare(b.date + (b.heure || "")));
 }
 // Dossier de l'adversaire s'il existe (au moins un match contre elles cette saison)
-const aDossier = nom => filtres().some(m => cleAdv(m.adversaire) === cleAdv(nom));
+const aDossier = nom => !!nom && filtres().some(m => cleAdv(m.adversaire) === cleAdv(nom));
+// Tournois (data/tournois.json, recopiés dans calendrier.json) : nom, dates « 20–22 nov. », icône de trophée
+const tournoi = id => (etat.tournois || []).find(t => t.id === id);
+const nomTournoi = c => tournoi(c.tournoi)?.nom || "Tournoi";
+function joursTournoi(t, ms) {
+  const [d, f] = t ? [t.debut, t.fin] : [ms[0].date, ms[ms.length - 1].date];
+  const j = iso => new Date(iso + "T12:00").getDate();
+  return d === f ? dateCourte(d) : d.slice(0, 7) === f.slice(0, 7) ? `${j(d)}–${dateCourte(f)}` : `${dateCourte(d)} – ${dateCourte(f)}`;
+}
+const TROPHEE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V18h3v3H8v-3h3v-3.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm0 4H6v1a2 2 0 0 0 1 1.7zm10 0v2.7A2 2 0 0 0 18 8V7z"/></svg>`;
+// Bandeau au-dessus des matchs d'un même tournoi (liste des matchs, À venir) ; bilan V-D-N si matchs joués
+function bandeauTournoi(id, nom, ms, col, bilan) {
+  const t = tournoi(id);
+  const vdn = bilan && ms.length ? ` · ${["V", "D", "N"].map(r => ms.filter(m => resultat(m) === r).length).join("-")}` : "";
+  return `<tr class="groupe-t"><td colspan="${col}">${TROPHEE}${esc(nom)} <span>· ${joursTournoi(t, ms)}${vdn}</span></td></tr>`;
+}
+// Lignes d'une liste, avec un bandeau avant chaque suite de matchs du même tournoi
+function lignesGroupees(liste, idDe, nomDe, col, ligne, bilan) {
+  let avant = null;
+  return liste.map(x => {
+    const id = idDe(x), h = id && id !== avant ? bandeauTournoi(id, nomDe(x), liste.filter(y => idDe(y) === id), col, bilan) : "";
+    avant = id;
+    return h + ligne(x);
+  }).join("");
+}
+// Adversaire d'un match du calendrier ; ronde éliminatoire sans adversaire connu : « Demi-finale (2e c. 3e) »
+const advCal = c => c.adversaire ? esc(c.adversaire)
+  : `<span class="eventuel">${esc(c.ronde || "Ronde éliminatoire")}${c.libelle ? ` (${esc(c.libelle)})` : ""}</span>`;
 function carteProchain(c) {
   const dossier = aDossier(c.adversaire);
-  return `<${dossier ? `a href="#/adversaire/${encodeURIComponent(cleAdv(c.adversaire))}"` : "div"} class="panneau vedette prochain">
+  const lieu = c.tournoi ? `${esc(c.endroit)}${c.ronde ? ` · ${esc(c.ronde)}` : ""}` : `${esc(c.endroit)} · BLL ${c.domicile ? "à domicile" : "visiteur"}`;
+  return `<${dossier ? `a href="#/adversaire/${encodeURIComponent(cleAdv(c.adversaire))}"` : "div"} class="panneau vedette prochain${c.tournoi ? " en-t" : ""}">
     <span class="ved-tag">Prochain match · ${dateJour(c.date)}${c.heure ? `, ${heureFr(c.heure)}` : ""}</span>
-    <span class="ved-score"><span class="eq">BLL ${esc(c.equipe)}</span><span class="contre">contre</span><span class="eq">${esc(c.adversaire)}</span></span>
-    <span class="sous">${esc(c.endroit)} · BLL ${c.domicile ? "à domicile" : "visiteur"} · match no ${esc(c.no)}</span>
-    <span class="ved-lien">${dossier ? "Dossier de l’adversaire →" : "Premier affrontement de la saison"}</span>
+    ${c.tournoi ? `<span class="ligne-t" style="margin:0"><span class="tag-t">Tournoi</span>${esc(nomTournoi(c))}</span>` : ""}
+    <span class="ved-score"><span class="eq">BLL ${esc(c.equipe)}</span><span class="contre">contre</span><span class="eq">${advCal(c)}</span></span>
+    <span class="sous">${lieu} · match no ${esc(c.no)}</span>
+    <span class="ved-lien">${dossier ? "Dossier de l’adversaire →" : c.adversaire ? "Premier affrontement de la saison" : ""}</span>
   </${dossier ? "a" : "div"}>`;
 }
 function tableauAVenir(cs) {
   if (!cs.length) return "";
+  const t = cs.some(c => c.tournoi);
   return `<h2>À venir</h2><div class="panneau defile"><table class="a-venir">
     <thead><tr><th>Date</th><th>Heure</th><th>Adversaire</th><th class="opt">Aréna</th><th class="opt">No</th></tr></thead>
-    <tbody>${cs.map(c => `<tr${aDossier(c.adversaire) ? ` class="lien" tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
-      <td>${dateCourte(c.date)}</td><td>${esc(c.heure || "–")}</td><td class="txt">${esc(c.adversaire)}${c.domicile ? "" : ` <span class="vis">(visiteur)</span>`}</td>
-      <td class="opt txt">${esc(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`).join("")}</tbody></table></div>
-    <p class="sous" style="font-size:.85rem">Calendrier de la LERQ, relu chaque nuit.</p>`;
+    <tbody>${lignesGroupees(cs, c => c.tournoi, nomTournoi, 5, c => `<tr class="${aDossier(c.adversaire) ? "lien" : ""}${c.tournoi ? " en-t" : ""}"${aDossier(c.adversaire) ? ` tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
+      <td>${dateCourte(c.date)}</td><td>${esc(c.heure || "–")}</td>
+      <td class="txt">${advCal(c)}${c.tournoi || c.domicile ? "" : ` <span class="vis">(visiteur)</span>`}${c.eventuel ? ` <span class="vis">si qualifiées</span>` : ""}</td>
+      <td class="opt txt">${esc(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`, false)}</tbody></table></div>
+    <p class="sous" style="font-size:.85rem">Calendrier de la LERQ${t ? " et horaires des tournois" : ""}, relus chaque nuit.</p>`;
 }
 
 function vueMatchs() {
   // Du plus vieux au plus récent
   const ms = filtres().sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
-  const venir = aVenir();
+  // Prochain match : jamais une ronde éliminatoire dont BLL n'est pas encore sûre (« éventuel »)
+  const venir = aVenir(), pro = venir.find(c => !c.eventuel), reste = venir.filter(c => c !== pro);
   if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>
-    ${venir.length ? carteProchain(venir[0]) + tableauAVenir(venir.slice(1)) : ""}`;
+    ${pro ? carteProchain(pro) : ""}${tableauAVenir(reste)}`;
   // Dernier match en vedette : score et quelques faits saillants, un clic ouvre sa fiche
   const der = ms[ms.length - 1], faits = faitsSaillants(der, true).slice(0, 3);
-  return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}</p>
+  const nT = ms.filter(m => m.tournoi).length;
+  return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}${nT ? `, dont ${nT} en tournoi` : ""}</p>
   <div class="grille g2 vedettes">
-  <a class="panneau vedette faits" href="#/match/${encodeURIComponent(der.id)}">
+  <a class="panneau vedette faits${der.tournoi ? " en-t" : ""}" href="#/match/${encodeURIComponent(der.id)}">
     <span class="ved-tag">Dernier match · ${dateFr(der.date)}</span>
+    ${der.tournoi ? `<span class="ligne-t" style="margin:0"><span class="tag-t">Tournoi</span>${esc(der.tournoi.nom)}${der.ronde ? ` · ${esc(der.ronde)}` : ""}</span>` : ""}
     <span class="ved-score"><span class="eq">BLL ${esc(der.equipe)}</span><b>${der.buts.nous}–${der.buts.adv}</b><span class="eq">${esc(der.adversaire)}</span>
       <span class="res ${resultat(der)}">${resultat(der)}</span></span>
     ${faits.length ? `<ul>${faits.map(t => `<li>${t}</li>`).join("")}</ul>` : ""}
     <span class="ved-lien">Voir le match →</span>
   </a>
-  ${venir.length ? carteProchain(venir[0]) : ""}
+  ${pro ? carteProchain(pro) : ""}
   </div>
   <div class="panneau defile" style="margin-top:1rem"><table class="liste-matchs">
     <thead><tr><th class="opt">No</th><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n opt">Tirs</th><th class="opt">Gardienne</th><th class="n" title="Sorties de zone réussies">% sorties</th><th class="n">% arrêts</th></tr></thead>
-    <tbody>${ms.map(m => `
-      <tr class="lien" tabindex="0" data-id="${esc(m.id)}">
+    <tbody>${lignesGroupees(ms, m => m.tournoi?.id, m => m.tournoi.nom, 9, m => `
+      <tr class="lien${m.tournoi ? " en-t" : ""}" tabindex="0" data-id="${esc(m.id)}">
         <td class="opt">${esc(m.no_match || "–")}</td><td>${dateCourte(m.date)}</td><td class="txt">${esc(m.adversaire)}</td>
         <td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
         <td class="n">${m.buts.nous}–${m.buts.adv}</td>
@@ -308,8 +342,8 @@ function vueMatchs() {
         <td class="opt">${esc(nomsGardiennes(m))}</td>
         <td class="n">${pctC(m.sorties_zone.reussies, m.sorties_zone.tentatives)}</td>
         <td class="n">${svArret(m) == null ? "–" : pctC(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td>
-      </tr>`).join("")}</tbody></table></div>
-  ${tableauAVenir(venir.slice(1))}`;
+      </tr>`, true)}</tbody></table></div>
+  ${tableauAVenir(reste)}`;
 }
 
 // Index dans PERIODES (0 à 4, -1 si inconnue) et temps au chrono en secondes
@@ -488,6 +522,7 @@ function vueMatch(id) {
   return `<a class="retour" href="#/matchs">← Matchs</a>
   ${titreActions(`${esc(m.equipe)} contre ${esc(m.adversaire)}`, partage)}
   <p class="sous">${dateFr(m.date)}${m.heure_debut ? `, ${m.heure_debut}${m.heure_fin ? "–" + m.heure_fin : ""}` : ""}${m.no_match ? `, match no ${esc(m.no_match)}` : ""}</p>
+  ${m.tournoi ? `<p class="ligne-t"><span class="tag-t">Tournoi</span>${esc(m.tournoi.nom)}${m.ronde ? ` · ${esc(m.ronde)}` : ""}</p>` : ""}
   <div class="score">
     <div class="eq">BLL ${esc(m.equipe)}<small>${m.tirs.nous ?? "–"} tirs cadrés</small></div>
     <div class="pts">${m.buts.nous}–${m.buts.adv}</div>
@@ -871,11 +906,12 @@ function vueAdversaire(cle) {
       <h3>Nos affrontements</h3>
       <div class="defile"><table>
         <thead><tr><th>Date</th><th>Rés.</th><th class="n">Score</th><th class="n">Tirs</th><th class="opt">Gardienne</th></tr></thead>
-        <tbody>${ms.map(m => `<tr class="lien" tabindex="0" data-id="${esc(m.id)}">
-          <td>${dateCourte(m.date)}</td><td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
+        <tbody>${ms.map(m => `<tr class="lien${m.tournoi ? " en-t" : ""}" tabindex="0" data-id="${esc(m.id)}">
+          <td>${dateCourte(m.date)}${m.tournoi ? ` <span class="tag-t" title="${esc(m.tournoi.nom)}">T</span>` : ""}</td><td><span class="res ${resultat(m)}">${resultat(m)}</span></td>
           <td class="n">${m.buts.nous}–${m.buts.adv}</td><td class="n">${m.tirs.nous == null && m.tirs.adv == null ? "–" : `${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}`}</td>
           <td class="opt">${esc(nomsGardiennes(m))}</td></tr>`).join("")}</tbody>
       </table></div>
+      ${ms.some(m => m.tournoi) ? `<p class="sous" style="font-size:.85rem"><span class="tag-t">T</span> match de tournoi</p>` : ""}
     </section>
     <section class="panneau">
       <h3>Contre elles et toute la saison</h3>
@@ -986,7 +1022,7 @@ async function demarrer() {
   // Calendrier LERQ (facultatif : sans lui, pas de prochain match)
   try {
     const c = await fetch("data/calendrier.json", { cache: "no-cache" });
-    if (c.ok) etat.calendrier = (await c.json()).matchs || [];
+    if (c.ok) { const cal = await c.json(); etat.calendrier = cal.matchs || []; etat.tournois = cal.tournois || []; }
   } catch (e) { /* rien */ }
   const saisons = [...new Set([...etat.matchs.map(m => m.saison), ...etat.calendrier.map(c => saisonDe(c.date))])].sort().reverse();
   let pref = {};

@@ -41,7 +41,9 @@ jobs:
 
       - name: Calendrier LERQ (data/calendrier.json)
         # Avant l'extraction : les noms d'adversaires suivent la LERQ. N'échoue jamais (avertissement seulement).
-        run: python tools/lerq.py
+        run: |
+          python tools/lerq.py
+          python tools/tournois.py   # ajoute les matchs des tournois de data/tournois.json (horaires .ics)
 
       - name: Importer les PDF et extraire les matchs
         id: extract

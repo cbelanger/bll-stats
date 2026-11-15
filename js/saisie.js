@@ -251,10 +251,11 @@ function boutonsCalendrier(eq) {
   const hier = `${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}`;
   d.setDate(d.getDate() + 15);
   const fin = `${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}`;
-  const liste = CALENDRIER.map((c, k) => ({ c, k })).filter(({ c }) => c.equipe === eq && c.date >= hier && c.date <= fin).slice(0, 3);
+  const liste = CALENDRIER.map((c, k) => ({ c, k })).filter(({ c }) => c.equipe === eq && c.date >= hier && c.date <= fin).slice(0, 4);
+  // Ronde éliminatoire sans adversaire connu : « Demi-finale (2e c. 3e) » ; l'adversaire s'écrit à la main
   $("#fi-cal").innerHTML = liste.map(({ c, k }) => `<button type="button" class="puce" data-cal="${k}">
-    <b>${new Date(c.date + "T12:00").toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short" })}${c.heure ? ` · ${c.heure}` : ""}</b>
-    ${esc(c.adversaire)}</button>`).join("");
+    <b>${new Date(c.date + "T12:00").toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short" })}${c.heure ? ` · ${c.heure}` : ""}${c.tournoi ? " · tournoi" : ""}</b>
+    ${c.adversaire ? esc(c.adversaire) : `${esc(c.ronde || "Ronde éliminatoire")}${c.libelle ? ` (${esc(c.libelle)})` : ""}`}</button>`).join("");
   $("#fi-cal-champ").hidden = !liste.length;
   majCalendrier();
 }
@@ -635,7 +636,9 @@ document.addEventListener("click", e => {
   const cal = e.target.closest("[data-cal]");
   if (cal) {
     const c = CALENDRIER[Number(cal.dataset.cal)];
-    $("#fi-adv").value = c.adversaire; $("#fi-date").value = c.date; $("#fi-no").value = c.no;
+    if (c.adversaire) $("#fi-adv").value = c.adversaire;
+    else { $("#fi-adv").value = ""; $("#fi-adv").focus(); }   // ronde éliminatoire : adversaire à écrire
+    $("#fi-date").value = c.date; $("#fi-no").value = c.no;
     majCalendrier();
     return;
   }

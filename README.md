@@ -69,10 +69,11 @@ Toucher le nom du match en haut pour remplir les infos : équipe (U16AA ou U19AA
 (le lien **LERQ** ouvre le calendrier de Ringuette Québec), heures, gardienne (seulement celles de l'équipe choisie,
 ou « Autre » avec nom et numéro) et responsable des stats.
 
-**Match au calendrier LERQ** : sous l'équipe, les prochains matchs de l'équipe (d'hier à dans deux semaines, 3 au plus,
-tirés de `data/calendrier.json`). En toucher un remplit l'adversaire (nom écrit comme à la LERQ), la date et le no de
-match ; l'heure de début reste celle du premier tir compté. La dernière copie du calendrier est gardée dans le
-téléphone pour l'aréna sans réseau.
+**Match au calendrier** : sous l'équipe, les prochains matchs de l'équipe, LERQ et tournois (d'hier à dans deux
+semaines, 4 au plus, tirés de `data/calendrier.json` ; « · tournoi » après l'heure). En toucher un remplit l'adversaire
+(nom écrit comme à la LERQ), la date et le no de match ; l'heure de début reste celle du premier tir compté. Demi-finale
+ou finale de tournoi dont l'adversaire n'est pas encore connu (« Demi-finale (2e c. 3e) ») : date et numéro remplis,
+l'adversaire s'écrit à la main. La dernière copie du calendrier est gardée dans le téléphone pour l'aréna sans réseau.
 
 ### Pendant le match
 
@@ -186,7 +187,12 @@ tout se consulte aussi sur téléphone.
   ouvre le dossier de l'adversaire s'il y a déjà eu un match contre elles), puis la liste de la saison, du plus vieux au
   plus récent : résultat, score, tirs, % de sorties de zone réussies, gardienne, % d'arrêts. Sous la liste, **À venir** :
   les autres matchs du calendrier. Un match du calendrier disparaît des matchs à venir dès que son fichier est publié
-  (même numéro). Le dossier d'un adversaire indique aussi le prochain match contre elles. Un clic sur un match joué ouvre sa fiche :
+  (même numéro). Le dossier d'un adversaire indique aussi le prochain match contre elles.
+  **Tournois** (couleur or) : dans la liste et dans À venir, les matchs d'un même tournoi sont regroupés sous un bandeau
+  (« Tournoi de Nepean · 20–22 nov. · 2-1-0 ») avec un liseré à gauche ; étiquette « Tournoi » sur le dernier et le
+  prochain match et sur la fiche (avec la ronde : Demi-finale, Finale) ; « T » à côté de la date dans le dossier d'un
+  adversaire. Rondes éliminatoires pas encore jouées : « Demi-finale (2e c. 3e) si qualifiées », jamais dans la carte du
+  prochain match. Les stats comptent tous les matchs, saison et tournois. Un clic sur un match joué ouvre sa fiche :
   - **Faits saillants** : quelques phrases tirées des données (retard effacé, but gagnant, série de buts,
     3 buts ou plus en 5 minutes, période gagnée par 3 buts ou plus, arrêts de la gardienne, domination aux tirs,
     records de la saison dès 3 matchs) ; 6 au plus ;
@@ -259,7 +265,8 @@ contient toutes les gardiennes. Le site regroupe les gardiennes par numéro.
 
 À chaque push, et chaque nuit vers 4 h ou 5 h (pour relire le calendrier sans push), `.github/workflows/publier.yml` :
 
-1. lance `tools/lerq.py`, qui lit le calendrier sur le site de la LERQ et écrit `data/calendrier.json` (voir plus bas) ;
+1. lance `tools/lerq.py`, qui lit le calendrier sur le site de la LERQ et écrit `data/calendrier.json`, puis
+   `tools/tournois.py`, qui y ajoute les matchs des tournois (voir plus bas) ;
 1. lance `tools/extract.py` (sur `main` : avec `--importer`, qui convertit les PDF de `pdf/` et les archive) ;
 2. sur `main`, enregistre l'import (commit « Import automatique des PDF » par le bot) ;
 3. écrit `data/version.json` (date du dernier changement de code, affichée en bas du site) ;
@@ -285,6 +292,32 @@ pas corrigé ou retiré.
   change vraiment ou si la date diffère) : les dossiers d'adversaires ne se séparent pas. Le fichier du match n'est pas modifié.
 - La page de la LERQ montre 100 matchs au plus par ligue : avertissement si une ligue en a davantage.
 - LERQ inaccessible : on garde le dernier calendrier publié (avertissement jaune, jamais d'échec).
+- Match sans numéro : `extract.py` prend le match du calendrier de la même équipe le même jour s'il n'y en a qu'un
+  (sinon celui dont l'adversaire porte le même nom) et le signale en jaune.
+
+### Tournois (`data/tournois.json`, `tools/tournois.py`)
+
+**Ajouter un tournoi** (2 ou 3 par saison) : dans `data/tournois.json`, une entrée par tournoi :
+
+```json
+{ "id": "nepean-2026", "nom": "Tournoi de Nepean", "debut": "2026-11-20", "fin": "2026-11-22",
+  "horaires": { "U16AA": "https://…ics…", "U19AA": "https://…ics…" } }
+```
+
+- `horaires` : lien du calendrier .ics de la division de chaque équipe, sur le site du tournoi (Schedule → bouton de
+  téléchargement du calendrier : clic droit → Copier le lien). Sur les sites Ringette Ontario (RAMP), le lien finit
+  par `DID=<division>` : changer ce numéro donne l'autre division.
+- `noms` (en bas du fichier) : nom de l'équipe au tournoi, sans la catégorie (« Nepean Ravens U16AA - Cram » →
+  « Nepean Ravens - Cram »), vers le nom de la LERQ (« Nepean ») ou un nom court. Une équipe absente de la liste
+  donne un avertissement jaune : l'ajouter. Ces correspondances servent aussi aux noms tapés dans la saisie.
+- Chaque nuit, `tools/tournois.py` relit les horaires : seuls les matchs entre `debut` et `fin` sont gardés (le .ics
+  contient aussi les éditions passées). Demi-finales et finales sont gardées avec leur ronde tant que BLL n'y est pas
+  inscrite (« éventuelles »), puis deviennent des matchs ordinaires quand le tournoi inscrit les équipes.
+- Un match joué entre `debut` et `fin` par une équipe qui a un horaire dans ce tournoi est marqué « tournoi » par
+  `extract.py` (rien à faire dans la saisie). Les numéros de match des tournois (ex. 26056) servent de no de match.
+- Prolongation en mort subite, parfois en plusieurs périodes de 10 min : la saisie n'a qu'un « Prol. » ; une 2ᵉ
+  prolongation se note dans les notes (le temps de glace des gardiennes est alors un peu sous-estimé).
+- Horaire illisible : on garde les matchs de ce tournoi du dernier calendrier publié (avertissement, jamais d'échec).
 
 ### Si quelque chose ne va pas
 
@@ -316,6 +349,7 @@ Toutes les commandes se lancent depuis la racine du dépôt.
 |---|---|
 | `pip install -r requirements.txt` | Installe les dépendances Python (pypdf, reportlab, pillow) |
 | `python tools/lerq.py` | Relit le calendrier de la LERQ et écrit `data/calendrier.json` (à lancer avant `extract.py` pour vérifier localement) |
+| `python tools/tournois.py` | Ajoute à `data/calendrier.json` les matchs des tournois de `data/tournois.json` (après `lerq.py`) |
 | `python tools/extract.py` | Lit `data/matchs/` et les PDF de `pdf/` (sans les déplacer), réécrit `data/matchs.json` : vérification locale |
 | `python tools/extract.py --importer` | Comme ci-dessus, mais convertit les PDF en `data/matchs/*.json` et les archive (ce que fait GitHub Actions) |
 | `python tools/fiches/generer_sommaire.py` | Régénère le PDF remplissable vierge `fiches/BLL - Statistiques - Sommaire - Match.pdf` |
@@ -344,11 +378,13 @@ Le site doit être ouvert par un serveur : un double-clic sur `index.html` ne pe
 | `js/vendor/pdf-lib.min.js` | [pdf-lib](https://pdf-lib.js.org/) 1.17.1 (licence MIT, `js/vendor/pdf-lib-LICENSE.md`) : remplit le PDF Sommaire dans la saisie |
 | `data/matchs/` | **Un fichier JSON par match (source des données)** |
 | `data/gardiennes.json` | Liste officielle des gardiennes (nom, numéro, équipe) — éditée à la main |
+| `data/tournois.json` | Tournois de la saison (dates, liens .ics des horaires) et correspondances de noms d'équipes — édité à la main |
 | `data/matchs.json`, `data/version.json`, `data/calendrier.json` | Générés (extract.py, lerq.py, Action) — non versionnés, ne pas éditer à la main |
 | `pdf/` | PDF déposés, en attente d'import ; `pdf/archives/` : PDF déjà importés |
 | `fiches/` | Fiches vierges à distribuer (Sommaire remplissable, Saisie papier) |
 | `tools/extract.py` | Validation, import des PDF, production de `data/matchs.json` |
 | `tools/lerq.py` | Lecture du calendrier de la LERQ → `data/calendrier.json` |
+| `tools/tournois.py` | Lecture des horaires de tournoi (.ics) → ajoutés à `data/calendrier.json` |
 | `tools/fiches/` | Scripts qui génèrent les fiches vierges |
 | `tools/generer_icones.py`, `tools/generer_glace.py` | Icônes de la saisie, fond du site |
 | `.github/workflows/publier.yml` | GitHub Actions : extraction et publication du site |
