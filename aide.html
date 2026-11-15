@@ -41,6 +41,7 @@
 
   <main>
     <nav class="carte sommaire-aide" aria-label="Sections">
+      <a href="#appli">Installer l’application</a>
       <a href="#video">Vidéo</a>
       <a href="#avant">Avant le match</a>
       <a href="#pendant">Pendant le match</a>
@@ -49,6 +50,50 @@
       <a href="#fin">À la fin</a>
       <a href="#faq">Problèmes</a>
     </nav>
+
+    <section class="carte" id="appli">
+      <h2>Installer en application</h2>
+      <p>Sur téléphone, c’est vraiment mieux : une icône sur l’écran d’accueil, ça s’ouvre d’un toucher, en plein écran,
+        sans la barre du navigateur. Et la saisie fonctionne même sans réseau dans l’aréna.</p>
+      <div class="applis">
+        <a class="appli" href="index.html"><img src="assets/icones/site-192.png" alt="" width="56" height="56">
+          <span><b>Stats BLL</b>le site des statistiques</span></a>
+        <a class="appli" href="saisie.html" id="lien-saisie"><img src="assets/icones/saisie-192.png" alt="" width="56" height="56">
+          <span><b>Saisie BLL</b>pour prendre les stats d’un match</span></a>
+      </div>
+      <p><b>Ouvre d’abord la page à installer</b> (touche une des deux icônes ci-dessus), puis suis les étapes de ton téléphone.
+        Recommence avec l’autre page pour avoir les deux.</p>
+      <p class="gestion-seul">Admin : l’icône « Saisie BLL » ouvre la saisie en mode admin ; installée de là, elle devient
+        l’application « BLL Gestion ».</p>
+
+      <h3>Android</h3>
+      <p><b>Edge</b></p>
+      <ol class="etapes-aide">
+        <li>Touche le menu <span class="t c">⋯</span> en bas de l’écran.</li>
+        <li>Touche <span class="t c">Ajouter au téléphone</span> (parfois « Installer l’application »).</li>
+        <li>Confirme avec <span class="t c">Installer</span> ou <span class="t c">Ajouter</span>.</li>
+      </ol>
+      <p><b>Chrome</b> : menu <span class="t c">⋮</span> en haut à droite → <span class="t c">Ajouter à l’écran d’accueil</span>
+        → <span class="t c">Installer</span>.</p>
+      <p><b>Samsung Internet</b> : menu <span class="t c">≡</span> en bas → <span class="t c">Ajouter la page à</span>
+        → <span class="t c">Écran d’accueil</span>.</p>
+      <p>L’icône apparaît sur l’écran d’accueil ou dans la liste des applications ; garde le doigt dessus pour la déplacer.</p>
+
+      <h3>iPhone</h3>
+      <ol class="etapes-aide">
+        <li>Ouvre la page dans <b>Safari</b> (Chrome et Edge le permettent aussi, par le même bouton Partager).</li>
+        <li>Touche le bouton Partager <span class="t c partage" aria-label="Partager"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M8 10H6v10h12V10h-2"/></svg></span>
+          en bas de l’écran (sur les iPhone récents, touche d’abord <span class="t c">⋯</span>).</li>
+        <li>Descends dans la liste et touche <span class="t c">Sur l’écran d’accueil</span>.</li>
+        <li>Touche <span class="t c">Ajouter</span> en haut à droite.</li>
+      </ol>
+      <p class="astuce">Sur iPhone, l’application a sa propre mémoire, séparée de Safari : un match commencé dans Safari
+        n’apparaît pas dans l’application (et l’inverse). Commence et termine un match au même endroit, le mieux étant
+        toujours dans l’application.</p>
+
+      <h3>Ensuite</h3>
+      <p>Ouvre l’application une première fois avec du réseau. Les mises à jour arrivent toutes seules : rien à réinstaller.</p>
+    </section>
 
     <section class="carte" id="video">
       <h2>La saisie en vidéo <span>2 min</span></h2>
@@ -60,7 +105,7 @@
     <section class="carte" id="avant">
       <h2>Avant d’arriver à l’aréna</h2>
       <p>Ouvre la saisie <b>une fois avec du réseau</b> (à la maison). Ensuite, elle fonctionne même sans réseau dans l’aréna.</p>
-      <p>Pour l’avoir comme une application : menu du navigateur (⋮) → <b>Ajouter à l’écran d’accueil</b>.</p>
+      <p>Le mieux : l’<a href="#appli">installer comme une application</a> (Android et iPhone, voir plus haut).</p>
 
       <h2>Avant le match</h2>
       <p>Touche le nom du match en haut de l’écran <span class="t c">U19AA contre adversaire ? ✎</span> et remplis :</p>
@@ -196,7 +241,10 @@
       a.href = site ? "index.html" : "saisie.html" + location.search;
       if (site) a.textContent = id === "retour" ? "‹ Site" : "‹ Retour au site";
     }
-    if (/[?&]gestion=1(&|$)/.test(location.search)) document.body.classList.add("gestion");
+    if (/[?&]gestion=1(&|$)/.test(location.search)) {
+      document.body.classList.add("gestion");
+      document.getElementById("lien-saisie").href = "saisie.html?gestion=1";   // à installer : BLL Gestion
+    }
     // Mode clair / sombre : même choix que le site et la saisie (localStorage « bll-theme »)
     const theme = document.getElementById("theme"), racine = document.documentElement;
     const majTheme = () => theme.setAttribute("aria-label", racine.classList.contains("sombre") ? "Mode clair" : "Mode sombre");

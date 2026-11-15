@@ -186,7 +186,9 @@ tout se consulte aussi sur téléphone, où les onglets forment une barre fixe e
 blanc) : Edge ou Chrome sur Android → menu ⋯ → « Ajouter au téléphone » / « Installer l'application » ; Safari sur
 iPhone → Partager → « Sur l'écran d'accueil » ; ordi : icône d'installation dans la barre d'adresse. Le site s'ouvre
 alors en plein écran, sans barre du navigateur. Les données sont toujours lues en ligne (pas de mode hors ligne pour le
-site) : la mise à jour est la même que dans le navigateur.
+site) : la mise à jour est la même que dans le navigateur. La page d'aide a une section « Installer en application »
+(`aide.html#appli`) pour les deux applications, Android (Edge, Chrome, Samsung Internet) et iPhone, à envoyer aux
+parents et aux coachs.
 
 Allure : résultats en pastilles rondes (V vert, D rouge, N gris) ; **séquence actuelle** = les 5 derniers résultats
 (le plus récent cerclé, chacun mène à son match) et la série en cours, dans Matchs et Équipe ; score façon tableau

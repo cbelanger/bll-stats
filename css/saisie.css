@@ -292,6 +292,15 @@ body:not(.gestion) .gestion-seul { display: none !important; }
 .retour-bas .t { padding: .6rem 1rem; font-size: 1.1rem; }
 .page-aide section { scroll-margin-top: 4.5rem; }
 .page-aide .carte h2:not(:first-child) { margin-top: 1.1rem; }
+/* Installer en application : les deux icônes, chacune ouvre sa page */
+.applis { display: grid; gap: .5rem; margin: .6rem 0; }
+.appli { display: flex; align-items: center; gap: .75rem; padding: .5rem .6rem; border: 1px solid var(--trait); border-radius: 10px;
+  background: var(--glace); color: var(--encre); text-decoration: none; }
+.appli img { width: 56px; height: 56px; border-radius: 13px; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); flex: none; }
+.appli span { line-height: 1.3; color: var(--doux); font-size: .95rem; }
+.appli b { display: block; font: 700 1.15rem/1.2 var(--titre); color: var(--encre); }
+.t.partage { padding: .1rem .3rem; vertical-align: -3px; }
+.t.partage svg { display: block; width: 18px; height: 18px; fill: none; stroke: #0A84FF; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .video-aide { display: block; width: 100%; max-width: 360px; margin: .3rem auto; aspect-ratio: 9 / 16; border-radius: 10px; background: #16336B; }
 
 /* Célébration d'un but BLL (celebrer() dans saisie.js) : anneaux bleus qui montent et s'effacent */
