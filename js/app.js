@@ -123,23 +123,6 @@ function forme(ms) {
     `<a class="res ${resultat(m)}" href="#/match/${encodeURIComponent(m.id)}" title="${esc(titreMatch(m))}">${resultat(m)}</a>`).join("")}${
     n >= 2 ? `<span class="serie">${n} ${mot} de suite</span>` : ""}</div>`;
 }
-// Animations (désactivées si l'appareil demande moins de mouvement) : chiffres clés et score qui montent
-const animer = () => !matchMedia("(prefers-reduced-motion: reduce)").matches;
-function compteurs(racine) {
-  if (!animer()) return;
-  racine.querySelectorAll(".chiffre b, .cb").forEach(b => {
-    if (b.closest("[hidden]")) return;
-    const t = b.textContent, x = /^(\d+)(?:,(\d+))?(\s%)?$/.exec(t.trim());
-    if (!x || !Number(x[1] + "." + (x[2] || 0))) return;
-    const fin = Number(x[1] + "." + (x[2] || 0)), dec = x[2] ? x[2].length : 0, debut = performance.now();
-    const pas = now => {
-      const k = Math.min(1, (now - debut) / 700);
-      b.textContent = k < 1 ? (fin * (1 - (1 - k) ** 3)).toFixed(dec).replace(".", ",") + (x[3] || "") : t;
-      if (k < 1) requestAnimationFrame(pas);
-    };
-    requestAnimationFrame(pas);
-  });
-}
 
 function tendance(points) {
   // points : [{date, v (0-1), m (le match), tirs, buts (de cette gardienne)}] ; survol ou toucher = valeurs du match
@@ -155,7 +138,7 @@ function tendance(points) {
     ${bandesT(points.map(p => p.m), X, lg, 0, H)}
     <line class="ref" x1="${px}" x2="${W}" y1="${Y(ref)}" y2="${Y(ref)}"/>
     <text x="0" y="${Y(ref) + 4}">90 %</text>
-    <path class="ligne" pathLength="1" d="${d}"/>
+    <path class="ligne" d="${d}"/>
     ${points.map((p, i) => `<circle class="pt" cx="${X(i)}" cy="${Y(p.v)}" r="5"/>`).join("")}
     ${points.map((p, i) => `<rect class="survol" x="${Math.max(0, X(i) - lg / 2)}" y="0" width="${lg}" height="${H}" data-match="${esc(p.m.id)}"
       data-titre="${esc(titreMatch(p.m))}"
@@ -192,7 +175,7 @@ function progression(ms, series, unite = "", nom = "") {
     // segments continus entre matchs qui ont une valeur
     const d = ms.map((m, i) => [i, se.val(m)]).reduce((a, [i, v], k, arr) =>
       v == null ? a : a + `${k && arr[k - 1][1] != null ? "L" : "M"}${X(i).toFixed(1)} ${Y(v).toFixed(1)} `, "");
-    s += `<path class="ligne ${se.cls}" pathLength="1" d="${d}"/>`;
+    s += `<path class="ligne ${se.cls}" d="${d}"/>`;
     ms.forEach((m, i) => { const v = se.val(m); if (v != null) s += `<circle class="pt ${se.cls}" cx="${X(i)}" cy="${Y(v)}" r="4.5"/>`; });
     const dern = ms.length - 1 - [...ms].reverse().findIndex(m => se.val(m) != null);
     if (dern < ms.length) etiq.push({ x: X(dern) + 9, y: Y(se.val(ms[dern])) + 4, lab: se.lab });
@@ -813,7 +796,7 @@ function vueGardiennes() {
 // Onglet ou ligne du tableau comparatif : affiche la fiche de cette gardienne (choix gardé en changeant d'onglet)
 function choisirGardienne(cle, defiler) {
   etat.gardienne = cle;
-  document.querySelectorAll("[data-gcarte]").forEach(c => { c.hidden = c.dataset.gcarte !== cle; if (!c.hidden) compteurs(c); });
+  document.querySelectorAll("[data-gcarte]").forEach(c => { c.hidden = c.dataset.gcarte !== cle; });
   document.querySelectorAll("[data-gsel]").forEach(b => b.setAttribute("aria-selected", b.dataset.gsel === cle));
   if (defiler) (document.querySelector(".onglets-g") || document.querySelector(`[data-gcarte="${CSS.escape(cle)}"]`))?.scrollIntoView({ behavior: "smooth" });
 }
@@ -1086,9 +1069,6 @@ function afficher() {
     : vue === "adversaires" ? vueAdversaires()
     : vue === "adversaire" ? vueAdversaire(decodeURIComponent(id || ""))
     : vueMatchs();
-  // Entrée de la vue : fondu court (CSS), puis chiffres qui montent
-  el.classList.remove("calme", "entre"); void el.offsetWidth; el.classList.add("entre");
-  compteurs(el);
   el.focus({ preventScroll: true });
   window.scrollTo(0, 0);
 }
@@ -1178,8 +1158,7 @@ async function demarrer() {
     minuterie = setTimeout(() => {
       if (el.clientWidth === largeur || !location.hash.startsWith("#/equipe")) return;
       largeur = el.clientWidth;
-      // redessin sans animation (.calme) : rien ne doit bouger quand on tourne le téléphone
-      const y = window.scrollY; el.classList.add("calme"); el.innerHTML = vueEquipe(); window.scrollTo(0, y);
+      const y = window.scrollY; el.innerHTML = vueEquipe(); window.scrollTo(0, y);
     }, 200);
   });
   el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], tr[data-g], tr[data-adv], table.triable thead th")) e.target.click(); });

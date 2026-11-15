@@ -185,9 +185,7 @@ tout se consulte aussi sur téléphone, où les onglets forment une barre fixe e
 Allure : résultats en pastilles rondes (V vert, D rouge, N gris) ; **forme récente** = les 5 derniers résultats
 (le plus récent cerclé, chacun mène à son match) et la série en cours, dans Matchs et Équipe ; score façon tableau
 d'aréna (chiffre de la gagnante en blanc vif) sur la fiche du match et la carte du dernier match ; gros numéro pâle
-dans le bandeau de chaque gardienne. Petites animations (fondu à l'arrivée d'une page, chiffres clés qui montent,
-barres qui poussent, lignes des graphiques qui se tracent), jamais si l'appareil demande moins de mouvement ni à
-l'impression ; formes grises pendant le chargement.
+dans le bandeau de chaque gardienne. Aucune animation : tout s'affiche d'un coup.
 
 - **Matchs** : en haut, le **dernier match** en vedette (score, résultat, 3 faits saillants au plus ; un clic ouvre sa
   fiche) et, à côté, le **prochain match** au calendrier LERQ (date, heure, aréna, domicile ou visiteur, numéro ; un clic
