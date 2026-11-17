@@ -21,6 +21,13 @@ const pctC = (n, d) => pct(n, d).replace(" %", '<span class="pc">&nbsp;%</span>'
 const moy = (n, d, dec = 2) => (d ? (n / d).toFixed(dec).replace(".", ",") : "–");
 const dateFr = iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
 const dateHeure = d => d.toLocaleString("fr-CA", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+// Pied de page : date longue sur ordi, abrégée sur téléphone (« 2026/11/16 - 17h34 ») ; heure = false : date seule
+function datePied(d, heure = true) {
+  const z = n => String(n).padStart(2, "0");
+  const court = `${d.getFullYear()}/${z(d.getMonth() + 1)}/${z(d.getDate())}${heure ? ` - ${d.getHours()}h${z(d.getMinutes())}` : ""}`;
+  const long = heure ? dateHeure(d) : d.toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+  return `<span class="d-long">${long}</span><span class="d-court">${court}</span>`;
+}
 const dateCourte =iso => new Date(iso + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" });
 const resultat = m => (m.buts.nous > m.buts.adv ? "V" : m.buts.nous < m.buts.adv ? "D" : "N");
 const cleGardienne = g => (g.numero != null ? "#" + g.numero : g.nom || "?");
@@ -1191,7 +1198,7 @@ async function versionCode() {
       const r = await fetch("js/app.js", { method: "HEAD", cache: "no-cache" });
       d = new Date(r.headers.get("Last-Modified"));
     }
-    if (!isNaN(d)) $("#version").textContent = `Code mis à jour : ${dateHeure(d)}`;
+    if (!isNaN(d)) $("#version").innerHTML = `Code mis à jour : ${datePied(d)}`;
   } catch (e) { /* date indisponible : on n'affiche rien */ }
 }
 
@@ -1202,7 +1209,7 @@ async function demarrer() {
     const data = await r.json();
     etat.matchs = data.matchs || [];
     // genere_le : « AAAA-MM-JJTHH:MM » (ancien format sans heure : date seulement)
-    $("#maj").textContent = `Dernière mise à jour des stats : ${data.genere_le.includes("T") ? dateHeure(new Date(data.genere_le)) : dateFr(data.genere_le)}`;
+    $("#maj").innerHTML = `Dernière mise à jour des données : ${data.genere_le.includes("T") ? datePied(new Date(data.genere_le)) : datePied(new Date(data.genere_le + "T12:00"), false)}`;
     versionCode();
   } catch (e) {
     el.innerHTML = `<p class="vide">Les statistiques ne sont pas disponibles pour le moment. Réessayer plus tard.</p>`;

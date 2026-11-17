@@ -424,7 +424,8 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
 
 .notes { white-space: pre-wrap; }
 .pied { text-align: center; color: var(--doux); font-size: .85rem; padding: 0 1rem 2rem; }
-.pied span { display: block; }
+.pied > span { display: block; }
+.pied .d-court { display: none; }   /* date abrégée : téléphone seulement */
 
 @media (max-width: 720px) {
   .barre { position: relative; }
@@ -435,6 +436,8 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
 }
 @media (max-width: 600px) {
   .panneau { padding: .9rem .8rem; }
+  .pied .d-long { display: none; }
+  .pied .d-court { display: inline; }
   /* Onglets : barre fixe en bas de l'écran, icône + nom, à portée du pouce */
   .onglets {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; gap: 0;
@@ -491,7 +494,7 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
    panneaux jamais coupés entre deux pages. Le thème sombre est retiré par app.js (beforeprint). */
 @page { size: letter; margin: 10mm; }
 @media print {
-  body { background: #fff; font-size: 13px; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding-bottom: 0; }  .barre, .retour, .imprimer, .pied span:not(#maj) { display: none; }
+  body { background: #fff; font-size: 13px; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding-bottom: 0; }  .barre, .retour, .imprimer, .pied > span:not(#maj) { display: none; }
   main { max-width: none; padding: 0; }
   h1 { font-size: 1.9rem; }
   .panneau { border-color: #C9D3E3; padding: .6rem .8rem; break-inside: avoid; }
