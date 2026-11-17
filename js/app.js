@@ -1198,7 +1198,7 @@ async function versionCode() {
       const r = await fetch("js/app.js", { method: "HEAD", cache: "no-cache" });
       d = new Date(r.headers.get("Last-Modified"));
     }
-    if (!isNaN(d)) $("#version").innerHTML = `Code mis à jour : ${datePied(d)}`;
+    if (!isNaN(d)) $("#version").innerHTML = `Mise à jour du code :${datePied(d)}`;
   } catch (e) { /* date indisponible : on n'affiche rien */ }
 }
 
@@ -1209,7 +1209,7 @@ async function demarrer() {
     const data = await r.json();
     etat.matchs = data.matchs || [];
     // genere_le : « AAAA-MM-JJTHH:MM » (ancien format sans heure : date seulement)
-    $("#maj").innerHTML = `Dernière mise à jour des données : ${data.genere_le.includes("T") ? datePied(new Date(data.genere_le)) : datePied(new Date(data.genere_le + "T12:00"), false)}`;
+    $("#maj").innerHTML = `Mise à jour des données :${data.genere_le.includes("T") ? datePied(new Date(data.genere_le)) : datePied(new Date(data.genere_le + "T12:00"), false)}`;
     versionCode();
   } catch (e) {
     el.innerHTML = `<p class="vide">Les statistiques ne sont pas disponibles pour le moment. Réessayer plus tard.</p>`;
