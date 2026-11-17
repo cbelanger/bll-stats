@@ -327,20 +327,22 @@ function joursTournoi(t, ms) {
   return d === f ? dateCourte(d) : d.slice(0, 7) === f.slice(0, 7) ? `${j(d)}–${dateCourte(f)}` : `${dateCourte(d)} – ${dateCourte(f)}`;
 }
 const TROPHEE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V18h3v3H8v-3h3v-3.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm0 4H6v1a2 2 0 0 0 1 1.7zm10 0v2.7A2 2 0 0 0 18 8V7z"/></svg>`;
-// Bandeau au-dessus des matchs d'un même tournoi (liste des matchs, À venir) ; bilan V-D-N si matchs joués,
-// et alors le bandeau mène au résumé du tournoi
+// Bandeau au-dessus des matchs d'un même tournoi (liste des matchs, À venir) ; bilan V-D-N si matchs joués.
+// Le bandeau mène à la page du tournoi (résumé si des matchs sont joués, sinon horaire) ; pas sur cette page même.
 function bandeauTournoi(id, nom, ms, col, bilan) {
   const t = tournoi(id);
   const vdn = bilan && ms.length ? ` · ${["V", "D", "N"].map(r => ms.filter(m => resultat(m) === r).length).join("-")}` : "";
-  const lien = bilan && ms.length;
+  const lien = !location.hash.startsWith("#/tournoi/");
+  const joue = etat.matchs.some(m => m.tournoi?.id === id && m.equipe === etat.equipe);
   return `<tr class="groupe-t${lien ? " lien" : ""}"${lien ? ` tabindex="0" data-tournoi="${esc(id)}"` : ""}><td colspan="${col}">${TROPHEE}${esc(nom)} <span>· ${joursTournoi(t, ms)}${vdn}</span>${
-    lien ? `<b class="vers-t">Résumé →</b>` : ""}</td></tr>`;
+    lien ? `<b class="vers-t">${joue ? "Résumé" : "Horaire"} →</b>` : ""}</td></tr>`;
 }
-// Lignes d'une liste, avec un bandeau avant chaque suite de matchs du même tournoi
-function lignesGroupees(liste, idDe, nomDe, col, ligne, bilan) {
-  let avant = null;
+// Lignes d'une liste, avec un bandeau avant chaque suite de matchs du même tournoi.
+// avant : tournoi de la ligne qui précède (liste coupée en deux corps de tableau : pas de 2e bandeau) ;
+// tout : liste complète, pour les dates du bandeau
+function lignesGroupees(liste, idDe, nomDe, col, ligne, bilan, avant = null, tout = liste) {
   return liste.map(x => {
-    const id = idDe(x), h = id && id !== avant ? bandeauTournoi(id, nomDe(x), liste.filter(y => idDe(y) === id), col, bilan) : "";
+    const id = idDe(x), h = id && id !== avant ? bandeauTournoi(id, nomDe(x), tout.filter(y => idDe(y) === id), col, bilan) : "";
     avant = id;
     return h + ligne(x);
   }).join("");
@@ -361,18 +363,19 @@ function carteProchain(c) {
 }
 // Les 5 prochains matchs ; les autres dans un 2e corps de tableau, ouvert par « Voir tout le calendrier »
 const NB_A_VENIR = 5;
-function tableauAVenir(cs) {
+// titre, nb : page d'un tournoi (« Horaire », tous les matchs)
+function tableauAVenir(cs, titre = "À venir", NB_A_VENIR = 5) {
   if (!cs.length) return "";
   const t = cs.some(c => c.tournoi);
-  const lignes = liste => lignesGroupees(liste, c => c.tournoi, nomTournoi, 5, c => `<tr class="${aDossier(c.adversaire) ? "lien" : ""}${c.tournoi ? " en-t" : ""}"${aDossier(c.adversaire) ? ` tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
+  const lignes = (liste, avant = null) => lignesGroupees(liste, c => c.tournoi, nomTournoi, 5, c => `<tr class="${aDossier(c.adversaire) ? "lien" : ""}${c.tournoi ? " en-t" : ""}"${aDossier(c.adversaire) ? ` tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
       <td>${dateCourte(c.date)}</td><td>${esc(c.heure || "–")}</td>
       <td class="txt">${advCal(c)}${c.tournoi || c.domicile ? "" : ` <span class="vis">(visiteur)</span>`}${c.eventuel ? ` <span class="vis">si qualifiées</span>` : ""}</td>
-      <td class="opt txt">${esc(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`, false);
+      <td class="opt txt">${esc(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`, false, avant, cs);
   const reste = cs.slice(NB_A_VENIR);
-  return `<h2>À venir</h2><div class="panneau defile"><table class="a-venir">
+  return `<h2>${titre}</h2><div class="panneau defile"><table class="a-venir">
     <thead><tr><th>Date</th><th>Heure</th><th>Adversaire</th><th class="opt">Aréna</th><th class="opt">No</th></tr></thead>
     <tbody>${lignes(cs.slice(0, NB_A_VENIR))}</tbody>
-    ${reste.length ? `<tbody class="reste-cal"${etat.toutCal ? "" : " hidden"}>${lignes(reste)}</tbody>` : ""}</table>
+    ${reste.length ? `<tbody class="reste-cal"${etat.toutCal ? "" : " hidden"}>${lignes(reste, cs[NB_A_VENIR - 1].tournoi)}</tbody>` : ""}</table>
     ${reste.length ? `<button type="button" class="tout-cal" data-tout-cal>${etat.toutCal ? "Voir moins" : `Voir tout le calendrier (${reste.length} autres)`}</button>` : ""}</div>
     ${note(`Calendrier de la LERQ${t ? " et horaires des tournois" : ""}, relus chaque nuit.`)}`;
 }
@@ -1065,7 +1068,14 @@ function vueTournoi(id) {
   const venir = etat.calendrier.filter(c => c.tournoi === id && c.equipe === etat.equipe && c.date >= aujourdhui()
     && !etat.matchs.some(m => m.equipe === c.equipe && m.no_match === c.no));
   const retour = `<a class="retour" href="#/matchs">← Matchs</a>`;
-  if (!ms.length) return `${retour}<h1>${esc(nom)}</h1><p class="vide">Aucun match ${etat.equipe} publié pour ce tournoi.</p>${tableauAVenir(venir)}`;
+  if (!ms.length) {
+    if (!t) return `${retour}<p class="vide">Ce tournoi n’existe pas ou n’a pas encore été publié.</p>`;
+    const nbV = venir.filter(c => !c.eventuel).length;
+    return `${retour}${titreActions(esc(nom))}
+    <p class="sous">Tournoi, ${esc(etat.equipe)}, ${joursTournoi(t, [])}${nbV ? ` : ${nbV} match${nbV > 1 ? "s" : ""} prévu${nbV > 1 ? "s" : ""}` : ""}</p>
+    <p class="vide">Aucun match ${etat.equipe} joué pour le moment. Le résumé du tournoi s’affichera ici après le premier match.</p>
+    ${tableauAVenir(venir, "Horaire", venir.length)}`;
+  }
   const somme = (l, f) => l.reduce((s, m) => s + f(m), 0);
   const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length, n = ms.length - v - d;
   const bp = somme(ms, m => m.buts.nous), bc = somme(ms, m => m.buts.adv);
@@ -1142,7 +1152,7 @@ function vueTournoi(id) {
       ${note(`Reste de la saison : ${reste.length} match${reste.length > 1 ? "s" : ""} ${esc(etat.equipe)} hors de ce tournoi.`)}
     </section>` : ""}
   </div>
-  ${tableauAVenir(venir)}`;
+  ${tableauAVenir(venir, "À venir", venir.length)}`;
 }
 
 // Au moins un but avec type ou zone
