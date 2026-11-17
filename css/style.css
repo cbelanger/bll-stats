@@ -341,6 +341,12 @@ tr.groupe-t td { background: var(--or-pale); border-bottom: 0; padding-top: .45r
   font: 600 1rem/1.2 var(--titre); white-space: normal; }
 tr.groupe-t td svg { width: 16px; height: 16px; margin-right: .35rem; vertical-align: -2px; fill: var(--or); }
 tr.groupe-t td span { color: var(--doux); font-weight: 500; }
+tr.groupe-t.lien { cursor: pointer; }
+tr.groupe-t .vers-t { float: right; margin-left: .6rem; font: 600 .88rem/1.4 var(--titre); color: var(--marine); white-space: nowrap; }
+.sombre tr.groupe-t .vers-t { color: #8FB0EA; }
+tr.groupe-t.lien:hover td, tr.groupe-t.lien:focus-visible td { filter: brightness(.97); }
+.ligne-t a { color: inherit; }
+td .ronde { display: block; color: var(--or); font: 600 .78rem/1.2 var(--titre); text-transform: uppercase; letter-spacing: .04em; }
 /* liseré = ombre intérieure de la 1re cellule (une bordure de ligne élargirait le tableau) */
 tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7rem; }
 .tag-t { display: inline-block; padding: .12rem .4rem; border-radius: 3px; background: var(--or); color: #fff;

@@ -208,7 +208,12 @@ dans le bandeau de chaque gardienne. Aucune animation : tout s'affiche d'un coup
   adversaire et dans le tableau match par match de chaque gardienne (sur téléphone, le liseré seul) ; bande dorée
   derrière les matchs de tournoi dans les graphiques (Progression de la saison, % d'arrêts des gardiennes), et nom du
   tournoi dans la ligne d'info quand on touche le match. Rondes éliminatoires pas encore jouées : « Demi-finale (2e c. 3e) si qualifiées », jamais dans la carte du
-  prochain match. Les stats comptent tous les matchs, saison et tournois. Un clic sur un match joué ouvre sa fiche :
+  prochain match. Les stats comptent tous les matchs, saison et tournois.
+  **Résumé d'un tournoi** (`#/tournoi/<id>`) : on y arrive en touchant le bandeau d'un tournoi joué dans la liste
+  (« Résumé → ») ou le nom du tournoi sur la fiche d'un match. Fiche V-D-N, buts, tirs, % d'arrêts et sorties de zone
+  du tournoi, faits saillants (rondes éliminatoires, plus large victoire, blanchissages, matchs serrés), les matchs,
+  les gardiennes (PJ, décisions, BA, % arr., MOY), comparaison avec le reste de la saison et matchs du tournoi à venir.
+  Boutons Partager et Imprimer. Un clic sur un match joué ouvre sa fiche :
   - **Faits saillants** : quelques phrases tirées des données (retard effacé, but gagnant, série de buts,
     3 buts ou plus en 5 minutes, période gagnée par 3 buts ou plus, arrêts de la gardienne, domination aux tirs,
     records de la saison dès 3 matchs) ; 6 au plus ;
