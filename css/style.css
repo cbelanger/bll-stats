@@ -2,12 +2,14 @@
   --marine: #16336B;
   --marine-fonce: #0F244D;
   --rouge: #D7192D;
-  --glace: #F2F6FB;
-  --surface: #FFFFFF;
-  --trait: #D3DEEC;
+  /* Mode clair adouci (2026-11-17) : cartes bleu très pâle plutôt que blanc pur, fond glace plus soutenu */
+  --fond: #D8E3F1;
+  --glace: #E3EBF6;
+  --surface: #F3F7FC;
+  --trait: #C9D6E8;
   --encre: #13213F;
-  --doux: #5B6B86;
-  --chaleur-0: #F2F6FB;
+  --doux: #55657F;
+  --chaleur-0: #E3EBF6;
   --chaleur-1: #CFDCF0;
   --chaleur-2: #93AEDB;
   --chaleur-3: #4D73B8;
@@ -35,7 +37,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   /* Glace marquée par les patins : texture générée par tools/generer_glace.py */
-  background: #E6EEF8 url("../assets/glace.svg");
+  background: var(--fond) url("../assets/glace.svg");
   color: var(--encre);
   font: 400 16px/1.5 var(--texte);
 }
