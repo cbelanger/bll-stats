@@ -16,6 +16,10 @@
   --chaleur-4: #16336B;
   --or: #B7850B;          /* matchs de tournoi */
   --or-pale: #FBF1D6;
+  --tuile-haut: #FFFFFF;  /* tuiles de chiffres (.chiffre) */
+  --tuile-bas: #EAF0F8;
+  --touche: #B5C4DA;
+  --ombre-tuile: rgba(19, 33, 63, .14);
   --titre: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --texte: "Barlow", "Segoe UI", system-ui, sans-serif;
   color-scheme: light;
@@ -29,6 +33,10 @@
     --chaleur-0: #1B2C55;
     --or: #E2B53E;
     --or-pale: #3A3218;
+    --tuile-haut: #22386E;
+    --tuile-bas: #182A55;
+    --touche: #0A1430;
+    --ombre-tuile: rgba(0, 0, 0, .3);
     color-scheme: dark;
   }
 
@@ -108,9 +116,14 @@ h3 { font-size: 1.2rem; margin-bottom: .5rem; }
 .g3 { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
 
 /* Chiffres clés */
-.chiffres { display: flex; flex-wrap: wrap; gap: 1.5rem 2.25rem; margin-top: 1rem; }
-.chiffre b { display: block; font: 700 2.2rem/1 var(--titre); font-variant-numeric: tabular-nums; }
-.chiffre span { color: var(--doux); font-size: .9rem; }
+/* Tuiles « touche de clavier » (2026-11-17, variante B choisie par Christian) : dégradé + tranche épaisse en bas,
+   même tranche pour toutes (pas de rouge sur la tuile vedette, seul son chiffre est rouge) */
+.chiffres { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: .8rem; margin-top: 1rem; }
+.chiffre { min-width: 0; padding: .8rem .75rem .7rem; border-radius: 10px;
+  background: linear-gradient(180deg, var(--tuile-haut), var(--tuile-bas));
+  border: 1px solid var(--trait); border-bottom: 5px solid var(--touche); box-shadow: 0 3px 6px var(--ombre-tuile); }
+.chiffre b { display: block; font: 700 2.1rem/1 var(--titre); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chiffre span { display: block; color: var(--doux); font-size: .86rem; line-height: 1.25; margin-top: .35rem; }
 .chiffre.accent b { color: var(--rouge); }
 
 /* Tableaux */
@@ -440,6 +453,10 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
   .panneau { padding: .9rem .8rem; }
   .pied .d-long { display: none; }
   .pied .d-court { display: inline; }
+  .chiffres { grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); gap: .55rem; }
+  .chiffre { padding: .65rem .5rem .55rem; }
+  .chiffre b { font-size: 1.65rem; }
+  .chiffre span { font-size: .76rem; }
   /* Onglets : barre fixe en bas de l'écran, icône + nom, à portée du pouce */
   .onglets {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; gap: 0;
@@ -499,6 +516,7 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
   body { background: #fff; font-size: 13px; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding-bottom: 0; }  .barre, .retour, .imprimer, .pied > span:not(#maj) { display: none; }
   main { max-width: none; padding: 0; }
   h1 { font-size: 1.9rem; }
+  .chiffre { background: #fff; box-shadow: none; border-bottom-width: 2px; }
   .panneau { border-color: #C9D3E3; padding: .6rem .8rem; break-inside: avoid; }
   .grille { gap: .6rem; }
   .grille[style], .panneau[style] { margin-top: .6rem !important; }
