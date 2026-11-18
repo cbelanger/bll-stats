@@ -56,41 +56,81 @@ function filtres() {
 }
 
 /* ---------- Composants */
-let nbFilets = 0;   // identifiant unique du motif de mailles (plusieurs filets par page)
+let nbFilets = 0;   // identifiant unique des dégradés (plusieurs filets par page)
+// Mailles en losange qui se creusent vers le centre (effet de poche du filet) : chemin SVG, découpé ensuite à l'ouverture
+function maillesCourbes(x0, y0, w, h, pas, k) {
+  const cx = x0 + w / 2, cy = y0 + h * .55, ex = w * .3, eh = h * .3;
+  const tr = (X, Y) => {
+    const dx = (X - cx) / (w / 2), dy = (Y - cy) / (h / 2), f = 1 - k * Math.max(0, 1 - (dx * dx + dy * dy) / 2.5);
+    return `${(cx + (X - cx) * f).toFixed(1)} ${(cy + (Y - cy) * f).toFixed(1)}`;
+  };
+  let d = "";
+  for (const s of [1, -1]) for (let c = -(w + h); c <= w + h; c += pas) {
+    const pts = [];
+    for (let X = x0 - ex; X <= x0 + w + ex; X += 5) {
+      const Y = cy + s * (X - cx) - c;
+      if (Y >= y0 - eh && Y <= y0 + h + eh) pts.push(tr(X, Y));
+    }
+    if (pts.length > 1) d += "M" + pts.join("L");
+  }
+  return d;
+}
+let maillesFilet = null;   // même dessin pour tous les filets : calculé une seule fois
+
 function filet(valeurs, mode, nous = false) {
   // mode "numeros" : valeurs[zone] = [1, 4] (en bleu pour nos buts) ; mode "chaleur" : valeurs[zone] = nombre
-  // Ouverture 6 pi × 4 pi (ratio 1,5), poteaux arrondis, mailles en losange, ligne des buts au sol
-  const W = 360, H = 250, x0 = 20, y0 = 18, w = W - 40, h = 214, cw = w / 3, ch = h / 3, yb = y0 + h, r = 14;
+  // Filet d'aréna vu de face (variante E2 choisie le 2026-11-17) : ouverture 6 pi × 4 pi (ratio 1,5), fond ombré,
+  // couleurs des zones derrière des mailles très légères, poteau blanc au centre, bourrelet blanc en U, glace devant
+  const W = 360, H = 262, x0 = 20, y0 = 18, w = W - 40, h = 214, cw = w / 3, ch = h / 3, yb = y0 + h, r = 14, cx = x0 + w / 2;
   const max = mode === "chaleur" ? Math.max(1, ...Object.values(valeurs)) : 1;
-  const id = `mailles-${++nbFilets}`;
-  const cadre = (dx, dy) => `M${x0 + dx} ${yb} V${y0 + r + dy} Q${x0 + dx} ${y0 + dy} ${x0 + r + dx} ${y0 + dy} H${x0 + w - r + dx} Q${x0 + w + dx} ${y0 + dy} ${x0 + w + dx} ${y0 + r + dy} V${yb}`;
+  const id = `filet-${++nbFilets}`;
+  maillesFilet = maillesFilet || maillesCourbes(x0, y0, w, h, 16, .38);
+  const cadre = `M${x0} ${yb} V${y0 + r} Q${x0} ${y0} ${x0 + r} ${y0} H${x0 + w - r} Q${x0 + w} ${y0} ${x0 + w} ${y0 + r} V${yb}`;
+  const bourrelet = `M${x0 + 5} ${yb} C${x0 + 7} ${yb - 14} ${x0 + 30} ${yb - 16} ${x0 + 62} ${yb - 16} H${x0 + w - 62} C${x0 + w - 30} ${yb - 16} ${x0 + w - 7} ${yb - 14} ${x0 + w - 5} ${yb}`;
   let s = `<svg class="filet" viewBox="0 0 ${W} ${H}" role="img" aria-label="Filet vu de face">
-    <defs><pattern id="${id}" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <path class="mailles" d="M0 0H13M0 0V13"/></pattern></defs>
+    <defs>
+      <clipPath id="${id}-o"><rect x="${x0}" y="${y0}" width="${w}" height="${h}"/></clipPath>
+      <radialGradient id="${id}-i" cx="50%" cy="55%" r="70%"><stop offset="0" class="s-int-centre"/><stop offset="1" class="s-int-bord"/></radialGradient>
+      <linearGradient id="${id}-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-glace-haut"/><stop offset="1" class="s-glace-bas"/></linearGradient>
+      <linearGradient id="${id}-p" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#AEB9C9"/><stop offset=".45" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C3CCDA"/></linearGradient>
+      <filter id="${id}-f" x="-10%" y="-200%" width="120%" height="500%"><feGaussianBlur stdDeviation="5"/></filter>
+    </defs>
+    <rect x="0" y="${yb - 14}" width="${W}" height="${H - yb + 14}" fill="url(#${id}-g)"/>
+    <ellipse class="ombre-filet" cx="${W / 2}" cy="${yb + 4}" rx="${w / 2 + 8}" ry="7" filter="url(#${id}-f)"/>
     <line class="ligne-but" x1="0" y1="${yb + 1}" x2="${W}" y2="${yb + 1}"/>
-    <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="url(#${id})"/>
-    <path class="fond-filet" d="M${x0 + 8} ${yb} C${x0 + 40} ${yb - 26} ${x0 + w - 40} ${yb - 26} ${x0 + w - 8} ${yb}"/>`;
-  ZONES.forEach((ligne, r) => ligne.forEach((z, k) => {
-    const x = x0 + k * cw, y = y0 + r * ch;
-    let fond = "transparent", txt = "", coul = "var(--rouge)", codeCoul = "";
+    <g clip-path="url(#${id}-o)"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="url(#${id}-i)"/>`;
+  let etiquettes = "";
+  ZONES.forEach((ligne, i) => ligne.forEach((z, k) => {
+    const x = x0 + k * cw, y = y0 + i * ch;
+    let fond = "transparent", op = 0, txt = "", coul = "var(--rouge)", halo = "var(--surface)", codeCoul = "";
     if (mode === "chaleur") {
       const n = valeurs[z] || 0, niv = n ? Math.min(4, Math.ceil(4 * n / max)) : 0;
-      fond = `var(--chaleur-${niv})`; txt = n ? n : ""; coul = niv >= 3 ? "#fff" : "var(--encre)"; if (niv >= 3) codeCoul = ' style="fill:#C9D6EE"';
+      if (niv) { fond = `var(--chaleur-${niv})`; op = .7; }
+      txt = n ? n : "";
+      coul = niv >= 3 ? "#fff" : "var(--encre)";
+      if (niv >= 3) { halo = "var(--chaleur-4)"; codeCoul = ' style="fill:#C9D6EE"'; }
     } else {
-      txt = (valeurs[z] || []).join(", ");
+      const l = valeurs[z] || [];
+      txt = l.join(", ");
+      if (l.length) { fond = nous ? "var(--marine)" : "var(--rouge)"; op = .16; }
     }
     // data-buts : buts de la zone, pour l'allumer quand on touche un but ailleurs dans la fiche
     const ids = mode === "chaleur" ? "" : (valeurs[z] || []).map(n => `${nous ? "nous" : "adv"}-${n}`).join(" ");
-    s += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fond}" fill-opacity=".85"${ids ? ` data-buts="${ids}"` : ""}/>`;
-    s += `<text class="code" x="${x + 10}" y="${y + 20}"${codeCoul}>${z}</text>`;
-    if (txt !== "") s += `<text class="val${nous && mode !== "chaleur" ? " nous" : ""}" x="${x + cw / 2}" y="${y + ch / 2 + 6}" fill="${coul}"${String(txt).length > 6 ? ' style="font-size:20px"' : ""}>${txt}</text>`;
+    s += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" fill="${fond}" fill-opacity="${op}"${ids ? ` data-buts="${ids}"` : ""}/>`;
+    etiquettes += `<text class="code" x="${x + 9}" y="${y + 19}"${codeCoul}>${z}</text>`;
+    // Rangée du bas un peu remontée : le bourrelet est juste dessous
+    if (txt !== "") etiquettes += `<text class="val${nous && mode !== "chaleur" ? " nous" : ""}" x="${x + cw / 2}" y="${y + ch / 2 - (i === 2 ? 6 : 0)}" fill="${coul}" stroke="${halo}"${String(txt).length > 6 ? ' style="font-size:20px"' : ""}>${txt}</text>`;
   }));
+  // Poteau du centre (atténué, derrière les mailles), mailles, bourrelet
+  s += `<rect x="${cx - 4.5}" y="${y0 + 4}" width="9" height="${h - 20}" fill="url(#${id}-p)" opacity=".6"/>
+    <path class="mailles" d="${maillesFilet}"/>
+    <path class="bourrelet-o" d="${bourrelet}"/><path class="bourrelet" d="${bourrelet}"/><path class="bourrelet-r" d="${bourrelet}" transform="translate(0 -3)"/></g>`;
   for (let k = 1; k < 3; k++) {
     s += `<line class="maille" x1="${x0 + k * cw}" y1="${y0}" x2="${x0 + k * cw}" y2="${y0 + h}"/>`;
     s += `<line class="maille" x1="${x0}" y1="${y0 + k * ch}" x2="${x0 + w}" y2="${y0 + k * ch}"/>`;
   }
-  // Poteaux et barre horizontale : ombre, tube rouge, reflet
-  s += `<path class="cadre-ombre" d="${cadre(1.5, 1.5)}"/><path class="cadre" d="${cadre(0, 0)}"/><path class="cadre-reflet" d="${cadre(-2, -2)}"/></svg>`;
+  // Poteaux et barre horizontale : tube rouge avec ombre et reflet
+  s += etiquettes + `<path class="cadre-ombre" d="${cadre}" transform="translate(1 1.5)"/><path class="cadre" d="${cadre}"/><path class="cadre-reflet" d="${cadre}" transform="translate(-2 -2)"/></svg>`;
   if (mode === "chaleur") {
     s += `<div class="legende-chaleur">moins ${[0, 1, 2, 3, 4].map(i => `<i style="background:var(--chaleur-${i})"></i>`).join("")} plus</div>`;
   }

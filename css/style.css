@@ -20,6 +20,12 @@
   --tuile-bas: #EAF0F8;
   --touche: #B5C4DA;
   --ombre-tuile: rgba(19, 33, 63, .14);
+  --filet-centre: #BFCCDF;  /* fond du filet (centre plus creux) */
+  --filet-bord: #E3EAF4;
+  --filet-maille: rgba(255, 255, 255, .33);
+  --filet-glace-h: #EEF3F9;
+  --filet-glace-b: #D5DFEC;
+  --filet-ombre: rgba(19, 33, 63, .22);
   --titre: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --texte: "Barlow", "Segoe UI", system-ui, sans-serif;
   color-scheme: light;
@@ -37,6 +43,12 @@
     --tuile-bas: #182A55;
     --touche: #0A1430;
     --ombre-tuile: rgba(0, 0, 0, .3);
+    --filet-centre: #0A142C;
+    --filet-bord: #1A2D5C;
+    --filet-maille: rgba(196, 210, 235, .2);
+    --filet-glace-h: #1B2C55;
+    --filet-glace-b: #0E1A33;
+    --filet-ombre: rgba(0, 0, 0, .45);
     color-scheme: dark;
   }
 
@@ -177,16 +189,25 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 
 /* Filet */
 .filet { width: 100%; max-width: 360px; display: block; margin: 0 auto; }
-.filet .cadre, .filet .cadre-ombre, .filet .cadre-reflet { fill: none; stroke-linecap: butt; }
-.filet .cadre { stroke: var(--rouge); stroke-width: 10; }
-.filet .cadre-ombre { stroke: #7E0E1A; stroke-width: 10; }
-.filet .cadre-reflet { stroke: #fff; stroke-opacity: .4; stroke-width: 2.5; }
-.filet .mailles { stroke: var(--doux); stroke-opacity: .35; stroke-width: .9; fill: none; }
-.filet .fond-filet { fill: none; stroke: var(--doux); stroke-opacity: .45; stroke-width: 3; }
-.filet .ligne-but { stroke: var(--rouge); stroke-opacity: .55; stroke-width: 4; }
-.filet .maille { stroke: var(--doux); stroke-opacity: .6; stroke-width: 1.2; stroke-dasharray: 5 4; }
+/* Filet d'aréna (variante E2, 2026-11-17) : fond ombré, mailles très légères, poteau et bourrelet blancs, glace devant */
+.filet .cadre, .filet .cadre-ombre, .filet .cadre-reflet { fill: none; stroke-linecap: butt; stroke-linejoin: round; }
+.filet .cadre { stroke: var(--rouge); stroke-width: 9; }
+.filet .cadre-ombre { stroke: #6E0B16; stroke-width: 13; }
+.filet .cadre-reflet { stroke: #FF7B88; stroke-opacity: .85; stroke-width: 2.4; }
+.filet .s-int-centre { stop-color: var(--filet-centre); }
+.filet .s-int-bord { stop-color: var(--filet-bord); }
+.filet .s-glace-haut { stop-color: var(--filet-glace-h); }
+.filet .s-glace-bas { stop-color: var(--filet-glace-b); }
+.filet .ombre-filet { fill: var(--filet-ombre); }
+.filet .mailles { stroke: var(--filet-maille); stroke-width: .8; fill: none; }
+.filet .bourrelet-o, .filet .bourrelet, .filet .bourrelet-r { fill: none; stroke-linecap: round; }
+.filet .bourrelet-o { stroke: #9AA8BC; stroke-width: 15; }
+.filet .bourrelet { stroke: #F6F8FB; stroke-width: 11; }
+.filet .bourrelet-r { stroke: #fff; stroke-width: 3; }
+.filet .ligne-but { stroke: var(--rouge); stroke-opacity: .8; stroke-width: 5; }
+.filet .maille { stroke: var(--doux); stroke-opacity: .5; stroke-width: 1; stroke-dasharray: 3 5; }
 .filet .code { font: 600 13px var(--titre); fill: var(--doux); }
-.filet .val { font: 700 30px var(--titre); text-anchor: middle; dominant-baseline: central; }
+.filet .val { font: 700 30px var(--titre); text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke-width: 5; stroke-linejoin: round; }
 .filet .val.nous { fill: var(--marine); }
 .sombre .filet .val.nous { fill: #A9C1F0; }
 .legende-chaleur { display: flex; align-items: center; gap: .35rem; justify-content: center; font-size: .8rem; color: var(--doux); margin-top: .5rem; }
