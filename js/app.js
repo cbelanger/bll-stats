@@ -38,6 +38,18 @@ const svArret = m => (m.tirs.adv ? (m.tirs.adv - m.buts.adv) / m.tirs.adv : null
 const partsG = m => m.gardiennes || [{ ...m.gardienne, debut: null, minutes: 40, buts: m.buts.adv, tirs: m.tirs.adv,
   decision: resultat(m), blanchissage: m.buts.adv === 0 }];
 const nomsGardiennes = m => partsG(m).map(nomGardienne).join(" / ");
+// Tableau de marque d'un match : la ou les gardiennes BLL (nom = lien vers sa fiche) et le % d'arrêts de chacune
+function gardiennesScore(m) {
+  const ps = partsG(m).filter(p => p.nom || p.numero != null);
+  if (!ps.length) return "";
+  const per = x => (/^\d$/.test(x) ? "P" + x : x);
+  const une = p => {
+    const tirs = ps.length > 1 ? p.tirs : m.tirs.adv, ba = ps.length > 1 ? p.buts : m.buts.adv;
+    const pc = tirs != null ? ` <span class="g-pct">${pct(tirs - ba, tirs)} d’arrêts</span>` : "";
+    return `<a href="#/gardiennes" data-vers-g="${esc(cleGardienne(p))}">${esc(nomGardienne(p))}</a>${p.debut ? ` <span class="g-pct">dès ${esc(per(p.debut.periode))} ${esc(p.debut.temps)}</span>` : ""}${pc}`;
+  };
+  return `<div class="g-score"><span class="g-titre">${ps.length > 1 ? "Gardiennes" : "Gardienne"}</span>${ps.map(une).join('<span class="g-sep">puis</span>')}</div>`;
+}
 // Fiche de match : la gardienne et son % d'arrêts ; s'il y a eu un changement, la part de chacune et la décision
 function gardiennesMatch(m) {
   const ps = partsG(m);
@@ -661,6 +673,7 @@ function vueMatch(id) {
     <div class="pts"><b class="cb${r === "V" ? " gagne" : ""}">${m.buts.nous}</b>
       <span class="fin">Final${prol ? "<br>prol." : ""}</span><b class="cb${r === "D" ? " gagne" : ""}">${m.buts.adv}</b></div>
     <div class="eq droite">${esc(m.adversaire)}<small>${m.tirs.adv ?? "–"} tirs cadrés</small></div>
+    ${gardiennesScore(m)}
   </div>
   ${faitsSaillants(m)}
   ${ligneTemps(m)}
@@ -1282,6 +1295,7 @@ async function demarrer() {
     const ent = e.target.closest("table.triable thead th"); if (ent) trierTableau(ent);
     const gr = e.target.closest("[data-graphe]"); if (gr) choisirGraphe(gr);
     const og = e.target.closest("[data-gsel]"); if (og) choisirGardienne(og.dataset.gsel);
+    const vg = e.target.closest("[data-vers-g]"); if (vg) etat.gardienne = vg.dataset.versG;   // ouvre sa fiche dans Gardiennes
     const tc = e.target.closest("[data-tout-cal]"); if (tc) toutCalendrier(tc);
     if (e.target.closest('[data-act="imprimer"]')) window.print();
     const pa = e.target.closest('[data-act="partager"]'); if (pa) partager(pa);

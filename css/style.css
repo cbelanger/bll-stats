@@ -175,6 +175,14 @@ tbody tr.lien:hover { background: color-mix(in srgb, var(--marine) 6%, transpare
 .score .eq.droite::before { content: ""; display: block; width: 2.2rem; height: 4px; border-radius: 2px; background: #8D9AB3; margin: 0 0 .45rem auto; }
 .score .eq small { display: block; font: 500 .9rem/1.3 var(--texte); color: #C9D6EE; margin-top: .2rem; }
 .score .eq.droite { text-align: right; }
+/* Gardienne(s) du match : rangée sous le score, sur toute la largeur */
+.score .g-score { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: .3rem .6rem;
+  border-top: 1px solid rgb(255 255 255 / .15); padding-top: .75rem; font: 500 .95rem/1.3 var(--texte); color: #C9D6EE; text-align: center; }
+.score .g-titre { font: 600 .8rem/1 var(--titre); letter-spacing: .12em; text-transform: uppercase; }
+.score .g-score a { font: 700 1.15rem/1.1 var(--titre); color: #fff; text-decoration: none; border-bottom: 1px solid rgb(255 255 255 / .35); }
+.score .g-score a:hover { border-bottom-color: #fff; }
+.score .g-pct { white-space: nowrap; }
+.score .g-sep { color: #8FA3C6; }
 .score .pts { display: flex; align-items: center; gap: .6rem; }
 .cb { font-variant-numeric: tabular-nums; }
 .score .cb {
