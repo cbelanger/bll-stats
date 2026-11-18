@@ -137,6 +137,13 @@ h3 { font-size: 1.2rem; margin-bottom: .5rem; }
 .chiffre b { display: block; font: 700 2.1rem/1 var(--titre); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .chiffre span { display: block; color: var(--doux); font-size: .86rem; line-height: 1.25; margin-top: .35rem; }
 .chiffre.accent b { color: var(--rouge); }
+/* Tuile cliquable (Équipe) : mène au graphique correspondant ; petite flèche en coin, enfoncée au toucher (sans transition) */
+button.chiffre { font: inherit; color: inherit; text-align: left; cursor: pointer; position: relative; }
+.chiffre .fl { position: absolute; top: .5rem; right: .5rem; width: .8rem; height: .8rem;
+  fill: none; stroke: var(--doux); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: .7; }
+button.chiffre:active { transform: translateY(3px); border-bottom-width: 2px; box-shadow: 0 1px 2px var(--ombre-tuile); }
+button.chiffre:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
+#progression, [id^="par-periode-"] { scroll-margin-top: 5.5rem; }
 
 /* Tableaux */
 .defile { overflow-x: auto; }
@@ -475,6 +482,7 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
   .barre { position: relative; }
   .filtres { margin-left: 0; width: 100%; justify-content: space-between; }
   .theme { position: absolute; top: 14px; right: 16px; }   /* en haut à droite, à côté de « Statistiques » */
+  #progression, [id^="par-periode-"] { scroll-margin-top: .75rem; }   /* barre du haut non collante */
   .score .cb { font-size: 2.8rem; }
   .barre-l { grid-template-columns: 7.5rem 1fr 2rem; }
 }
@@ -546,6 +554,7 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
   main { max-width: none; padding: 0; }
   h1 { font-size: 1.9rem; }
   .chiffre { background: #fff; box-shadow: none; border-bottom-width: 2px; }
+  .chiffre .fl { display: none; }
   .panneau { border-color: #C9D3E3; padding: .6rem .8rem; break-inside: avoid; }
   .grille { gap: .6rem; }
   .grille[style], .panneau[style] { margin-top: .6rem !important; }

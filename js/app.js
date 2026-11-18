@@ -272,7 +272,7 @@ function progressionSaison(chrono) {
     graphes.push(["sz", "Sorties", "Sorties de zone réussies", progression(chrono, [{ lab: "Réussies", cls: "nous",
       val: m => m.sorties_zone.tentatives ? 100 * m.sorties_zone.reussies / m.sorties_zone.tentatives : null }], "%", "Sorties de zone réussies")]);
   const choix = graphes.some(g => g[0] === etat.graphe) ? etat.graphe : "buts";
-  return `<section class="panneau" style="margin-top:1rem">
+  return `<section class="panneau" id="progression" style="margin-top:1rem">
     <div class="titre-graphe"><h3>Progression de la saison</h3>
       <div class="choix-g" role="group" aria-label="Graphique">${graphes.map(([k, b]) =>
         `<button type="button" data-graphe="${k}" aria-pressed="${k === choix}">${b}</button>`).join("")}</div></div>
@@ -286,6 +286,20 @@ function choisirGraphe(b) {
   const s = b.closest("section");
   s.querySelectorAll("[data-graphe]").forEach(x => x.setAttribute("aria-pressed", x === b));
   s.querySelectorAll("[data-graphe-de]").forEach(x => { x.hidden = x.dataset.grapheDe !== etat.graphe; });
+}
+// Tuiles d'Équipe cliquables (2026-11-18, demande de Christian) : mènent au graphique Buts / Tirs / Sorties de la
+// Progression et le choisissent ; sans Progression (1 match) ou sans ce graphique : tableau par période correspondant.
+function tuileVers(val, lab, vers, accent) {
+  const cls = `chiffre${accent ? " accent" : ""}`;
+  if (!vers) return `<div class="${cls}"><b>${val}</b><span>${lab}</span></div>`;
+  return `<button type="button" class="${cls} vers" data-vers="${vers}"><b>${val}</b><span>${lab}</span>`
+    + `<svg class="fl" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>`;
+}
+function allerVers(vers) {
+  const b = document.querySelector(`#progression [data-graphe="${vers}"]`);
+  if (b) choisirGraphe(b);
+  const cible = b ? document.getElementById("progression") : document.getElementById(`par-periode-${vers}`);
+  cible?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // Tableau triable (gardiennes) : un clic sur un en-tête trie les lignes du corps selon data-v de la colonne
@@ -900,22 +914,24 @@ function vueEquipe() {
   const szPt = avecSz.reduce((s, m) => s + m.sorties_zone.tentatives, 0), szPr = avecSz.reduce((s, m) => s + m.sorties_zone.reussies, 0);
   const ag = agregerButs(ms), agN = agregerButs(ms, "buts_marques");
   const detN = ms.reduce((s, m) => s + (m.buts_marques || []).filter(b => b.type || b.zone).length, 0);
+  // Tuile Sorties cliquable s'il y a un graphique (≥ 2 matchs avec sorties) ou le tableau par période
+  const szCible = (ms.length > 1 && ms.filter(m => m.sorties_zone.tentatives).length > 1) || avecSz.length > 0;
   return `${titreActions(`Équipe ${etat.equipe}`)}<p class="sous">Cumulatif de la saison ${etat.saison}</p>
   <section class="panneau" style="margin-top:1rem">
     <div class="chiffres" style="margin-top:0">
-      <div class="chiffre"><b>${v}-${d}-${n}</b><span>fiche V-D-N</span></div>
-      <div class="chiffre"><b>${bp}–${bc}</b><span>buts pour et contre</span></div>
-      <div class="chiffre"><b>${moy(bp, ms.length)}</b><span>buts pour / match</span></div>
-      <div class="chiffre"><b>${moy(bc, ms.length)}</b><span>buts contre / match</span></div>
-      <div class="chiffre"><b>${moy(tp, avecTn.length, 1)}</b><span>tirs pour / match</span></div>
-      <div class="chiffre"><b>${moy(tc, avecTa.length, 1)}</b><span>tirs contre / match</span></div>
-      <div class="chiffre accent"><b>${pct(szR, szT)}</b><span>sorties de zone réussies</span></div>
+      ${tuileVers(`${v}-${d}-${n}`, "fiche V-D-N", "buts")}
+      ${tuileVers(`${bp}–${bc}`, "buts pour et contre", "buts")}
+      ${tuileVers(moy(bp, ms.length), "buts pour / match", "buts")}
+      ${tuileVers(moy(bc, ms.length), "buts contre / match", "buts")}
+      ${tuileVers(moy(tp, avecTn.length, 1), "tirs pour / match", "tirs")}
+      ${tuileVers(moy(tc, avecTa.length, 1), "tirs contre / match", "tirs")}
+      ${tuileVers(pct(szR, szT), "sorties de zone réussies", szCible ? "sz" : null, true)}
     </div>
     ${forme(ms)}
   </section>
   ${ms.length > 1 ? progressionSaison(chrono) : ""}
   <div class="grille g2" style="margin-top:1rem">
-    <section class="panneau">
+    <section class="panneau" id="par-periode-tirs">
       <h3>Tirs cadrés moyens par période</h3>
       <div class="periodes">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t"></div>
@@ -924,7 +940,7 @@ function vueEquipe() {
       </div>
       ${note(`Sur ${avecP.length} match${avecP.length > 1 ? "s" : ""} avec tirs par période.`)}
     </section>
-    <section class="panneau">
+    <section class="panneau" id="par-periode-buts">
       <h3>Buts par période</h3>
       <div class="periodes">
         <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
@@ -935,7 +951,7 @@ function vueEquipe() {
     </section>
   </div>
   ${aSits(ms) ? `<section class="panneau" style="margin-top:1rem"><h3>Buts selon la situation</h3>${situations(ms)}</section>` : ""}
-  ${avecSz.length ? `<section class="panneau" style="margin-top:1rem">
+  ${avecSz.length ? `<section class="panneau" id="par-periode-sz" style="margin-top:1rem">
     <h3>Sorties de zone par période</h3>
     <div class="periodes">
       <div></div>${PERIODES.map(([, l]) => `<div class="t">${l}</div>`).join("")}<div class="t">Total</div>
@@ -1294,6 +1310,7 @@ async function demarrer() {
     const sv = e.target.closest(".progression .survol"); if (sv) infoProgression(sv);
     const ent = e.target.closest("table.triable thead th"); if (ent) trierTableau(ent);
     const gr = e.target.closest("[data-graphe]"); if (gr) choisirGraphe(gr);
+    const tv = e.target.closest("[data-vers]"); if (tv) allerVers(tv.dataset.vers);
     const og = e.target.closest("[data-gsel]"); if (og) choisirGardienne(og.dataset.gsel);
     const vg = e.target.closest("[data-vers-g]"); if (vg) etat.gardienne = vg.dataset.versG;   // ouvre sa fiche dans Gardiennes
     const tc = e.target.closest("[data-tout-cal]"); if (tc) toutCalendrier(tc);
