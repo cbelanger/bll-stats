@@ -133,8 +133,9 @@ Menu ☰ → « Ouvrir un match du site… » recharge n'importe quel fichier de
 ### Fichier « (1) »
 
 Edge ajoute « (1) » si un fichier du même nom est déjà dans Téléchargements. Les deux fichiers du même match coexistent
-alors dans `data/matchs/` : le plus récemment exporté est gardé (avertissement dans l'Action). Supprimer l'ancien, puis
-renommer le nouveau sans « (1) ». Pour l'éviter : supprimer l'ancien fichier de Téléchargements avant de télécharger.
+alors dans `data/matchs/`. Rien à faire : à la publication, l'Action garde le plus récemment exporté sous le nom sans
+« (1) », supprime l'autre et enregistre le tout (commit « Import automatique (PDF, doublons) » : faire Pull avant ton
+prochain push). En local, `extract.py` sans `--importer` ne touche à rien et affiche seulement un avertissement.
 
 ## Ajouter un match en PDF
 

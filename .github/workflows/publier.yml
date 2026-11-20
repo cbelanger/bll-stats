@@ -66,16 +66,18 @@ jobs:
             exit 1
           fi
 
-      - name: Enregistrer l'import des PDF
+      - name: Enregistrer l'import des PDF et les doublons réglés
+        # extract.py --importer : PDF convertis et archivés ; fichiers « (1) » du même match : le plus récent gardé
+        # sous le nom propre, l'autre supprimé
         if: github.ref == 'refs/heads/main'
         run: |
           if [ -n "$(git status --porcelain -- pdf data/matchs)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -A -- pdf data/matchs
-            git commit -m "Import automatique des PDF"
+            git commit -m "Import automatique (PDF, doublons)"
             git push
-            echo "::notice::PDF importés et archivés : faire Pull origin avant ton prochain push."
+            echo "::notice::PDF importés ou doublons réglés : faire Pull origin avant ton prochain push."
           fi
 
       - name: Date du dernier changement de code

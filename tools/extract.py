@@ -533,14 +533,31 @@ def main(importer):
         avert = avert + selon_calendrier(m, cal, tournois, noms)
         autre = next((x for x in matchs if meme_match(x, m)), None)
         if autre:
-            # Deux fichiers pour le même match (ex. renommé « (1) » au téléchargement) : le plus récent gagne
+            # Deux fichiers pour le même match (ex. renommé « (1) » au téléchargement) : le plus récent gagne.
+            # Avec --importer (GitHub Actions), l'autre est supprimé et le gardé reprend le nom sans « (1) » (plus bas)
             garde, ecarte = (m, autre) if (m["exporte_le"] or "") > (autre["exporte_le"] or "") else (autre, m)
+            garde["_doublons"] = autre.pop("_doublons", []) + m.pop("_doublons", []) + [ecarte["fichier"]]
             avert = avert + [f"même match que {autre['fichier']} : {garde['fichier']} est gardé (le plus récent), "
-                             f"supprimer {ecarte['fichier']}"]
+                             + (f"{ecarte['fichier']} supprimé" if importer else f"supprimer {ecarte['fichier']}")]
             matchs[matchs.index(autre)] = garde
         else:
             matchs.append(m)
         rapport.fichier(f.name, "✓", "", (), avert)
+
+    # Doublons réglés (--importer seulement) : fichiers écartés supprimés, fichier gardé renommé sans « (1) »
+    for m in matchs:
+        doublons = m.pop("_doublons", [])
+        if not importer or not doublons:
+            continue
+        for nom in doublons:
+            (DOSSIER_MATCHS / nom).unlink(missing_ok=True)
+        propre, origine = re.sub(r" \(\d+\)(?=\.json$)", "", m["fichier"]), m["fichier"]
+        if propre != origine and not (DOSSIER_MATCHS / propre).exists():
+            (DOSSIER_MATCHS / origine).rename(DOSSIER_MATCHS / propre)
+            m["fichier"] = propre
+        ecartes = [n for n in doublons if n != m["fichier"]]
+        print(f"doublon réglé : {m['fichier']} gardé (contenu le plus récent, de {origine})"
+              + (f", supprimé : {', '.join(ecartes)}" if ecartes else ""))
 
     # 2. PDF déposés dans pdf/ : convertis (et archivés avec --importer), ils remplacent le même match
     for pdf in sorted(DOSSIER_PDF.glob("*.pdf")):
