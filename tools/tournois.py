@@ -141,7 +141,11 @@ def main():
     for n in sorted(inconnus):
         avertir(f"équipe « {n} » absente des correspondances de data/tournois.json (« noms ») : nom gardé tel quel")
     cal["matchs"] = sorted(matchs, key=lambda m: (m["date"], m["heure"] or "", m["equipe"]))
-    cal["tournois"] = [{k: t[k] for k in ("id", "nom", "debut", "fin")} for t in conf.get("tournois", [])]
+    # equipes : équipes inscrites (champ « equipes » de tournois.json, sinon les divisions qui ont un horaire) ;
+    # liste vide = pas encore connu : le site montre le tournoi aux deux équipes
+    cal["tournois"] = [{**{k: t[k] for k in ("id", "nom", "debut", "fin")},
+                        "equipes": sorted(t.get("equipes") or t.get("horaires", {}).keys())}
+                       for t in conf.get("tournois", [])]
     CALENDRIER.parent.mkdir(exist_ok=True)
     CALENDRIER.write_text(json.dumps(cal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

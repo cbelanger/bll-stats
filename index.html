@@ -41,10 +41,11 @@
     <nav class="onglets" aria-label="Sections">
       <!-- Icônes : affichées seulement dans la barre du bas, sur téléphone -->
       <a href="#/matchs" data-vue="matchs"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Matchs</span></a>
+      <a href="#/tournois" data-vue="tournois"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8 21h8M9.5 17h5v4h-5z"/></svg><span>Tournois</span></a>
       <a href="#/gardiennes" data-vue="gardiennes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6z"/><path d="M9 11h6M9 14.5h6"/></svg><span>Gardiennes</span></a>
       <a href="#/equipe" data-vue="equipe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Équipe</span></a>
       <a href="#/adversaires" data-vue="adversaires"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.5-5.5 5.5-5.5S13.5 16.7 13.5 20M10.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/></svg><span>Adversaires</span></a>
-      <a href="aide.html?depuis=site"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg><span>Aide</span></a>
+      <a href="aide.html?depuis=site" class="aide-o"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg><span>Aide</span></a>
     </nav>
     <div class="filtres">
       <label>Saison <select id="f-saison"></select></label>
@@ -58,6 +59,8 @@
           <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
       </button>
     </div>
+    <!-- Aide sur téléphone : la place d'Aide dans la barre du bas revient à Tournois -->
+    <a class="aide-h" href="aide.html?depuis=site" aria-label="Aide" title="Aide"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg></a>
   </header>
 
   <main id="contenu" tabindex="-1">

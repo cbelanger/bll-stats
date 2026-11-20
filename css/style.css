@@ -106,6 +106,9 @@ main:focus, main:focus-visible { outline: none; }
 .theme .lune { stroke: none; }
 .theme .soleil, .sombre .theme .lune { display: none; }
 .sombre .theme .soleil { display: block; }
+/* Aide dans le bandeau : téléphone seulement (la barre du bas donne sa place à Tournois) */
+.aide-h { display: none; place-items: center; width: 36px; height: 34px; border: 1px solid #3A5590; border-radius: 4px; color: #C9D6EE; }
+.aide-h svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 
 /* ---------- Contenu */
 /* tabular-nums : chiffres de même largeur partout, les colonnes et les scores restent alignés */
@@ -407,6 +410,71 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
 .leg-t .tag-t { margin-right: .3rem; }
 .ligne-t { margin: .5rem 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font: 600 1.05rem/1.2 var(--titre); }
 .vedettes .vedette.en-t, .vedette.prochain.en-t { border-left-color: var(--or); }
+
+/* ---------- Onglet Tournois (2026-11-20) */
+.etat-t { display: inline-block; font: 700 .72rem/1 var(--titre); letter-spacing: .05em; text-transform: uppercase;
+  padding: .22rem .4rem; border-radius: 3px; background: var(--trait); color: var(--doux); vertical-align: 1px; }
+.etat-t.direct { background: var(--rouge); color: #fff; }
+.etat-t.final { background: var(--or); color: #fff; }
+.sombre .etat-t.final { color: #1B1404; }
+/* Bandeau dans Matchs pendant un tournoi */
+.bandeau-t { display: flex; align-items: center; gap: .6rem; margin-top: 1rem; padding: .6rem .8rem; border-radius: 8px;
+  background: var(--or-pale); border: 1px solid var(--or); color: inherit; text-decoration: none; }
+.bandeau-t svg { width: 20px; height: 20px; fill: var(--or); flex: none; }
+.bandeau-t b { font: 700 1.05rem/1.2 var(--titre); }
+.bandeau-t .vers { margin-left: auto; font: 600 .95rem var(--titre); color: var(--marine); white-space: nowrap; }
+.sombre .bandeau-t .vers { color: #8FB0EA; }
+/* Liste des tournois */
+.cartes-t { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: 1rem; margin-top: 1rem; align-items: start; }
+.carte-t { display: grid; gap: .45rem; color: inherit; text-decoration: none; border-left: 5px solid var(--or); }
+.carte-t.vedette-t { border: 2px solid var(--or); border-left-width: 5px; }
+.carte-t.passe { border-left-color: var(--trait); }
+.carte-t .nom-t { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
+.carte-t .nom-t svg { width: 20px; height: 20px; fill: var(--or); flex: none; }
+.carte-t .nom-t b { font: 700 1.3rem/1.1 var(--titre); margin-right: auto; }
+.carte-t .sous { margin: 0; }
+.bilan-t { display: flex; flex-wrap: wrap; gap: .25rem 1.1rem; font-size: .95rem; }
+.bilan-t b { font-family: var(--titre); font-size: 1.05rem; }
+.carte-t:hover .ved-lien { text-decoration: underline; }
+table.comp-t tfoot td { font-style: italic; }
+/* Page d'un tournoi */
+.haut-t .pile-t { display: grid; gap: .6rem; align-content: start; }
+.final-t { border-left-color: var(--or); }
+.titre-final { display: flex; align-items: center; gap: .5rem; font: 700 2rem/1 var(--titre); }
+.titre-final svg { width: 30px; height: 30px; fill: var(--or); }
+.final-t .sous { margin: 0; }
+.dernier-t { display: flex; align-items: center; gap: .55rem; padding: .55rem .75rem; border-radius: 8px; background: var(--surface);
+  border: 1px solid var(--trait); color: inherit; text-decoration: none; }
+.dernier-t b { font-family: var(--titre); font-size: 1.05rem; }
+.dernier-t .vers { margin-left: auto; font: 600 .95rem var(--titre); color: var(--marine); white-space: nowrap; }
+.sombre .dernier-t .vers { color: #8FB0EA; }
+.parcours { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .45rem; }
+.parcours li { display: grid; grid-template-columns: 9.5rem 1fr; gap: .6rem; align-items: center; padding: .45rem .6rem;
+  border: 1px solid var(--trait); border-radius: 6px; background: var(--fond); }
+.parcours li b { font: 700 1rem/1.1 var(--titre); }
+.parcours li span { font-size: .92rem; }
+.parcours li.fait b::after { content: " ✓"; color: #1E7A46; }
+.sombre .parcours li.fait b::after { color: #4CC277; }
+.parcours li.ici { border: 2px solid var(--or); background: var(--or-pale); }
+.parcours li.possible { border-style: dashed; color: var(--doux); }
+.parcours li.non { opacity: .55; }
+.parcours .res { width: 1.4rem; height: 1.4rem; font-size: .8rem; margin-right: .2rem; }
+.jour-t { font: 700 .9rem/1.2 var(--titre); letter-spacing: .06em; text-transform: uppercase; color: var(--or);
+  border-bottom: 1px solid var(--or); padding-bottom: .2rem; margin: 1rem 0 .1rem; }
+.jour-t:first-child { margin-top: .5rem; }
+.m-t { display: grid; grid-template-columns: 4rem 1fr auto; gap: .05rem .6rem; align-items: center; padding: .5rem .3rem;
+  border-bottom: 1px solid var(--trait); color: inherit; text-decoration: none; }
+.m-t:last-child { border-bottom: 0; }
+a.m-t:hover { background: var(--glace); }
+.m-t .h { font: 600 1rem var(--titre); }
+.m-t .adv { font-weight: 600; min-width: 0; }
+.m-t .adv .ronde { display: block; color: var(--or); font: 600 .78rem/1.2 var(--titre); text-transform: uppercase; letter-spacing: .04em; }
+.m-t .sc { display: flex; align-items: center; gap: .4rem; font: 700 1.1rem var(--titre); white-space: nowrap; }
+.m-t .lieu { grid-column: 2 / 4; color: var(--doux); font-size: .85rem; }
+.m-t.ev { color: var(--doux); }
+.m-t.ev .adv { font-weight: 500; }
+.m-t.suivant { background: var(--or-pale); border-radius: 6px; }
+.portee { margin-top: .8rem; width: max-content; max-width: 100%; }
 .sombre .vedette { border-left-color: #3A66C4; }
 .sombre .prochain { border-left-color: var(--rouge); }
 .sombre .ved-score b, .sombre .ved-lien { color: #8FB0EA; }
@@ -506,6 +574,12 @@ tr.en-t > td:first-child { box-shadow: inset 4px 0 0 var(--or); padding-left: .7
   .onglets a svg { display: block; width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.8;
     stroke-linecap: round; stroke-linejoin: round; }
   .onglets a[aria-current="page"] { box-shadow: inset 0 3px 0 var(--rouge); background: var(--marine-fonce); }
+  .onglets .aide-o { display: none; }
+  .parcours li { grid-template-columns: 7rem 1fr; }
+  .m-t { grid-template-columns: 3.3rem 1fr auto; }
+  .bandeau-t { align-items: flex-start; }
+  .bandeau-t .vers { align-self: flex-end; }
+  .aide-h { display: grid; position: absolute; top: 14px; right: 60px; }
   body { padding-bottom: calc(3.6rem + env(safe-area-inset-bottom)); }
   .filtres { margin-top: -.15rem; }
   .score .cb { font-size: 2.2rem; border-radius: 6px; }

@@ -399,6 +399,72 @@ function joursTournoi(t, ms) {
   const j = iso => new Date(iso + "T12:00").getDate();
   return d === f ? dateCourte(d) : d.slice(0, 7) === f.slice(0, 7) ? `${j(d)}–${dateCourte(f)}` : `${dateCourte(d)} – ${dateCourte(f)}`;
 }
+// ---------- Onglet Tournois (2026-11-20 : choix N1, L1, B de Christian)
+const parDate = (a, b) => (a.date + (a.heure_debut || a.heure || "")).localeCompare(b.date + (b.heure_debut || b.heure || ""));
+const debutC = c => new Date(`${c.date}T${c.heure || "12:00"}`);
+function jourRelatif(iso) {
+  const j = Math.round((new Date(iso + "T12:00") - new Date(aujourdhui() + "T12:00")) / 864e5);
+  return j === 0 ? "aujourd’hui" : j === 1 ? "demain" : j === -1 ? "hier" : dateJour(iso);
+}
+// Le tournoi concerne l'équipe : equipes (calendrier.json, tools/tournois.py) ; liste vide = pas encore connu (les deux) ;
+// vieux calendrier sans equipes : un match au calendrier ou publié
+const tournoiPour = (t, eq) => (Array.isArray(t.equipes) ? !t.equipes.length || t.equipes.includes(eq)
+  : etat.calendrier.some(c => c.tournoi === t.id && c.equipe === eq) || etat.matchs.some(m => m.tournoi?.id === t.id && m.equipe === eq));
+const statutT = t => { const a = aujourdhui(); return a < t.debut ? "avenir" : a > t.fin ? "fini" : "encours"; };
+// Tout ce qu'on sait d'un tournoi pour l'équipe choisie : matchs publiés, horaire, prochain match, résultat final
+function infoTournoi(t, eq = etat.equipe) {
+  const ms = etat.matchs.filter(m => m.tournoi?.id === t.id && m.equipe === eq).sort(parDate);
+  const cal = etat.calendrier.filter(c => c.tournoi === t.id && c.equipe === eq).sort(parDate);
+  const publie = c => (c.no ? ms.find(m => String(m.no_match) === String(c.no)) : null);
+  const restants = cal.filter(c => !publie(c));
+  const now = new Date();
+  const futurs = restants.filter(c => debutC(c) > now);
+  const prochain = futurs.find(c => !c.eventuel), possible = prochain ? null : futurs[0] || null;
+  // Résultat final : d'après la dernière ronde jouée ; « Ronde préliminaire » seulement quand tout est publié
+  const fin = ms.find(m => m.ronde === "Finale"), demi = ms.find(m => m.ronde === "Demi-finale");
+  let final = null;
+  if (fin) final = { V: "Championnes", D: "Finalistes", N: "Finale" }[resultat(fin)];
+  else if (demi && resultat(demi) === "D") final = "Demi-finalistes";
+  else if (statutT(t) === "fini" && ms.length && !demi && !restants.some(c => !c.eventuel)) final = "Ronde préliminaire";
+  const vdn = ["V", "D", "N"].map(r => ms.filter(m => resultat(m) === r).length).join("-");
+  return { t, ms, cal, publie, restants, prochain, possible, final, vdn, statut: statutT(t) };
+}
+function tournoisEquipe() {
+  return (etat.tournois || []).filter(t => saisonDe(t.debut) === etat.saison && tournoiPour(t, etat.equipe));
+}
+// Étiquette d'état : résultat final (or), en cours (rouge), dans N jours, terminé
+function etiquetteT(i) {
+  if (i.final) return `<span class="etat-t final">${i.final}</span>`;
+  if (i.statut === "encours") return `<span class="etat-t direct">En cours</span>`;
+  if (i.statut === "avenir") {
+    const j = Math.round((new Date(i.t.debut + "T12:00") - new Date(aujourdhui() + "T12:00")) / 864e5);
+    return `<span class="etat-t">${j === 1 ? "Demain" : `Dans ${j} jours`}</span>`;
+  }
+  return `<span class="etat-t">Terminé</span>`;
+}
+// Bandeau doré dans Matchs pendant un tournoi (de la veille au dernier jour)
+function bandeauEnCours() {
+  const veille = new Date(Date.now() + 864e5), dem = `${veille.getFullYear()}-${String(veille.getMonth() + 1).padStart(2, "0")}-${String(veille.getDate()).padStart(2, "0")}`;
+  const t = tournoisEquipe().find(t => t.debut <= dem && aujourdhui() <= t.fin);
+  if (!t) return "";
+  const i = infoTournoi(t), c = i.prochain;
+  const suite = i.final ? ` · ${i.final}` : c ? ` · prochain match ${jourRelatif(c.date)}${c.heure ? ` ${heureFr(c.heure)}` : ""}${c.adversaire ? ` contre ${esc(c.adversaire)}` : ""}` : "";
+  return `<a class="bandeau-t" href="#/tournoi/${encodeURIComponent(t.id)}">${TROPHEE}<span><b>${esc(t.nom)}</b> ${i.statut === "encours" ? "en cours" : "commence demain"}${
+    i.ms.length ? ` · ${i.vdn}` : ""}${suite}</span><span class="vers">Voir →</span></a>`;
+}
+// Portée des stats d'Équipe et de Gardiennes : tous les matchs, saison (hors tournois) ou tournois seulement
+const PORTEES = [["tous", "Tous les matchs"], ["saison", "Saison"], ["tournois", "Tournois"]];
+const aTournoi = () => filtres().some(m => m.tournoi);
+function filtresP() {
+  const ms = filtres();
+  if (!ms.some(m => m.tournoi)) return ms;
+  return etat.portee === "saison" ? ms.filter(m => !m.tournoi) : etat.portee === "tournois" ? ms.filter(m => m.tournoi) : ms;
+}
+const choixPortee = () => (aTournoi() ? `<div class="choix-g portee" role="group" aria-label="Matchs comptés">${PORTEES.map(([k, l]) =>
+  `<button type="button" data-portee="${k}" aria-pressed="${k === (etat.portee || "tous")}">${l}</button>`).join("")}</div>` : "");
+const motPortee = () => (aTournoi() ? { saison: ", hors tournois", tournois: ", matchs de tournoi seulement" }[etat.portee] || "" : "");
+const videPortee = () => `<p class="vide">Aucun match ${etat.equipe}${motPortee()} pour la saison ${etat.saison}.</p>`;
+
 const TROPHEE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V18h3v3H8v-3h3v-3.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm0 4H6v1a2 2 0 0 0 1 1.7zm10 0v2.7A2 2 0 0 0 18 8V7z"/></svg>`;
 // Bandeau au-dessus des matchs d'un même tournoi (liste des matchs, À venir) ; bilan V-D-N si matchs joués.
 // Le bandeau mène à la page du tournoi (résumé si des matchs sont joués, sinon horaire) ; pas sur cette page même.
@@ -423,12 +489,13 @@ function lignesGroupees(liste, idDe, nomDe, col, ligne, bilan, avant = null, tou
 // Adversaire d'un match du calendrier ; ronde éliminatoire sans adversaire connu : « Demi-finale (2e c. 3e) »
 const advCal = c => c.adversaire ? esc(c.adversaire)
   : `<span class="eventuel">${esc(c.ronde || "Ronde éliminatoire")}${c.libelle ? ` (${esc(c.libelle)})` : ""}</span>`;
-function carteProchain(c) {
+// tag : « Prochain match » ; dansT : page du tournoi (pas de rappel du nom du tournoi, jour relatif)
+function carteProchain(c, tag = "Prochain match", dansT = false) {
   const dossier = aDossier(c.adversaire);
   const lieu = c.tournoi ? `${esc(c.endroit)}${c.ronde ? ` · ${esc(c.ronde)}` : ""}` : `${esc(c.endroit)} · BLL ${c.domicile ? "à domicile" : "visiteur"}`;
   return `<${dossier ? `a href="#/adversaire/${encodeURIComponent(cleAdv(c.adversaire))}"` : "div"} class="panneau vedette prochain${c.tournoi ? " en-t" : ""}">
-    <span class="ved-tag">Prochain match · ${dateJour(c.date)}${c.heure ? `, ${heureFr(c.heure)}` : ""}</span>
-    ${c.tournoi ? `<span class="ligne-t" style="margin:0"><span class="tag-t">Tournoi</span>${esc(nomTournoi(c))}</span>` : ""}
+    <span class="ved-tag">${tag} · ${dansT ? jourRelatif(c.date) : dateJour(c.date)}${c.heure ? `, ${heureFr(c.heure)}` : ""}</span>
+    ${c.tournoi && !dansT ? `<span class="ligne-t" style="margin:0"><span class="tag-t">Tournoi</span>${esc(nomTournoi(c))}</span>` : ""}
     <span class="ved-score"><span class="eq">BLL ${esc(c.equipe)}</span><span class="contre">contre</span><span class="eq">${advCal(c)}</span></span>
     <span class="sous">${lieu} · match no ${esc(c.no)}</span>
     <span class="ved-lien">${dossier ? "Dossier de l’adversaire →" : c.adversaire ? "Premier affrontement de la saison" : ""}</span>
@@ -467,13 +534,14 @@ function vueMatchs() {
   // (la liste À venir le reprend aussi : le calendrier complet)
   const venir = aVenir(), pro = venir.find(c => !c.eventuel);
   if (!ms.length) return `<h1>Matchs ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>
-    ${pro ? carteProchain(pro) : ""}${tableauAVenir(venir)}`;
+    ${bandeauEnCours()}${pro ? carteProchain(pro) : ""}${tableauAVenir(venir)}`;
   // Dernier match en vedette : score et quelques faits saillants, un clic ouvre sa fiche
   const der = ms[ms.length - 1], faits = faitsSaillants(der, true).slice(0, 3);
   const nT = ms.filter(m => m.tournoi).length;
   const rd = resultat(der);
   return `<h1>Matchs ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}, ${ms.length} match${ms.length > 1 ? "s" : ""}${nT ? `, dont ${nT} en tournoi` : ""}</p>
   ${forme(ms)}
+  ${bandeauEnCours()}
   <div class="grille g2 vedettes">
   <a class="panneau vedette faits${der.tournoi ? " en-t" : ""}" href="#/match/${encodeURIComponent(der.id)}">
     <span class="ved-tag">Dernier match · ${dateFr(der.date)}</span>
@@ -748,8 +816,8 @@ function vueMatch(id) {
 }
 
 function vueGardiennes() {
-  const ms = filtres();
-  if (!ms.length) return `<h1>Gardiennes ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
+  const ms = filtresP();
+  if (!ms.length) return `<h1>Gardiennes ${etat.equipe}</h1>${choixPortee()}${videPortee()}`;
   // Une « apparition » par gardienne et par match : copie du match réduite à sa part (buts accordés pendant
   // qu'elle était dans le filet, tirs reçus) ; _p = sa part (minutes, décision, blanchissage), _complet = seule du match
   const groupes = {};
@@ -868,7 +936,8 @@ function vueGardiennes() {
   const onglets = tries.length > 1 ? `<div class="onglets-g" role="tablist" aria-label="Fiche de la gardienne">${tries.map(([cle, { g }]) =>
     `<button type="button" role="tab" data-gsel="${esc(cle)}" aria-selected="${cle === choix}">${esc(g.nom || "Non indiquée")}${
       g.numero != null ? ` <span class="no">#${g.numero}</span>` : ""}</button>`).join("")}</div>` : "";
-  return `<h1>Gardiennes ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}. V-D-N = victoires, défaites, nulles.</p>
+  return `<h1>Gardiennes ${etat.equipe}</h1><p class="sous">Cumulatif de la saison ${etat.saison}${motPortee()}. V-D-N = victoires, défaites, nulles.</p>
+    ${choixPortee()}
     ${tableau}
     ${onglets}
     <div class="grille" style="margin-top:${onglets ? ".5rem" : "1rem"}">${cartes.join("")}</div>`;
@@ -882,8 +951,8 @@ function choisirGardienne(cle, defiler) {
 }
 
 function vueEquipe() {
-  const ms = filtres();
-  if (!ms.length) return `<h1>Équipe ${etat.equipe}</h1><p class="vide">Aucun match ${etat.equipe} pour la saison ${etat.saison}.</p>`;
+  const ms = filtresP();
+  if (!ms.length) return `<h1>Équipe ${etat.equipe}</h1>${choixPortee()}${videPortee()}`;
   const somme = f => ms.reduce((s, m) => s + (f(m) ?? 0), 0);
   const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length, n = ms.length - v - d;
   const bp = somme(m => m.buts.nous), bc = somme(m => m.buts.adv);
@@ -916,7 +985,8 @@ function vueEquipe() {
   const detN = ms.reduce((s, m) => s + (m.buts_marques || []).filter(b => b.type || b.zone).length, 0);
   // Tuile Sorties cliquable s'il y a un graphique (≥ 2 matchs avec sorties) ou le tableau par période
   const szCible = (ms.length > 1 && ms.filter(m => m.sorties_zone.tentatives).length > 1) || avecSz.length > 0;
-  return `${titreActions(`Équipe ${etat.equipe}`)}<p class="sous">Cumulatif de la saison ${etat.saison}</p>
+  return `${titreActions(`Équipe ${etat.equipe}`)}<p class="sous">Cumulatif de la saison ${etat.saison}${motPortee()}</p>
+  ${choixPortee()}
   <section class="panneau" style="margin-top:1rem">
     <div class="chiffres" style="margin-top:0">
       ${tuileVers(`${v}-${d}-${n}`, "fiche V-D-N", "buts")}
@@ -1137,21 +1207,115 @@ function vueAdversaire(cle) {
     non notés pour ${manque.length > 1 ? "les buts" : manque[0]} de ces matchs.</p>` : ""}`;
 }
 /* ---------- Résumé d'un tournoi : bilan de la fin de semaine (équipe choisie) */
+// Liste des tournois de la saison (choix L1) : en cours, puis à venir, puis terminés ;
+// sous les cartes, comparaison des tournois joués avec le reste de la saison
+function vueTournois() {
+  const ordre = { encours: 0, avenir: 1, fini: 2 };
+  const infos = tournoisEquipe().map(t => infoTournoi(t)).sort((a, b) => ordre[a.statut] - ordre[b.statut]
+    || (a.statut === "fini" ? b.t.debut.localeCompare(a.t.debut) : a.t.debut.localeCompare(b.t.debut)));
+  const titre = `<h1>Tournois ${etat.equipe}</h1><p class="sous">Saison ${etat.saison}</p>`;
+  if (!infos.length) return `${titre}<p class="vide">Aucun tournoi ${etat.equipe} pour la saison ${etat.saison}.</p>`;
+  const carte = i => {
+    const c = i.prochain || i.possible, bp = i.ms.reduce((s, m) => s + m.buts.nous, 0), bc = i.ms.reduce((s, m) => s + m.buts.adv, 0);
+    const jour = i.statut === "encours" ? ` · jour ${Math.round((new Date(aujourdhui() + "T12:00") - new Date(i.t.debut + "T12:00")) / 864e5) + 1} de ${
+      Math.round((new Date(i.t.fin + "T12:00") - new Date(i.t.debut + "T12:00")) / 864e5) + 1}` : "";
+    const lignes = [];
+    if (i.ms.length) lignes.push(`Bilan <b>${i.vdn}</b>`, `Buts <b>${bp}–${bc}</b>`);
+    if (c && !i.final) lignes.push(`${i.prochain ? "Prochain match" : "Prochain match possible"} : <b>${jourRelatif(c.date)}${c.heure ? ` ${heureFr(c.heure)}` : ""}${
+      c.adversaire ? ` contre ${esc(c.adversaire)}` : c.ronde ? ` · ${esc(c.ronde)}` : ""}</b>`);
+    if (!i.cal.length && !i.ms.length) lignes.push("Horaire pas encore publié");
+    return `<a class="panneau carte-t${i.statut === "encours" ? " vedette-t" : ""}${i.statut === "fini" ? " passe" : ""}" href="#/tournoi/${encodeURIComponent(i.t.id)}">
+      <span class="nom-t">${TROPHEE}<b>${esc(i.t.nom)}</b>${etiquetteT(i)}</span>
+      <span class="sous">${joursTournoi(i.t, [])}${jour}</span>
+      ${lignes.length ? `<span class="bilan-t">${lignes.map(l => `<span>${l}</span>`).join("")}</span>` : ""}
+      <span class="ved-lien">${i.ms.length || i.statut !== "avenir" ? "Voir le tournoi →" : "Voir l’horaire →"}</span></a>`;
+  };
+  // Comparaison : un tournoi par ligne (matchs joués), puis les matchs hors tournois de la saison
+  const joues = infos.filter(i => i.ms.length).sort((a, b) => a.t.debut.localeCompare(b.t.debut));
+  const horsT = filtres().filter(m => !m.tournoi);
+  const ligneComp = (nom, ms, res, id) => { const mo = moyennes(ms);
+    return `<tr${id ? ` class="lien" tabindex="0" data-tournoi="${esc(id)}"` : ""}><td class="txt">${nom}</td><td class="n">${ms.length}</td>
+      <td class="n">${["V", "D", "N"].map(r => ms.filter(m => resultat(m) === r).length).join("-")}</td>
+      <td class="n">${mo.bp}</td><td class="n">${mo.bc}</td><td class="n opt">${mo.tp}</td><td class="n opt">${mo.tc}</td><td class="n">${mo.arr}</td>
+      <td class="txt opt">${res}</td></tr>`; };
+  const comp = joues.length ? `<h2>Tournois de la saison</h2><div class="panneau defile"><table class="comp-t">
+    <thead><tr><th>Tournoi</th><th class="n">PJ</th><th class="n">V-D-N</th><th class="n">BP/M</th><th class="n">BC/M</th><th class="n opt">TP/M</th><th class="n opt">TC/M</th><th class="n">% arr.</th><th class="opt">Résultat</th></tr></thead>
+    <tbody>${joues.map(i => ligneComp(esc(i.t.nom), i.ms, i.final || (i.statut === "encours" ? "En cours" : "–"), i.t.id)).join("")}</tbody>
+    ${horsT.length ? `<tfoot>${ligneComp("Saison (hors tournois)", horsT, "")}</tfoot>` : ""}</table></div>
+    ${note("PJ : matchs joués ; BP/M et BC/M : buts pour et contre par match ; TP/M et TC/M : tirs cadrés pour et contre par match ; % arr. : % d’arrêts.", "Abréviations")}` : "";
+  return `${titre}<div class="cartes-t">${infos.map(carte).join("")}</div>${comp}`;
+}
+
+// Page d'un tournoi (choix B) : prochain match ou résultat final, dernier résultat, parcours, chiffres, horaire jour par jour,
+// puis faits, gardiennes, tournoi vs reste de la saison. Saison ignorée (lien direct).
+function parcoursT(i) {
+  const rondes = ["Demi-finale", "Finale"].filter(r => i.cal.some(c => c.ronde === r) || i.ms.some(m => m.ronde === r));
+  if (!rondes.length) return "";
+  const elim = i.final && i.final !== "Championnes";
+  const prelim = i.ms.filter(m => !m.ronde), prelimR = i.restants.filter(c => !c.ronde);
+  const etapes = [{ nom: "Ronde préliminaire", fait: !prelimR.length && prelim.length > 0,
+    txt: `${prelim.length} de ${prelim.length + prelimR.length} joué${prelim.length > 1 ? "s" : ""}${prelim.length ? ` · ${["V", "D", "N"].map(r => prelim.filter(m => resultat(m) === r).length).join("-")}` : ""}` }];
+  rondes.forEach(r => {
+    const m = i.ms.find(x => x.ronde === r), cs = i.restants.filter(c => c.ronde === r), c = cs.find(x => !x.eventuel) || cs[0];
+    const jr = c ? jourRelatif(c.date) : "", jc = c && jr === dateJour(c.date) ? new Date(c.date + "T12:00").toLocaleDateString("fr-CA", { weekday: "long" }) : jr;
+    const quand = c ? `${jc}${c.heure ? ` ${heureFr(c.heure)}` : ""}` : "";
+    if (m) etapes.push({ nom: r, fait: true, txt: `<span class="res ${resultat(m)}">${resultat(m)}</span> ${m.buts.nous}–${m.buts.adv} contre ${esc(m.adversaire)}` });
+    else if (elim || i.statut === "fini") etapes.push({ nom: r, non: true, txt: "–" });
+    else if (c && !c.eventuel) etapes.push({ nom: r, txt: `Qualifiées · ${quand}` });
+    else etapes.push({ nom: r, possible: true, txt: c ? `Si qualifiées · ${quand}` : "Si qualifiées" });
+  });
+  const ici = elim ? -1 : etapes.findIndex(e => !e.fait && !e.non);
+  return `<section class="panneau"><h3>Parcours</h3><ol class="parcours">${etapes.map((e, k) =>
+    `<li class="${[k === ici ? "ici" : "", e.fait ? "fait" : "", e.possible ? "possible" : "", e.non ? "non" : ""].join(" ").trim()}"><b>${e.nom}</b><span>${e.txt}</span></li>`).join("")}</ol></section>`;
+}
+function horaireT(i) {
+  const now = new Date();
+  const lignes = [...i.cal.map(c => ({ c, m: i.publie(c), date: c.date, h: c.heure })),
+    ...i.ms.filter(m => !i.cal.some(c => i.publie(c) === m)).map(m => ({ m, date: m.date, h: m.heure_debut }))]
+    .sort((a, b) => (a.date + (a.h || "")).localeCompare(b.date + (b.h || "")));
+  if (!lignes.length) return "";
+  const jours = [...new Set(lignes.map(l => l.date))];
+  const ligne = ({ c, m, h }) => {
+    const lieu = c?.endroit ? `<span class="lieu">${esc(c.endroit)}</span>` : "";
+    const ronde = m?.ronde || c?.ronde;
+    if (m) {
+      const r = resultat(m);
+      const det = [m.tirs.nous != null || m.tirs.adv != null ? `tirs ${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}` : "",
+        svArret(m) != null ? `${pct(m.tirs.adv - m.buts.adv, m.tirs.adv)} d’arrêts` : ""].filter(Boolean).join(" · ");
+      return `<a class="m-t" href="#/match/${encodeURIComponent(m.id)}"><span class="h">${heureFr(h) || "–"}</span>
+        <span class="adv">${ronde ? `<small class="ronde">${esc(ronde)}</small>` : ""}${esc(m.adversaire)}</span>
+        <span class="sc">${m.buts.nous}–${m.buts.adv} <span class="res ${r}">${r}</span></span>${lieu}${det ? `<span class="lieu">${det}</span>` : ""}</a>`;
+    }
+    const etat_ = c === i.prochain ? `<span class="tag-t">Prochain</span>` : c.eventuel ? `<span class="etat-t">Si qualifiées</span>`
+      : debutC(c) <= now ? `<span class="etat-t">Résultat à venir</span>` : "";
+    return `<div class="m-t${c.eventuel ? " ev" : ""}${c === i.prochain ? " suivant" : ""}"><span class="h">${heureFr(h) || "–"}</span>
+      <span class="adv">${c.adversaire && ronde ? `<small class="ronde">${esc(ronde)}</small>` : ""}${advCal(c)}</span><span class="sc">${etat_}</span>${lieu}</div>`;
+  };
+  return `<section class="panneau"><h3>Horaire</h3><div class="horaire-t">${jours.map(d => {
+    const l = lignes.filter(x => x.date === d);
+    return `<h4 class="jour-t">${dateJour(d)}${l.every(x => x.m?.ronde || x.c?.ronde) ? " · éliminatoires" : ""}</h4>${l.map(ligne).join("")}`;
+  }).join("")}</div>${note("Horaire du tournoi relu chaque nuit ; résultats ajoutés à mesure que les matchs sont publiés.")}</section>`;
+}
 function vueTournoi(id) {
-  const ms = etat.matchs.filter(m => m.tournoi?.id === id && m.equipe === etat.equipe)
-    .sort((a, b) => (a.date + (a.heure_debut || "")).localeCompare(b.date + (b.heure_debut || "")));
-  const t = tournoi(id), nom = ms[0]?.tournoi.nom || t?.nom || "Tournoi";
-  const venir = etat.calendrier.filter(c => c.tournoi === id && c.equipe === etat.equipe && c.date >= aujourdhui()
-    && !etat.matchs.some(m => m.equipe === c.equipe && m.no_match === c.no));
-  const retour = `<a class="retour" href="#/matchs">← Matchs</a>`;
-  if (!ms.length) {
-    if (!t) return `${retour}<p class="vide">Ce tournoi n’existe pas ou n’a pas encore été publié.</p>`;
-    const nbV = venir.filter(c => !c.eventuel).length;
-    return `${retour}${titreActions(esc(nom))}
-    <p class="sous">Tournoi, ${esc(etat.equipe)}, ${joursTournoi(t, [])}${nbV ? ` : ${nbV} match${nbV > 1 ? "s" : ""} prévu${nbV > 1 ? "s" : ""}` : ""}</p>
-    <p class="vide">Aucun match ${etat.equipe} joué pour le moment. Le résumé du tournoi s’affichera ici après le premier match.</p>
-    ${tableauAVenir(venir, "Horaire", venir.length)}`;
-  }
+  const t0 = tournoi(id);
+  const ms0 = etat.matchs.filter(m => m.tournoi?.id === id && m.equipe === etat.equipe);
+  const retour = `<a class="retour" href="#/tournois">← Tournois</a>`;
+  if (!t0 && !ms0.length) return `${retour}<p class="vide">Ce tournoi n’existe pas ou n’a pas encore été publié.</p>`;
+  const t = t0 || { id, nom: ms0[0].tournoi.nom, debut: ms0[0].date, fin: ms0[ms0.length - 1].date };
+  const i = infoTournoi(t), ms = i.ms, nom = t.nom;
+  // Haut de page : prochain match (ou possible), sinon résultat final ; dernier résultat ; parcours
+  const der = ms[ms.length - 1];
+  const dernier = der ? `<a class="dernier-t" href="#/match/${encodeURIComponent(der.id)}"><span class="res ${resultat(der)}">${resultat(der)}</span>
+    <span>Dernier match : <b>${der.buts.nous}–${der.buts.adv} contre ${esc(der.adversaire)}</b>${der.ronde ? ` · ${esc(der.ronde)}` : ""}</span><span class="vers">Voir →</span></a>` : "";
+  const final = i.final || i.statut === "fini" ? `<div class="panneau vedette final-t"><span class="ved-tag">${i.final ? "Résultat final" : "Tournoi terminé"}</span>
+    ${i.final ? `<b class="titre-final">${TROPHEE}${i.final}</b>` : ""}<span class="sous">${ms.length ? `Bilan ${i.vdn} en ${ms.length} match${ms.length > 1 ? "s" : ""}` : "Aucun match publié"}</span></div>` : "";
+  const haut = final || (i.prochain ? carteProchain(i.prochain, "Prochain match", true)
+    : i.possible ? carteProchain(i.possible, "Prochain match possible", true) : "");
+  const parcours = parcoursT(i);
+  const entete = `${retour}${titreActions(esc(nom), ms.length ? `BLL ${etat.equipe} au ${nom} : ${i.vdn}` : "")}
+    <p class="sous">${esc(etat.equipe)} · ${joursTournoi(t, [])} · ${etiquetteT(i)}</p>
+    ${haut || dernier || parcours ? `<div class="grille g2 vedettes haut-t">${haut ? `<div class="pile-t">${haut}${dernier}</div>` : dernier ? `<div class="pile-t">${dernier}</div>` : ""}${parcours}</div>` : ""}`;
+  if (!ms.length) return `${entete}${horaireT(i) || `<p class="vide">L’horaire ${etat.equipe} de ce tournoi n’est pas encore publié.</p>`}`;
   const somme = (l, f) => l.reduce((s, m) => s + f(m), 0);
   const v = ms.filter(m => resultat(m) === "V").length, d = ms.filter(m => resultat(m) === "D").length, n = ms.length - v - d;
   const bp = somme(ms, m => m.buts.nous), bc = somme(ms, m => m.buts.adv);
@@ -1181,10 +1345,7 @@ function vueTournoi(id) {
   const reste = etat.matchs.filter(m => m.equipe === etat.equipe && m.saison === ms[0].saison && m.tournoi?.id !== id);
   const elles = moyennes(ms), autres = reste.length ? moyennes(reste) : null;
   const ligneC = (lab, a, b) => `<tr><td class="txt">${lab}</td><td class="n fort">${a}</td><td class="n">${b}</td></tr>`;
-  const partage = `BLL ${etat.equipe} au ${nom} : ${v}-${d}-${n}, buts ${bp}–${bc}`;
-  return `${retour}
-  ${titreActions(esc(nom), partage)}
-  <p class="sous">Tournoi, ${esc(etat.equipe)}, ${joursTournoi(t, ms)} : ${ms.length} match${ms.length > 1 ? "s" : ""}</p>
+  return `${entete}
   <section class="panneau" style="margin-top:1rem">
     <div class="chiffres" style="margin-top:0">
       <div class="chiffre"><b>${v}-${d}-${n}</b><span>fiche V-D-N</span></div>
@@ -1194,19 +1355,8 @@ function vueTournoi(id) {
       <div class="chiffre accent"><b>${pct(szR, szT)}</b><span>sorties de zone réussies</span></div>
     </div>
   </section>
+  <div style="margin-top:1rem">${horaireT(i)}</div>
   ${f.length ? `<section class="panneau faits" style="margin-top:1rem"><h3>Faits saillants</h3><ul>${f.map(x => `<li>${x}</li>`).join("")}</ul></section>` : ""}
-  <section class="panneau defile" style="margin-top:1rem">
-    <h3>Les matchs</h3>
-    <table class="liste-matchs">
-      <thead><tr><th>Date</th><th>Adversaire</th><th>Rés.</th><th class="n">Score</th><th class="n opt">Tirs</th><th class="opt">Gardienne</th><th class="n">% arrêts</th></tr></thead>
-      <tbody>${ms.map(m => `<tr class="lien" tabindex="0" data-id="${esc(m.id)}">
-        <td>${dateCourte(m.date)}</td><td class="txt">${esc(m.adversaire)}${m.ronde ? `<small class="ronde">${esc(m.ronde)}</small>` : ""}</td>
-        <td><span class="res ${resultat(m)}">${resultat(m)}</span></td><td class="n">${m.buts.nous}–${m.buts.adv}</td>
-        <td class="n opt">${m.tirs.nous == null && m.tirs.adv == null ? "–" : `${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}`}</td>
-        <td class="opt">${esc(nomsGardiennes(m))}</td>
-        <td class="n">${svArret(m) == null ? "–" : pctC(m.tirs.adv - m.buts.adv, m.tirs.adv)}</td></tr>`).join("")}</tbody>
-    </table>
-  </section>
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
       <h3>Gardiennes</h3>
@@ -1227,8 +1377,7 @@ function vueTournoi(id) {
       </table></div>
       ${note(`Reste de la saison : ${reste.length} match${reste.length > 1 ? "s" : ""} ${esc(etat.equipe)} hors de ce tournoi.`)}
     </section>` : ""}
-  </div>
-  ${tableauAVenir(venir, "À venir", venir.length)}`;
+  </div>`;
 }
 
 // Au moins un but avec type ou zone
@@ -1238,7 +1387,7 @@ const detail = ag => Object.keys(ag.types).length + Object.keys(ag.zones).length
 function afficher() {
   const [, vue = "matchs", id] = location.hash.split("/");
   document.querySelectorAll(".onglets a").forEach(a => {
-    if (a.dataset.vue === ({ match: "matchs", tournoi: "matchs", adversaire: "adversaires" }[vue] || vue)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    if (a.dataset.vue === ({ match: "matchs", tournoi: "tournois", adversaire: "adversaires" }[vue] || vue)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
   el.innerHTML = vue === "match" ? vueMatch(decodeURIComponent(id || ""))
     : vue === "gardiennes" ? vueGardiennes()
@@ -1246,6 +1395,7 @@ function afficher() {
     : vue === "adversaires" ? vueAdversaires()
     : vue === "adversaire" ? vueAdversaire(decodeURIComponent(id || ""))
     : vue === "tournoi" ? vueTournoi(decodeURIComponent(id || ""))
+    : vue === "tournois" ? vueTournois()
     : vueMatchs();
   el.focus({ preventScroll: true });
   window.scrollTo(0, 0);
@@ -1311,6 +1461,8 @@ async function demarrer() {
     const ent = e.target.closest("table.triable thead th"); if (ent) trierTableau(ent);
     const gr = e.target.closest("[data-graphe]"); if (gr) choisirGraphe(gr);
     const tv = e.target.closest("[data-vers]"); if (tv) allerVers(tv.dataset.vers);
+    const po = e.target.closest("[data-portee]");
+    if (po) { etat.portee = po.dataset.portee; const y = window.scrollY; afficher(); window.scrollTo(0, y); }
     const og = e.target.closest("[data-gsel]"); if (og) choisirGardienne(og.dataset.gsel);
     const vg = e.target.closest("[data-vers-g]"); if (vg) etat.gardienne = vg.dataset.versG;   // ouvre sa fiche dans Gardiennes
     const tc = e.target.closest("[data-tout-cal]"); if (tc) toutCalendrier(tc);

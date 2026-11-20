@@ -208,13 +208,25 @@ dans le bandeau de chaque gardienne. Aucune animation : tout s'affiche d'un coup
   adversaire et dans le tableau match par match de chaque gardienne (sur téléphone, le liseré seul) ; bande dorée
   derrière les matchs de tournoi dans les graphiques (Progression de la saison, % d'arrêts des gardiennes), et nom du
   tournoi dans la ligne d'info quand on touche le match. Rondes éliminatoires pas encore jouées : « Demi-finale (2e c. 3e) si qualifiées », jamais dans la carte du
-  prochain match. Les stats comptent tous les matchs, saison et tournois.
-  **Page d'un tournoi** (`#/tournoi/<id>`) : on y arrive en touchant le bandeau d'un tournoi (liste des matchs ou
-  À venir : « Résumé → » s'il y a des matchs joués, sinon « Horaire → ») ou le nom du tournoi sur la fiche d'un match.
-  Avant le premier match : dates et horaire complet du tournoi. Fiche V-D-N, buts, tirs, % d'arrêts et sorties de zone
-  du tournoi, faits saillants (rondes éliminatoires, plus large victoire, blanchissages, matchs serrés), les matchs,
-  les gardiennes (PJ, décisions, BA, % arr., MOY), comparaison avec le reste de la saison et matchs du tournoi à venir.
-  Boutons Partager et Imprimer. Un clic sur un match joué ouvre sa fiche :
+  prochain match. Pendant un tournoi (de la veille au dernier jour), un bandeau doré en haut de Matchs annonce
+  « Tournoi de Nepean en cours · bilan · prochain match » et mène à la page du tournoi.
+  Un clic sur un match joué ouvre sa fiche (voir plus bas).
+- **Tournois** (`#/tournois`, 2ᵉ onglet ; sur téléphone il prend la place d'Aide dans la barre du bas, Aide devient le
+  « ? » du bandeau) : une carte par tournoi de la saison pour l'équipe choisie, en cours d'abord (cadre doré, « jour 1
+  de 3 »), puis à venir (« Dans 52 jours », « Horaire pas encore publié »), puis terminés ; bilan, buts, prochain match
+  et état (En cours, Terminé ou résultat final). Sous les cartes, **Tournois de la saison** : un tournoi par ligne
+  (PJ, V-D-N, buts et tirs par match, % d'arrêts, résultat) et la ligne « Saison (hors tournois) » pour comparer.
+  **Résultat final** déduit de la dernière ronde jouée : Championnes (finale gagnée), Finalistes, Demi-finalistes, ou
+  Ronde préliminaire (tournoi terminé, tous les matchs publiés, aucune ronde éliminatoire jouée).
+  **Page d'un tournoi** (`#/tournoi/<id>`, aussi par le bandeau d'un tournoi dans la liste des matchs ou le nom du
+  tournoi sur la fiche d'un match) : en haut, le **prochain match** (« aujourd'hui, 21 h », aréna, lien vers le dossier
+  de l'adversaire), ou « prochain match possible » s'il ne reste que des rondes éliminatoires où le BLL n'est pas encore
+  inscrite, ou le **résultat final** une fois le tournoi fini ; le dernier résultat ; le **parcours** (ronde préliminaire
+  « 1 de 4 joué », demi-finale et finale : jouée, « Qualifiées », « Si qualifiées » ou –). Puis les chiffres du tournoi,
+  l'**horaire jour par jour** (heure, adversaire, aréna ; score, tirs et % d'arrêts des matchs publiés ; « Prochain »,
+  « Résultat à venir » pour un match commencé mais pas encore publié, « Si qualifiées »), les faits saillants, les
+  gardiennes et la comparaison avec le reste de la saison. Boutons Partager et Imprimer.
+- **Fiche d'un match** :
   - **Faits saillants** : quelques phrases tirées des données (retard effacé, but gagnant, série de buts,
     3 buts ou plus en 5 minutes, période gagnée par 3 buts ou plus, arrêts de la gardienne, domination aux tirs,
     records de la saison dès 3 matchs) ; 6 au plus ;
@@ -231,6 +243,8 @@ dans le bandeau de chaque gardienne. Aucune animation : tout s'affiche d'un coup
 
   Partout, les explications (matchs comptés, méthode, source) sont repliées derrière un petit **ⓘ** à toucher ; elles
   ne sont pas imprimées. Les remarques sur des données manquantes d'un match restent visibles.
+- **Gardiennes** et **Équipe** : dès qu'un match de tournoi est publié dans la saison, des boutons « Tous les matchs /
+  Saison / Tournois » choisissent les matchs comptés (Saison = hors tournois) ; le choix est rappelé sous le titre.
 - **Gardiennes** : tableau comparatif (MJ, V, D, N, BA, BL = blanchissages, TC, % arr., MOY par 40 minutes, TG = temps de glace, ligne Équipe ; un clic sur un en-tête trie le tableau, un deuxième inverse l'ordre ; un clic mène à la fiche),
   puis **une fiche à la fois**, choisie par les onglets au nom des gardiennes (ou un clic sur sa ligne du tableau) : % d'arrêts, buts accordés par match, tableau match par match, moyenne et % d'arrêts par période,
   tendance du % d'arrêts, zones du filet, types de jeu, d'où partent les buts accordés.
@@ -332,6 +346,8 @@ pas corrigé ou retiré.
 - `horaires` : lien du calendrier .ics de la division de chaque équipe, sur le site du tournoi (Schedule → bouton de
   téléchargement du calendrier : clic droit → Copier le lien). Sur les sites Ringette Ontario (RAMP), le lien finit
   par `DID=<division>` : changer ce numéro donne l'autre division.
+  Tournoi annoncé mais horaire pas encore publié : mettre `"horaires": {}` et, si une seule équipe y va,
+  `"equipes": ["U19AA"]` (sans `equipes` ni horaire, le tournoi s'affiche pour les deux équipes dans l'onglet Tournois).
 - `noms` (en bas du fichier) : nom de l'équipe au tournoi, sans la catégorie (« Nepean Ravens U16AA - Cram » →
   « Nepean Ravens - Cram »), vers le nom de la LERQ (« Nepean ») ou un nom court. Une équipe absente de la liste
   donne un avertissement jaune : l'ajouter. Ces correspondances servent aussi aux noms tapés dans la saisie.
