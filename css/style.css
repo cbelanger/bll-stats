@@ -474,6 +474,18 @@ a.m-t:hover { background: var(--glace); }
 .m-t.ev { color: var(--doux); }
 .m-t.ev .adv { font-weight: 500; }
 .m-t.suivant { background: var(--or-pale); border-radius: 6px; }
+.m-t.lien { cursor: pointer; }
+.m-t.lien:hover { background: var(--glace); }
+.prochain.lien { cursor: pointer; }
+/* Aréna → Google Maps : souligné pointillé + petite épingle */
+a.lieu-lien { color: inherit; text-decoration: underline dotted; text-underline-offset: 2px; }
+a.lieu-lien:hover { color: var(--marine); text-decoration-style: solid; }
+.sombre a.lieu-lien:hover { color: #8FB0EA; }
+a.lieu-lien::before { content: ""; display: inline-block; width: .7em; height: .85em; margin-right: .25em; vertical-align: -.05em; background: currentColor; opacity: .7;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M6 0a5 5 0 0 0-5 5c0 3.6 5 9 5 9s5-5.4 5-9a5 5 0 0 0-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E") no-repeat center / contain;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M6 0a5 5 0 0 0-5 5c0 3.6 5 9 5 9s5-5.4 5-9a5 5 0 0 0-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E") no-repeat center / contain; }
+.lieu-tel { display: none; }
+.a-venir td.txt { white-space: normal; }   /* « Finale (gagnante demi 1 c. gagnante demi 2) », noms d'arénas longs */
 .portee { margin-top: .8rem; width: max-content; max-width: 100%; }
 .sombre .vedette { border-left-color: #3A66C4; }
 .sombre .prochain { border-left-color: var(--rouge); }
@@ -575,6 +587,7 @@ a.m-t:hover { background: var(--glace); }
     stroke-linecap: round; stroke-linejoin: round; }
   .onglets a[aria-current="page"] { box-shadow: inset 0 3px 0 var(--rouge); background: var(--marine-fonce); }
   .onglets .aide-o { display: none; }
+  .lieu-tel { display: block; font-size: .8rem; color: var(--doux); margin-top: .1rem; }   /* colonne Aréna masquée */
   .parcours li { grid-template-columns: 7rem 1fr; }
   .m-t { grid-template-columns: 3.3rem 1fr auto; }
   .bandeau-t { align-items: flex-start; }

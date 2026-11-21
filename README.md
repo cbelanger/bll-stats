@@ -195,6 +195,8 @@ Allure : résultats en pastilles rondes (V vert, D rouge, N gris) ; **séquence 
 (le plus récent cerclé, chacun mène à son match) et la série en cours, dans Matchs et Équipe ; score façon tableau
 d'aréna (chiffre de la gagnante en blanc vif) sur la fiche du match et la carte du dernier match ; gros numéro pâle
 dans le bandeau de chaque gardienne. Aucune animation : tout s'affiche d'un coup.
+Partout où un aréna est nommé (prochain match, À venir, horaire d'un tournoi, dossier d'un adversaire), son nom
+(souligné en pointillé, petite épingle) ouvre Google Maps sur cet aréna, dans un nouvel onglet.
 
 - **Matchs** : en haut, le **dernier match** en vedette (score, résultat, 3 faits saillants au plus ; un clic ouvre sa
   fiche) et, à côté, le **prochain match** au calendrier LERQ (date, heure, aréna, domicile ou visiteur, numéro ; un clic

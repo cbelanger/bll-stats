@@ -489,17 +489,27 @@ function lignesGroupees(liste, idDe, nomDe, col, ligne, bilan, avant = null, tou
 // Adversaire d'un match du calendrier ; ronde éliminatoire sans adversaire connu : « Demi-finale (2e c. 3e) »
 const advCal = c => c.adversaire ? esc(c.adversaire)
   : `<span class="eventuel">${esc(c.ronde || "Ronde éliminatoire")}${c.libelle ? ` (${esc(c.libelle)})` : ""}</span>`;
+// Aréna cliquable : ouvre Google Maps (2026-11-21, demande de Christian). Recherche sur le nom sans la glace
+// (« - Pad A », « - Arena 2 », « - West »…) ; « aréna » ajouté aux noms courts de la LERQ (« Blainville », « Mascouche »)
+function rechercheArena(nom) {
+  let q = String(nom || "").replace(/\s*-\s*BLL$/i, "");
+  for (let k = 0; k < 2; k++) q = q.replace(/\s*-\s*(Pad|Arena|Rink|Glace|Patinoire|Surface)\b[^-]*$|\s*-\s*(West|East|North|South|Est|Ouest|Nord|Sud)$/i, "");
+  return /ar[eé]na|centre|complex|sportsplex|colis[eé]e|place|glaces/i.test(q) ? q : `${q} aréna`;
+}
+const lienArena = nom => (nom ? `<a class="lieu-lien" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(rechercheArena(nom))}" target="_blank" rel="noopener" title="Ouvrir dans Google Maps">${esc(nom)}</a>` : "");
+
 // tag : « Prochain match » ; dansT : page du tournoi (pas de rappel du nom du tournoi, jour relatif)
 function carteProchain(c, tag = "Prochain match", dansT = false) {
   const dossier = aDossier(c.adversaire);
-  const lieu = c.tournoi ? `${esc(c.endroit)}${c.ronde ? ` · ${esc(c.ronde)}` : ""}` : `${esc(c.endroit)} · BLL ${c.domicile ? "à domicile" : "visiteur"}`;
-  return `<${dossier ? `a href="#/adversaire/${encodeURIComponent(cleAdv(c.adversaire))}"` : "div"} class="panneau vedette prochain${c.tournoi ? " en-t" : ""}">
+  const lieu = c.tournoi ? `${lienArena(c.endroit)}${c.ronde ? ` · ${esc(c.ronde)}` : ""}` : `${lienArena(c.endroit)} · BLL ${c.domicile ? "à domicile" : "visiteur"}`;
+  // Carte = div (le lien de l'aréna ne peut pas être dans un lien) ; data-adv : un clic ailleurs ouvre le dossier
+  return `<div class="panneau vedette prochain${c.tournoi ? " en-t" : ""}${dossier ? " lien" : ""}"${dossier ? ` tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
     <span class="ved-tag">${tag} · ${dansT ? jourRelatif(c.date) : dateJour(c.date)}${c.heure ? `, ${heureFr(c.heure)}` : ""}</span>
     ${c.tournoi && !dansT ? `<span class="ligne-t" style="margin:0"><span class="tag-t">Tournoi</span>${esc(nomTournoi(c))}</span>` : ""}
     <span class="ved-score"><span class="eq">BLL ${esc(c.equipe)}</span><span class="contre">contre</span><span class="eq">${advCal(c)}</span></span>
     <span class="sous">${lieu} · match no ${esc(c.no)}</span>
     <span class="ved-lien">${dossier ? "Dossier de l’adversaire →" : c.adversaire ? "Premier affrontement de la saison" : ""}</span>
-  </${dossier ? "a" : "div"}>`;
+  </div>`;
 }
 // Les 5 prochains matchs ; les autres dans un 2e corps de tableau, ouvert par « Voir tout le calendrier »
 const NB_A_VENIR = 5;
@@ -509,8 +519,9 @@ function tableauAVenir(cs, titre = "À venir", NB_A_VENIR = 5) {
   const t = cs.some(c => c.tournoi);
   const lignes = (liste, avant = null) => lignesGroupees(liste, c => c.tournoi, nomTournoi, 5, c => `<tr class="${aDossier(c.adversaire) ? "lien" : ""}${c.tournoi ? " en-t" : ""}"${aDossier(c.adversaire) ? ` tabindex="0" data-adv="${esc(cleAdv(c.adversaire))}"` : ""}>
       <td>${dateCourte(c.date)}</td><td>${esc(c.heure || "–")}</td>
-      <td class="txt">${advCal(c)}${c.tournoi || c.domicile ? "" : ` <span class="vis">(visiteur)</span>`}${c.eventuel ? ` <span class="vis">si qualifiées</span>` : ""}</td>
-      <td class="opt txt">${esc(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`, false, avant, cs);
+      <td class="txt">${advCal(c)}${c.tournoi || c.domicile ? "" : ` <span class="vis">(visiteur)</span>`}${c.eventuel ? ` <span class="vis">si qualifiées</span>` : ""}${
+        c.endroit ? `<span class="lieu-tel">${lienArena(c.endroit)}</span>` : ""}</td>
+      <td class="opt txt">${lienArena(c.endroit)}</td><td class="opt">${esc(c.no)}</td></tr>`, false, avant, cs);
   const reste = cs.slice(NB_A_VENIR);
   return `<h2>${titre}</h2><div class="panneau defile"><table class="a-venir">
     <thead><tr><th>Date</th><th>Heure</th><th>Adversaire</th><th class="opt">Aréna</th><th class="opt">No</th></tr></thead>
@@ -1139,7 +1150,7 @@ function vueAdversaire(cle) {
   return `<a class="retour" href="#/adversaires">← Adversaires</a>
   ${titreActions(esc(nom))}
   <p class="sous">Dossier adversaire, ${esc(etat.equipe)}, saison ${etat.saison} : ${ms.length} match${ms.length > 1 ? "s" : ""}, fiche ${v}-${d}-${ms.length - v - d}</p>
-  ${prochain ? `<p class="prochain-adv">Prochain match contre elles : <b>${dateJour(prochain.date)}${prochain.heure ? `, ${heureFr(prochain.heure)}` : ""}</b>, ${esc(prochain.endroit)}</p>` : ""}
+  ${prochain ? `<p class="prochain-adv">Prochain match contre elles : <b>${dateJour(prochain.date)}${prochain.heure ? `, ${heureFr(prochain.heure)}` : ""}</b>, ${lienArena(prochain.endroit)}</p>` : ""}
   ${retenir.length ? `<section class="panneau faits" style="margin-top:1rem"><h3>À retenir</h3><ul>${retenir.map(t => `<li>${t}</li>`).join("")}</ul></section>` : ""}
   <div class="grille g2" style="margin-top:1rem">
     <section class="panneau">
@@ -1276,15 +1287,15 @@ function horaireT(i) {
   if (!lignes.length) return "";
   const jours = [...new Set(lignes.map(l => l.date))];
   const ligne = ({ c, m, h }) => {
-    const lieu = c?.endroit ? `<span class="lieu">${esc(c.endroit)}</span>` : "";
+    const lieu = c?.endroit ? `<span class="lieu">${lienArena(c.endroit)}</span>` : "";
     const ronde = m?.ronde || c?.ronde;
     if (m) {
       const r = resultat(m);
       const det = [m.tirs.nous != null || m.tirs.adv != null ? `tirs ${m.tirs.nous ?? "?"}–${m.tirs.adv ?? "?"}` : "",
         svArret(m) != null ? `${pct(m.tirs.adv - m.buts.adv, m.tirs.adv)} d’arrêts` : ""].filter(Boolean).join(" · ");
-      return `<a class="m-t" href="#/match/${encodeURIComponent(m.id)}"><span class="h">${heureFr(h) || "–"}</span>
+      return `<div class="m-t lien" tabindex="0" data-id="${esc(m.id)}"><span class="h">${heureFr(h) || "–"}</span>
         <span class="adv">${ronde ? `<small class="ronde">${esc(ronde)}</small>` : ""}${esc(m.adversaire)}</span>
-        <span class="sc">${m.buts.nous}–${m.buts.adv} <span class="res ${r}">${r}</span></span>${lieu}${det ? `<span class="lieu">${det}</span>` : ""}</a>`;
+        <span class="sc">${m.buts.nous}–${m.buts.adv} <span class="res ${r}">${r}</span></span>${lieu}${det ? `<span class="lieu">${det}</span>` : ""}</div>`;
     }
     const etat_ = c === i.prochain ? `<span class="tag-t">Prochain</span>` : c.eventuel ? `<span class="etat-t">Si qualifiées</span>`
       : debutC(c) <= now ? `<span class="etat-t">Résultat à venir</span>` : "";
@@ -1457,6 +1468,7 @@ async function demarrer() {
   // Graphiques de progression : valeurs du match survolé (souris) ou touché (téléphone)
   el.addEventListener("mouseover", e => { const r = e.target.closest(".progression .survol"); if (r) infoProgression(r); });
   el.addEventListener("click", e => {
+    if (e.target.closest("a.lieu-lien")) return;   // aréna → Google Maps : ni la ligne ni la carte autour
     const sv = e.target.closest(".progression .survol"); if (sv) infoProgression(sv);
     const ent = e.target.closest("table.triable thead th"); if (ent) trierTableau(ent);
     const gr = e.target.closest("[data-graphe]"); if (gr) choisirGraphe(gr);
@@ -1468,8 +1480,8 @@ async function demarrer() {
     const tc = e.target.closest("[data-tout-cal]"); if (tc) toutCalendrier(tc);
     if (e.target.closest('[data-act="imprimer"]')) window.print();
     const pa = e.target.closest('[data-act="partager"]'); if (pa) partager(pa);
-    const tr = e.target.closest("tr[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
-    const adv = e.target.closest("tr[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
+    const tr = e.target.closest("tr[data-id], .m-t[data-id]"); if (tr) location.hash = "#/match/" + encodeURIComponent(tr.dataset.id);
+    const adv = e.target.closest("tr[data-adv], .prochain[data-adv]"); if (adv) location.hash = "#/adversaire/" + encodeURIComponent(adv.dataset.adv);
     const tou = e.target.closest("tr[data-tournoi]"); if (tou) location.hash = "#/tournoi/" + encodeURIComponent(tou.dataset.tournoi);
     const g = e.target.closest("tr[data-g]");
     if (g) choisirGardienne(g.dataset.g, true);
@@ -1494,7 +1506,7 @@ async function demarrer() {
       const y = window.scrollY; el.innerHTML = vueEquipe(); window.scrollTo(0, y);
     }, 200);
   });
-  el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], tr[data-g], tr[data-adv], tr[data-tournoi], table.triable thead th")) e.target.click(); });
+  el.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest("tr[data-id], .m-t[data-id], tr[data-g], tr[data-adv], .prochain[data-adv], tr[data-tournoi], table.triable thead th")) e.target.click(); });
   window.addEventListener("hashchange", afficher);
   majFiltres();
   afficher();
