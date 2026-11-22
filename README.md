@@ -233,6 +233,9 @@ Partout où un aréna est nommé (prochain match, À venir, horaire d'un tournoi
   - **Faits saillants** : quelques phrases tirées des données (retard effacé, but gagnant, série de buts,
     3 buts ou plus en 5 minutes, période gagnée par 3 buts ou plus, arrêts de la gardienne, domination aux tirs,
     records de la saison dès 3 matchs) ; 6 au plus ;
+  - **Par rapport à la saison** : buts pour et contre, tirs cadrés pour et contre, % d'arrêts et sorties de zone
+    réussies du match, chacun avec la moyenne des autres matchs de l'équipe dans la saison ; ▲ ▼ si l'écart atteint 15 %
+    (3 points pour les pourcentages), en vert si c'est mieux que d'habitude, en rouge sinon, ≈ dans la moyenne ;
   - **Déroulement du match** : une bande par période, nos buts au-dessus, ceux de l'adversaire en dessous,
     score à la fin de chaque période ; seuls les buts avec période et temps y sont placés ;
   - **Sommaire** : buts des deux équipes dans l'ordre du match (BLL en bleu, adversaire en rouge), type, zone,
@@ -253,6 +256,10 @@ Partout où un aréna est nommé (prochain match, À venir, horaire d'un tournoi
   tendance du % d'arrêts, zones du filet, types de jeu, d'où partent les buts accordés.
 - **Équipe** : fiche V-D-N, moyennes par match, progression de la saison (un graphique match après match, choisi par
   les boutons Buts · Tirs · Sorties ; les trois sont imprimés), tirs cadrés moyens par période, buts pour et contre par période,
+  **facteurs de victoire** (bilan V-D-N quand le BLL marque le premier but ou non, en avance / à égalité / en retard après
+  3 périodes, avec plus ou moins de tirs, avec 50 % ou plus de sorties de zone réussies, à domicile / à l'étranger / en
+  tournoi ; un match n'entre dans une ligne que si l'information est connue), **moment des buts dans la période** (buts
+  pour et contre selon la minute, de la 1re à la 10e, périodes réunies ; 2 premières et 2 dernières minutes en texte),
   sorties de zone par période, **buts selon la situation** (à égalité, AN, 5 contre 3, DN, 3 contre 5 ; pour et contre),
   nos buts et les buts accordés par type de jeu, par zone du filet et par endroit d'où ils partent.
 - **Adversaires** : équipes affrontées dans la saison (PJ, V-D-N, buts) ; un clic ouvre le dossier d'avant-match :

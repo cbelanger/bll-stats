@@ -377,6 +377,141 @@ function situations(ms) {
 }
 
 /* ---------- Vues */
+// ---------- Analyse (2026-11-22, idées 1, 2, 3 choisies par Christian)
+const vdnDe = ms => ["V", "D", "N"].map(r => ms.filter(m => resultat(m) === r).length);
+// Équipe qui a marqué le premier but : "nous", "adv" ou null (0-0 ou ordre inconnu).
+// Blanchissage : l'autre équipe ; sinon 1re période où une seule équipe a marqué, ou temps connus dans cette période.
+function premierBut(m) {
+  if (!m.buts.nous && !m.buts.adv) return null;
+  if (!m.buts.nous) return "adv";
+  if (!m.buts.adv) return "nous";
+  const bpp = m.buts_par_periode;
+  if (!bpp?.nous || !bpp?.adv) return null;
+  for (const [k] of PERIODES) {
+    const n = bpp.nous[k] || 0, a = bpp.adv[k] || 0;
+    if (n && !a) return "nous";
+    if (a && !n) return "adv";
+    if (n && a) {
+      const i = PERIODES.findIndex(p => p[0] === k);
+      const dans = [...m.buts_accordes.map(b => ({ eq: "adv", ...b })), ...(m.buts_marques || []).map(b => ({ eq: "nous", ...b }))]
+        .map(b => ({ eq: b.eq, i: idxP(b.periode), s: sec(b.temps) })).filter(b => b.i === i);
+      return dans.length === n + a && dans.every(b => b.s != null) ? dans.sort((x, y) => y.s - x.s)[0].eq : null;
+    }
+  }
+  return null;
+}
+// Écart après 3 périodes (avant la 4e) : >0 en avance ; null si les buts par période ne sont pas connus
+const ecartP3 = m => {
+  const b = m.buts_par_periode;
+  if (!b?.nous || !b?.adv) return null;
+  const s = o => ["p1", "p2", "p3"].reduce((t, k) => t + (o[k] || 0), 0);
+  return s(b.nous) - s(b.adv);
+};
+// Domicile, visiteur ou tournoi (terrain neutre), d'après le calendrier ; null si le match n'y est pas
+function lieuMatch(m) {
+  if (m.tournoi) return "tournoi";
+  const c = etat.calendrier.find(c => c.equipe === m.equipe && !c.tournoi && c.no && String(c.no) === String(m.no_match));
+  return c ? (c.domicile ? "dom" : "vis") : null;
+}
+// Facteurs de victoire : bilan V-D-N selon la situation ; une ligne n'apparaît que si au moins un match y entre
+function facteurs(ms) {
+  const groupes = [
+    ["Premier but", [["Le BLL marque le premier but", m => premierBut(m) === "nous"], ["L’adversaire marque le premier but", m => premierBut(m) === "adv"]]],
+    ["Après 3 périodes", [["En avance", m => ecartP3(m) > 0], ["À égalité", m => ecartP3(m) === 0], ["En retard", m => ecartP3(m) < 0]]],
+    ["Tirs cadrés", [["Plus de tirs que l’adversaire", m => m.tirs.nous != null && m.tirs.adv != null && m.tirs.nous > m.tirs.adv],
+      ["Autant de tirs", m => m.tirs.nous != null && m.tirs.adv != null && m.tirs.nous === m.tirs.adv],
+      ["Moins de tirs que l’adversaire", m => m.tirs.nous != null && m.tirs.adv != null && m.tirs.nous < m.tirs.adv]]],
+    ["Sorties de zone", [["50 % ou plus de réussite", m => m.sorties_zone.tentatives > 0 && m.sorties_zone.reussies / m.sorties_zone.tentatives >= .5],
+      ["Moins de 50 %", m => m.sorties_zone.tentatives > 0 && m.sorties_zone.reussies / m.sorties_zone.tentatives < .5]]],
+    ["Lieu", [["À domicile", m => lieuMatch(m) === "dom"], ["À l’étranger", m => lieuMatch(m) === "vis"], ["En tournoi", m => lieuMatch(m) === "tournoi"]]],
+  ];
+  const corps = groupes.map(([titre, lignes]) => {
+    const rs = lignes.map(([lab, f]) => [lab, ms.filter(f)]).filter(([, l]) => l.length);
+    if (!rs.length) return "";
+    return `<tr class="sec-f"><th colspan="4">${titre}</th></tr>${rs.map(([lab, l]) => {
+      const [v, d, n] = vdnDe(l), t = l.length;
+      const pc = x => (100 * x / t).toFixed(1);
+      return `<tr><td class="txt">${lab}</td><td class="n">${t}</td><td class="n fort">${v}-${d}-${n}</td>
+        <td class="barre-f" aria-hidden="true"><div>${[["v", v], ["nn", n], ["d", d]].filter(([, x]) => x).map(([c, x]) => `<span class="${c}" style="width:${pc(x)}%"></span>`).join("")}</div></td></tr>`;
+    }).join("")}`;
+  }).join("");
+  if (!corps) return "";
+  return `<section class="panneau" style="margin-top:1rem">
+    <h3>Facteurs de victoire</h3>
+    <div class="defile"><table class="facteurs"><thead><tr><th>Situation</th><th class="n">PJ</th><th class="n">V-D-N</th><th><span class="leg-f"><i class="v"></i>V <i class="nn"></i>N <i class="d"></i>D</span></th></tr></thead>
+    <tbody>${corps}</tbody></table></div>
+    ${note("Bilan des matchs selon la situation. Un match n’entre dans une ligne que si l’information est connue : ordre des buts (premier but), buts par période (après 3 périodes), tirs ou sorties de zone notés, match retrouvé au calendrier LERQ (domicile ou étranger).")}
+  </section>`;
+}
+// Moment des buts : minute de la période (1re = 10:00 à 9:00, le chrono descend), toutes périodes réglementaires réunies
+function minuteParMinute(ms) {
+  const comptes = { nous: Array(10).fill(0), adv: Array(10).fill(0) };
+  ms.forEach(m => [["nous", m.buts_marques || []], ["adv", m.buts_accordes]].forEach(([eq, l]) => l.forEach(b => {
+    const i = idxP(b.periode), s = sec(b.temps);
+    if (i < 0 || i > 3 || s == null || s > DUREE_P) return;
+    comptes[eq][Math.min(9, Math.floor((DUREE_P - s) / 60))]++;
+  })));
+  const tn = comptes.nous.reduce((a, b) => a + b, 0), ta = comptes.adv.reduce((a, b) => a + b, 0);
+  if (tn + ta < 3) return "";
+  // Même échelle en haut et en bas ; chaque côté prend la hauteur de son plus grand compte (pas de vide)
+  const mN = Math.max(...comptes.nous), mA = Math.max(...comptes.adv), u = Math.max(8, 130 / Math.max(1, mN + mA));
+  const x0 = 14, lc = 37.2, lb = 22, yN = 22 + mN * u, yA = yN + 30, Ht = yA + mA * u + 24;
+  const col = (eq, k) => {
+    const v = comptes[eq][k], h = v * u, x = x0 + k * lc + (lc - lb) / 2;
+    const haut = eq === "nous";
+    const y = haut ? yN - h : yA;
+    return (v ? `<rect class="mb-${eq}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${lb}" height="${h.toFixed(1)}" rx="3"/>` : "")
+      + (v ? `<text class="mb-val" x="${(x + lb / 2).toFixed(1)}" y="${(haut ? y - 6 : y + h + 17).toFixed(1)}" text-anchor="middle">${v}</text>` : "");
+  };
+  const fin = eq => comptes[eq][8] + comptes[eq][9], deb = eq => comptes[eq][0] + comptes[eq][1];
+  const part = (x, t) => (t ? ` (${Math.round(100 * x / t)} %)` : "");
+  return `<section class="panneau" style="margin-top:1rem">
+    <h3>Moment des buts dans la période</h3>
+    <div class="legende-l" style="margin:0 0 .4rem"><span><i class="pt nous"></i>Buts BLL ${esc(etat.equipe)} (${tn})</span><span><i class="pt adv"></i>Buts accordés (${ta})</span></div>
+    <svg class="minutes" viewBox="0 0 400 ${Ht.toFixed(0)}" role="img" aria-label="Buts pour et contre selon la minute de la période">
+      <line class="mb-axe" x1="${x0}" x2="${x0 + 10 * lc}" y1="${yN}" y2="${yN}"/><line class="mb-axe" x1="${x0}" x2="${x0 + 10 * lc}" y1="${yA}" y2="${yA}"/>
+      ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `${col("nous", k)}${col("adv", k)}<text class="mb-min" x="${(x0 + k * lc + lc / 2).toFixed(1)}" y="${yN + 20}" text-anchor="middle">${k + 1}</text>`).join("")}
+    </svg>
+    <p class="sous" style="margin:.2rem 0 0;font-size:.85rem;text-align:center">Minute de la période (1 = de 10:00 à 9:00 au chrono)</p>
+    <ul class="faits-min">
+      <li>2 premières minutes : ${deb("nous")} but${deb("nous") > 1 ? "s" : ""} pour${part(deb("nous"), tn)}, ${deb("adv")} contre${part(deb("adv"), ta)}.</li>
+      <li>2 dernières minutes : ${fin("nous")} but${fin("nous") > 1 ? "s" : ""} pour${part(fin("nous"), tn)}, ${fin("adv")} contre${part(fin("adv"), ta)}.</li>
+    </ul>
+    ${note("Buts dont la période et le temps sont notés, périodes 1 à 4 réunies (prolongation exclue).")}
+  </section>`;
+}
+// Fiche de match : chaque chiffre comparé à la moyenne des autres matchs de la saison (même équipe)
+function compareSaison(m) {
+  const autres = etat.matchs.filter(x => x.equipe === m.equipe && x.saison === m.saison && x.id !== m.id);
+  if (autres.length < 2) return "";
+  const moyDe = f => { const v = autres.map(f).filter(x => x != null); return v.length >= 2 ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const sv = x => (x.tirs.adv ? 100 * (x.tirs.adv - x.buts.adv) / x.tirs.adv : null);
+  const sz = x => (x.sorties_zone.tentatives ? 100 * x.sorties_zone.reussies / x.sorties_zone.tentatives : null);
+  const elems = [
+    ["Buts pour", m.buts.nous, moyDe(x => x.buts.nous), 1, false],
+    ["Buts contre", m.buts.adv, moyDe(x => x.buts.adv), -1, false],
+    ["Tirs cadrés pour", m.tirs.nous, moyDe(x => x.tirs.nous), 1, false],
+    ["Tirs cadrés contre", m.tirs.adv, moyDe(x => x.tirs.adv), -1, false],
+    ["% d’arrêts", sv(m), moyDe(sv), 1, true],
+    ["Sorties de zone réussies", sz(m), moyDe(sz), 1, true],
+  ].filter(([, v, mo]) => v != null && mo != null);
+  if (!elems.length) return "";
+  const f1 = x => x.toFixed(1).replace(".", ",");
+  return `<section class="panneau" style="margin-top:1rem">
+    <h3>Par rapport à la saison</h3>
+    <div class="comp-s">${elems.map(([lab, v, mo, sens, pc]) => {
+      const ecart = v - mo, seuil = pc ? 3 : Math.max(1, .15 * mo);
+      const dir = Math.abs(ecart) < seuil ? 0 : Math.sign(ecart);
+      const bon = dir * sens > 0, cls = dir === 0 ? "egal" : bon ? "mieux" : "moins";
+      const fl = dir > 0 ? "▲" : dir < 0 ? "▼" : "≈";
+      const mot = dir === 0 ? "dans la moyenne" : dir > 0 ? "au-dessus de la moyenne" : "sous la moyenne";
+      return `<div class="cs ${cls}" title="${lab} : ${mot}"><span class="lab">${lab}</span><b>${pc ? f1(v) + " %" : v}</b>
+        <span class="moy"><i aria-hidden="true">${fl}</i> moy. ${pc ? f1(mo) + " %" : f1(mo)}<span class="vh"> (${mot})</span></span></div>`;
+    }).join("")}</div>
+    ${note(`Moyenne des ${autres.length} autres matchs ${esc(m.equipe)} de la saison ${esc(m.saison)} (matchs où la donnée est notée). ▲ ▼ : écart d’au moins 15 % (3 points pour les pourcentages) ; vert = mieux que d’habitude, rouge = moins bien.`)}
+  </section>`;
+}
+
 // Calendrier LERQ (data/calendrier.json, tools/lerq.py) : matchs de l'équipe et de la saison choisies,
 // à partir d'aujourd'hui, sauf ceux déjà publiés (même numéro de match)
 const saisonDe = iso => { const [a, m] = iso.split("-").map(Number); return m >= 8 ? `${a}-${a + 1}` : `${a - 1}-${a}`; };
@@ -769,6 +904,7 @@ function vueMatch(id) {
     ${gardiennesScore(m)}
   </div>
   ${faitsSaillants(m)}
+  ${compareSaison(m)}
   ${ligneTemps(m)}
 
   <div class="grille g2" style="margin-top:1rem">
@@ -1031,6 +1167,8 @@ function vueEquipe() {
         ${avecB.nous.length} sur ${nbM(ms.length)} pour la ligne BLL, ${avecB.adv.length} sur ${nbM(ms.length)} pour la ligne Contre.`)}
     </section>
   </div>
+  ${facteurs(ms)}
+  ${minuteParMinute(ms)}
   ${aSits(ms) ? `<section class="panneau" style="margin-top:1rem"><h3>Buts selon la situation</h3>${situations(ms)}</section>` : ""}
   ${avecSz.length ? `<section class="panneau" id="par-periode-sz" style="margin-top:1rem">
     <h3>Sorties de zone par période</h3>
