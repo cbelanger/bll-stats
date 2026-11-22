@@ -1,5 +1,5 @@
 {
-  "_lisezmoi": "Tournois de la saison (édité à la main). horaires = liens .ics des divisions (site du tournoi : Schedule → télécharger le calendrier ; DID = division). noms = nom au tournoi (sans U16AA/U19AA) → nom à la LERQ ou nom court.",
+  "_lisezmoi": "Tournois de la saison (édité à la main). horaires = liens .ics des divisions (site du tournoi : Schedule → télécharger le calendrier ; DID = division). noms = nom au tournoi (sans U16AA/U19AA) → nom à la LERQ ou nom court. resultats (facultatif) = résultat final par équipe : Ronde préliminaire, Demi-finalistes, Finalistes ou Championnes (le site le déduit sinon des matchs publiés).",
   "tournois": [
     {
       "id": "nepean-2026",
@@ -9,6 +9,10 @@
       "horaires": {
         "U16AA": "https://ringetteontario.com/calendar/master-schedule/3106.ics?SID=14985&DID=20515&TournamentAID=3106&TZ=America%2FToronto",
         "U19AA": "https://ringetteontario.com/calendar/master-schedule/3106.ics?SID=14985&DID=20518&TournamentAID=3106&TZ=America%2FToronto"
+      },
+      "resultats": {
+        "U16AA": "Ronde préliminaire",
+        "U19AA": "Ronde préliminaire"
       }
     }
   ],

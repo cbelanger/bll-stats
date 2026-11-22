@@ -554,22 +554,25 @@ function infoTournoi(t, eq = etat.equipe) {
   const restants = cal.filter(c => !publie(c));
   const now = new Date();
   const futurs = restants.filter(c => debutC(c) > now);
-  const prochain = futurs.find(c => !c.eventuel), possible = prochain ? null : futurs[0] || null;
-  // Résultat final : d'après la dernière ronde jouée ; « Ronde préliminaire » seulement quand tout est publié
+  // Résultat final : inscrit à la main dans tournois.json (resultats), sinon d'après la dernière ronde jouée ;
+  // « Ronde préliminaire » déduite seulement quand le tournoi est fini et tout est publié
   const fin = ms.find(m => m.ronde === "Finale"), demi = ms.find(m => m.ronde === "Demi-finale");
-  let final = null;
-  if (fin) final = { V: "Championnes", D: "Finalistes", N: "Finale" }[resultat(fin)];
-  else if (demi && resultat(demi) === "D") final = "Demi-finalistes";
-  else if (statutT(t) === "fini" && ms.length && !demi && !restants.some(c => !c.eventuel)) final = "Ronde préliminaire";
+  const final = t.resultats?.[eq]
+    || (fin ? { V: "Championnes", D: "Finalistes", N: "Finale" }[resultat(fin)]
+      : demi && resultat(demi) === "D" ? "Demi-finalistes"
+      : statutT(t) === "fini" && ms.length && !demi && !restants.some(c => !c.eventuel) ? "Ronde préliminaire" : null);
   const vdn = ["V", "D", "N"].map(r => ms.filter(m => resultat(m) === r).length).join("-");
-  return { t, ms, cal, publie, restants, prochain, possible, final, vdn, statut: statutT(t) };
+  // Résultat connu : plus de prochain match possible (rondes éventuelles = non qualifiées)
+  const prochain = futurs.find(c => !c.eventuel) || null, possible = prochain || final ? null : futurs[0] || null;
+  const podium = ["Championnes", "Finalistes"].includes(final);
+  return { t, ms, cal, publie, restants, prochain, possible, final, podium, vdn, statut: statutT(t) };
 }
 function tournoisEquipe() {
   return (etat.tournois || []).filter(t => saisonDe(t.debut) === etat.saison && tournoiPour(t, etat.equipe));
 }
 // Étiquette d'état : résultat final (or), en cours (rouge), dans N jours, terminé
 function etiquetteT(i) {
-  if (i.final) return `<span class="etat-t final">${i.final}</span>`;
+  if (i.final) return `<span class="etat-t${i.podium ? " final" : ""}">${esc(i.final)}</span>`;
   if (i.statut === "encours") return `<span class="etat-t direct">En cours</span>`;
   if (i.statut === "avenir") {
     const j = Math.round((new Date(i.t.debut + "T12:00") - new Date(aujourdhui() + "T12:00")) / 864e5);
@@ -583,8 +586,8 @@ function bandeauEnCours() {
   const t = tournoisEquipe().find(t => t.debut <= dem && aujourdhui() <= t.fin);
   if (!t) return "";
   const i = infoTournoi(t), c = i.prochain;
-  const suite = i.final ? ` · ${i.final}` : c ? ` · prochain match ${jourRelatif(c.date)}${c.heure ? ` ${heureFr(c.heure)}` : ""}${c.adversaire ? ` contre ${esc(c.adversaire)}` : ""}` : "";
-  return `<a class="bandeau-t" href="#/tournoi/${encodeURIComponent(t.id)}">${TROPHEE}<span><b>${esc(t.nom)}</b> ${i.statut === "encours" ? "en cours" : "commence demain"}${
+  const suite = i.final ? ` · ${esc(i.final)}` : c ? ` · prochain match ${jourRelatif(c.date)}${c.heure ? ` ${heureFr(c.heure)}` : ""}${c.adversaire ? ` contre ${esc(c.adversaire)}` : ""}` : "";
+  return `<a class="bandeau-t" href="#/tournoi/${encodeURIComponent(t.id)}">${TROPHEE}<span><b>${esc(t.nom)}</b> ${i.final ? "terminé" : i.statut === "encours" ? "en cours" : "commence demain"}${
     i.ms.length ? ` · ${i.vdn}` : ""}${suite}</span><span class="vers">Voir →</span></a>`;
 }
 // Portée des stats d'Équipe et de Gardiennes : tous les matchs, saison (hors tournois) ou tournois seulement
@@ -1366,7 +1369,7 @@ function vueTournois() {
   if (!infos.length) return `${titre}<p class="vide">Aucun tournoi ${etat.equipe} pour la saison ${etat.saison}.</p>`;
   const carte = i => {
     const c = i.prochain || i.possible, bp = i.ms.reduce((s, m) => s + m.buts.nous, 0), bc = i.ms.reduce((s, m) => s + m.buts.adv, 0);
-    const jour = i.statut === "encours" ? ` · jour ${Math.round((new Date(aujourdhui() + "T12:00") - new Date(i.t.debut + "T12:00")) / 864e5) + 1} de ${
+    const jour = i.statut === "encours" && !i.final ? ` · jour ${Math.round((new Date(aujourdhui() + "T12:00") - new Date(i.t.debut + "T12:00")) / 864e5) + 1} de ${
       Math.round((new Date(i.t.fin + "T12:00") - new Date(i.t.debut + "T12:00")) / 864e5) + 1}` : "";
     const lignes = [];
     if (i.ms.length) lignes.push(`Bilan <b>${i.vdn}</b>`, `Buts <b>${bp}–${bc}</b>`);
@@ -1403,13 +1406,13 @@ function parcoursT(i) {
   const elim = i.final && i.final !== "Championnes";
   const prelim = i.ms.filter(m => !m.ronde), prelimR = i.restants.filter(c => !c.ronde);
   const etapes = [{ nom: "Ronde préliminaire", fait: !prelimR.length && prelim.length > 0,
-    txt: `${prelim.length} de ${prelim.length + prelimR.length} joué${prelim.length > 1 ? "s" : ""}${prelim.length ? ` · ${["V", "D", "N"].map(r => prelim.filter(m => resultat(m) === r).length).join("-")}` : ""}` }];
+    txt: `${prelimR.length ? `${prelim.length} de ${prelim.length + prelimR.length} publié${prelim.length > 1 ? "s" : ""}` : `${prelim.length} match${prelim.length > 1 ? "s" : ""}`}${prelim.length ? ` · ${["V", "D", "N"].map(r => prelim.filter(m => resultat(m) === r).length).join("-")}` : ""}` }];
   rondes.forEach(r => {
     const m = i.ms.find(x => x.ronde === r), cs = i.restants.filter(c => c.ronde === r), c = cs.find(x => !x.eventuel) || cs[0];
     const jr = c ? jourRelatif(c.date) : "", jc = c && jr === dateJour(c.date) ? new Date(c.date + "T12:00").toLocaleDateString("fr-CA", { weekday: "long" }) : jr;
     const quand = c ? `${jc}${c.heure ? ` ${heureFr(c.heure)}` : ""}` : "";
     if (m) etapes.push({ nom: r, fait: true, txt: `<span class="res ${resultat(m)}">${resultat(m)}</span> ${m.buts.nous}–${m.buts.adv} contre ${esc(m.adversaire)}` });
-    else if (elim || i.statut === "fini") etapes.push({ nom: r, non: true, txt: "–" });
+    else if (elim || i.statut === "fini") etapes.push({ nom: r, non: true, txt: "Non qualifiées" });
     else if (c && !c.eventuel) etapes.push({ nom: r, txt: `Qualifiées · ${quand}` });
     else etapes.push({ nom: r, possible: true, txt: c ? `Si qualifiées · ${quand}` : "Si qualifiées" });
   });
@@ -1435,7 +1438,7 @@ function horaireT(i) {
         <span class="adv">${ronde ? `<small class="ronde">${esc(ronde)}</small>` : ""}${esc(m.adversaire)}</span>
         <span class="sc">${m.buts.nous}–${m.buts.adv} <span class="res ${r}">${r}</span></span>${lieu}${det ? `<span class="lieu">${det}</span>` : ""}</div>`;
     }
-    const etat_ = c === i.prochain ? `<span class="tag-t">Prochain</span>` : c.eventuel ? `<span class="etat-t">Si qualifiées</span>`
+    const etat_ = c === i.prochain ? `<span class="tag-t">Prochain</span>` : c.eventuel ? `<span class="etat-t">${i.final ? "Non qualifiées" : "Si qualifiées"}</span>`
       : debutC(c) <= now ? `<span class="etat-t">Résultat à venir</span>` : "";
     return `<div class="m-t${c.eventuel ? " ev" : ""}${c === i.prochain ? " suivant" : ""}"><span class="h">${heureFr(h) || "–"}</span>
       <span class="adv">${c.adversaire && ronde ? `<small class="ronde">${esc(ronde)}</small>` : ""}${advCal(c)}</span><span class="sc">${etat_}</span>${lieu}</div>`;
@@ -1457,7 +1460,7 @@ function vueTournoi(id) {
   const dernier = der ? `<a class="dernier-t" href="#/match/${encodeURIComponent(der.id)}"><span class="res ${resultat(der)}">${resultat(der)}</span>
     <span>Dernier match : <b>${der.buts.nous}–${der.buts.adv} contre ${esc(der.adversaire)}</b>${der.ronde ? ` · ${esc(der.ronde)}` : ""}</span><span class="vers">Voir →</span></a>` : "";
   const final = i.final || i.statut === "fini" ? `<div class="panneau vedette final-t"><span class="ved-tag">${i.final ? "Résultat final" : "Tournoi terminé"}</span>
-    ${i.final ? `<b class="titre-final">${TROPHEE}${i.final}</b>` : ""}<span class="sous">${ms.length ? `Bilan ${i.vdn} en ${ms.length} match${ms.length > 1 ? "s" : ""}` : "Aucun match publié"}</span></div>` : "";
+    ${i.final ? `<b class="titre-final">${i.podium ? TROPHEE : ""}${esc(i.final)}</b>` : ""}<span class="sous">${ms.length ? `Bilan ${i.vdn} en ${ms.length} match${ms.length > 1 ? "s" : ""}` : "Aucun match publié"}</span></div>` : "";
   const haut = final || (i.prochain ? carteProchain(i.prochain, "Prochain match", true)
     : i.possible ? carteProchain(i.possible, "Prochain match possible", true) : "");
   const parcours = parcoursT(i);

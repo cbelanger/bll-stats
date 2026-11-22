@@ -356,6 +356,11 @@ pas corrigé ou retiré.
 - `horaires` : lien du calendrier .ics de la division de chaque équipe, sur le site du tournoi (Schedule → bouton de
   téléchargement du calendrier : clic droit → Copier le lien). Sur les sites Ringette Ontario (RAMP), le lien finit
   par `DID=<division>` : changer ce numéro donne l'autre division.
+  **Résultat final** : à la fin du tournoi, l'inscrire pour chaque équipe dans `"resultats": { "U16AA": "Ronde
+  préliminaire", "U19AA": "Finalistes" }` (Ronde préliminaire, Demi-finalistes, Finalistes ou Championnes). L'horaire
+  du tournoi ne dit pas toujours qui s'est qualifiée (à Nepean, les demies sont restées « 2e c. 3e ») : sans ce champ,
+  le site affiche « Si qualifiées » jusqu'au lendemain du tournoi. Avec lui, les rondes non jouées deviennent « Non
+  qualifiées ». Sans ce champ, le résultat est déduit des matchs publiés (finale, demi perdue).
   Tournoi annoncé mais horaire pas encore publié : mettre `"horaires": {}` et, si une seule équipe y va,
   `"equipes": ["U19AA"]` (sans `equipes` ni horaire, le tournoi s'affiche pour les deux équipes dans l'onglet Tournois).
 - `noms` (en bas du fichier) : nom de l'équipe au tournoi, sans la catégorie (« Nepean Ravens U16AA - Cram » →

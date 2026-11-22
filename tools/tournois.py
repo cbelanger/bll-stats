@@ -143,8 +143,10 @@ def main():
     cal["matchs"] = sorted(matchs, key=lambda m: (m["date"], m["heure"] or "", m["equipe"]))
     # equipes : équipes inscrites (champ « equipes » de tournois.json, sinon les divisions qui ont un horaire) ;
     # liste vide = pas encore connu : le site montre le tournoi aux deux équipes
+    # resultats : résultat final inscrit à la main par équipe (le .ics ne dit pas toujours qui est qualifiée)
     cal["tournois"] = [{**{k: t[k] for k in ("id", "nom", "debut", "fin")},
-                        "equipes": sorted(t.get("equipes") or t.get("horaires", {}).keys())}
+                        "equipes": sorted(t.get("equipes") or t.get("horaires", {}).keys()),
+                        "resultats": t.get("resultats", {})}
                        for t in conf.get("tournois", [])]
     CALENDRIER.parent.mkdir(exist_ok=True)
     CALENDRIER.write_text(json.dumps(cal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
